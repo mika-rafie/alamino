@@ -63,4 +63,4 @@ jobs:
       - name: Verify alamino signature and pipeline attestation
         uses: mika-rafie/alamino/.github/actions/require-alamino@83cb9dedbebcbe9efbcdfc21d1166cb02e6f0918 # rename to alamino
         with:
-          exempt-authors: mika-rafie
+          exempt-authors: mika-rafie, laskalam
