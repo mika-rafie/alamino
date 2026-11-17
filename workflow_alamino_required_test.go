@@ -48,7 +48,7 @@ const requireActionUsesPrefix = "mika-rafie/alamino/"
 // deliberately asserted by value, not just by shape: the pin must always name
 // a commit that already carries the action, and bumping it is a separate,
 // deliberate pull request that updates this constant in the same change.
-const requiredActionPin = "f6441c96c352a18b9cadcaef6b6c7017e9ac3970"
+const requiredActionPin = "83cb9dedbebcbe9efbcdfc21d1166cb02e6f0918"
 
 var immutableActionPin = regexp.MustCompile(`^[0-9a-f]{40}$`)
 
