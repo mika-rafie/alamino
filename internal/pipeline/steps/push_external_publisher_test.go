@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const externalPublisherYAML = `push:
@@ -41,15 +41,15 @@ func TestPublication_ExternalPublisher(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				dir, _, _ := setupGitRepo(t)
 				gitCmd(t, dir, "checkout", "main")
-				if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte(tc.trusted), 0o644); err != nil {
+				if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte(tc.trusted), 0o644); err != nil {
 					t.Fatal(err)
 				}
-				gitCmd(t, dir, "add", ".no-mistakes.yaml")
+				gitCmd(t, dir, "add", ".alamino.yaml")
 				gitCmd(t, dir, "commit", "-m", "trusted publication policy")
 				base := gitCmd(t, dir, "rev-parse", "HEAD")
 				gitCmd(t, dir, "checkout", "feature")
 				gitCmd(t, dir, "merge", "--no-edit", "main")
-				if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte("push: {}\n"), 0o644); err != nil {
+				if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte("push: {}\n"), 0o644); err != nil {
 					t.Fatal(err)
 				}
 				if tc.marker {
@@ -66,11 +66,11 @@ func TestPublication_ExternalPublisher(t *testing.T) {
 				gitCmd(t, dir, "push", "origin", "main")
 				sctx := newTestContextWithDBRecords(t, &mockAgent{name: "test"}, dir, base, submitted, config.Commands{})
 				sctx.Repo.UpstreamURL = upstream
-				trusted, err := config.LoadRepoFromBytes([]byte(gitCmd(t, dir, "show", "main:.no-mistakes.yaml")))
+				trusted, err := config.LoadRepoFromBytes([]byte(gitCmd(t, dir, "show", "main:.alamino.yaml")))
 				if err != nil {
 					t.Fatal(err)
 				}
-				pushed, err := config.LoadRepoFromBytes([]byte(gitCmd(t, dir, "show", "HEAD:.no-mistakes.yaml")))
+				pushed, err := config.LoadRepoFromBytes([]byte(gitCmd(t, dir, "show", "HEAD:.alamino.yaml")))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -162,7 +162,7 @@ func testExternalPublisherRecovery(t *testing.T, repair bool) {
 	if err := app.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("NM_HOME", app.Root())
+	t.Setenv("ALAMINO_HOME", app.Root())
 	gate := app.RepoDir(sctx.Repo.ID)
 	gitCmd(t, "", "init", "--bare", gate)
 	gitCmd(t, gate, "fetch", dir, "feature:refs/heads/feature")

@@ -3,9 +3,9 @@ package steps
 import (
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/intent"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/intent"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // userIntentPromptSection returns a prompt fragment describing the user intent

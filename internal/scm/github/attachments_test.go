@@ -428,7 +428,7 @@ func TestGH2990IssueCreateHelpDocumentsAttach(t *testing.T) {
 }
 
 func localGH2990() string {
-	if p := strings.TrimSpace(os.Getenv("NM_TEST_GH_2_99_0")); p != "" {
+	if p := strings.TrimSpace(os.Getenv("ALAMINO_TEST_GH_2_99_0")); p != "" {
 		if st, err := os.Stat(p); err == nil && !st.IsDir() {
 			return p
 		}

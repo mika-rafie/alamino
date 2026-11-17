@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 func TestRunEvidenceDirKeepsThePinnedDirectory(t *testing.T) {

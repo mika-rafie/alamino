@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 func TestFormatPRBaseBranchPushOption(t *testing.T) {
 	opt := formatPRBaseBranchPushOption("epic/feature")
-	if opt != "no-mistakes.pr-base-branch=epic/feature" {
+	if opt != "alamino.pr-base-branch=epic/feature" {
 		t.Fatalf("formatPRBaseBranchPushOption = %q", opt)
 	}
 	if got := formatPRBaseBranchPushOption("   "); got != "" {
@@ -20,8 +20,8 @@ func TestFormatPRBaseBranchPushOption(t *testing.T) {
 
 func TestParsePRBaseBranchPushOptions(t *testing.T) {
 	got, err := parsePRBaseBranchPushOptions([]string{
-		"no-mistakes.pr-base-branch=develop",
-		"no-mistakes.pr-base-branch=epic/feature",
+		"alamino.pr-base-branch=develop",
+		"alamino.pr-base-branch=epic/feature",
 	})
 	if err != nil {
 		t.Fatal(err)

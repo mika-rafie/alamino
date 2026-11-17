@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Re-running eval capture for the same run must converge: the second pass

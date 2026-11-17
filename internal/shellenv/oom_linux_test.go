@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv/memscopetest"
+	"github.com/mika-rafie/alamino/internal/shellenv/memscopetest"
 )
 
 func TestStartShellCommandRaisesChildOOMScore(t *testing.T) {
@@ -70,7 +70,7 @@ func TestAttributeOOMKillLeavesAPlainFailureWithoutACounterRise(t *testing.T) {
 // scope with OOMPolicy=continue. The allocating command is attributed and the
 // neighbor command, plus this process, keep running.
 func TestOOMKillAttributesTheAllocatingCommandAndSparesItsNeighbor(t *testing.T) {
-	if os.Getenv("NM_OOM_INNER") == "1" {
+	if os.Getenv("ALAMINO_OOM_INNER") == "1" {
 		runOOMNeighborInner(t)
 		return
 	}
@@ -84,7 +84,7 @@ func TestOOMKillAttributesTheAllocatingCommandAndSparesItsNeighbor(t *testing.T)
 		"-p", "OOMPolicy=continue",
 		"--",
 		os.Args[0], "-test.run", "^TestOOMKillAttributesTheAllocatingCommandAndSparesItsNeighbor$", "-test.count=1")
-	cmd.Env = append(os.Environ(), "NM_OOM_INNER=1")
+	cmd.Env = append(os.Environ(), "ALAMINO_OOM_INNER=1")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("scoped run: %v\n%s", err, out)

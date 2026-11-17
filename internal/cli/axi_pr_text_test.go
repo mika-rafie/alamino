@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -43,17 +43,17 @@ func TestAxiRunPRTextRejectsInputBeforeOpeningResources(t *testing.T) {
 		{"body device", []string{"--pr-body-file", os.DevNull}, nil, "regular file"},
 		{"body empty file", []string{"--pr-body-file", writeIntentFile(t, "")}, nil, "--pr-body-file must not be empty"},
 		{"body whitespace", []string{"--pr-body-file", writeIntentFile(t, " \n\t")}, nil, "--pr-body-file must not be empty"},
-		{"body oversized file", []string{"--pr-body-file", writeIntentFile(t, large)}, nil, "exceeds the 49122-byte PR description transport limit"},
-		{"body oversized stdin", []string{"--pr-body-file", "-"}, strings.NewReader(large), "exceeds the 49122-byte PR description transport limit"},
+		{"body oversized file", []string{"--pr-body-file", writeIntentFile(t, large)}, nil, "exceeds the 49125-byte PR description transport limit"},
+		{"body oversized stdin", []string{"--pr-body-file", "-"}, strings.NewReader(large), "exceeds the 49125-byte PR description transport limit"},
 		{"body invalid UTF-8", []string{"--pr-body-file", writeIntentFile(t, "bad\xff")}, nil, "--pr-body-file must be valid UTF-8"},
 		{"body control", []string{"--pr-body-file", writeIntentFile(t, "a\x1bb")}, nil, "control characters"},
 		{"body bidi", []string{"--pr-body-file", writeIntentFile(t, "a⁦b")}, nil, "bidi override or isolate"},
-		{"body marker", []string{"--pr-body-file", writeIntentFile(t, "<!-- no-mistakes-pipeline-attestation:v1 {} -->")}, nil, "reserved no-mistakes publication markers"},
+		{"body marker", []string{"--pr-body-file", writeIntentFile(t, "<!-- alamino-pipeline-attestation:v1 {} -->")}, nil, "reserved alamino publication markers"},
 		{"both read stdin", []string{"--intent", "-", "--pr-body-file", "-"}, nil, "cannot both read stdin"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			home := filepath.Join(t.TempDir(), "not-created")
-			t.Setenv("NM_HOME", home)
+			t.Setenv("ALAMINO_HOME", home)
 			cmd := newAxiRunCmd()
 			cmd.SetArgs(append([]string{"--intent-file", writeIntentFile(t, "goal")}, tc.args...))
 			if tc.args[0] == "--intent" {
@@ -94,7 +94,7 @@ func TestPRTextPushOptionsRoundTrip(t *testing.T) {
 			t.Fatalf("push option is not one pkt-line: %q", option)
 		}
 	}
-	got, err := parsePRTextPushOptions(append([]string{"no-mistakes.skip=lint"}, options...))
+	got, err := parsePRTextPushOptions(append([]string{"alamino.skip=lint"}, options...))
 	if err != nil || got != text {
 		t.Fatalf("round trip = %+v, %v", got, err)
 	}

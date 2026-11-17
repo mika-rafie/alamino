@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // piReviewReply is one Pi invocation that returns review JSON and reports
@@ -21,8 +21,8 @@ func piReviewReply(t *testing.T, review string) string {
 	if !json.Valid([]byte(review)) {
 		t.Fatal("invalid fixture JSON")
 	}
-	return fmt.Sprintf(`{"type":"message_end","message":{"role":"assistant","provider":"xai","model":"grok-4.6","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"no_mistakes_output","arguments":%s}],"usage":{"input":100,"output":20,"cacheRead":30}}}
-{"type":"tool_execution_end","toolCallId":"final-1","toolName":"no_mistakes_output","isError":false,"result":{"terminate":true,"details":{"output":%s}}}
+	return fmt.Sprintf(`{"type":"message_end","message":{"role":"assistant","provider":"xai","model":"grok-4.6","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"alamino_output","arguments":%s}],"usage":{"input":100,"output":20,"cacheRead":30}}}
+{"type":"tool_execution_end","toolCallId":"final-1","toolName":"alamino_output","isError":false,"result":{"terminate":true,"details":{"output":%s}}}
 `, review, review)
 }
 

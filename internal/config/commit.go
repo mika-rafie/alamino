@@ -10,11 +10,11 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // DefaultFixMessageTemplate preserves the built-in auto-fix commit subject.
-const DefaultFixMessageTemplate = "no-mistakes({{.Step}}): {{.Summary}}"
+const DefaultFixMessageTemplate = "alamino({{.Step}}): {{.Summary}}"
 
 // Limits are byte-based because they bound allocations and the git commit argument.
 // The source and placeholder caps keep repository-controlled parsing cheap, while
@@ -255,7 +255,7 @@ func (c Commit) renderFixMessage(step types.StepName, summary, branch string, re
 // with {{.Branch}} and {{.RunID}} as its only placeholders.
 func (e Evidence) RenderCommitMessage(branch, runID string) (string, error) {
 	if e.CommitMessage == "" {
-		return fmt.Sprintf("no-mistakes: evidence for %s (run %s)", branch, runID), nil
+		return fmt.Sprintf("alamino: evidence for %s (run %s)", branch, runID), nil
 	}
 	return renderEvidenceMessage(e.CommitMessage, branch, runID)
 }

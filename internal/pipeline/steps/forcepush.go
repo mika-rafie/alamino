@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
+	"github.com/mika-rafie/alamino/internal/git"
 )
 
 // gitRunner runs a git subcommand and returns trimmed stdout. Callers bind it

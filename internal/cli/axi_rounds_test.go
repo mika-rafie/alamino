@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func executeAxiRounds(t *testing.T, args ...string) (string, error) {
@@ -300,7 +300,7 @@ func TestAxiRoundsErrorsAreNotCleanHistory(t *testing.T) {
 
 func TestAxiRoundsMissingDatabaseDoesNotCreateState(t *testing.T) {
 	home := filepath.Join(t.TempDir(), "absent")
-	t.Setenv("NM_HOME", home)
+	t.Setenv("ALAMINO_HOME", home)
 	out, err := executeAxiRounds(t, "--step", "review", "--run", "missing", "--json")
 	if err == nil || !json.Valid([]byte(out)) {
 		t.Fatalf("missing database should fail: %v\n%s", err, out)

@@ -19,26 +19,26 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/e2edaemon"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/e2edaemon"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Harness wires together the temp filesystem state needed to run the real
-// no-mistakes binary against a fake agent. Each test gets its own Harness;
+// alamino binary against a fake agent. Each test gets its own Harness;
 // the binaries themselves are built once per `go test` process.
 type Harness struct {
 	t *testing.T
 
-	NMBin       string // absolute path to the no-mistakes binary under test
+	NMBin       string // absolute path to the alamino binary under test
 	FakeAgent   string // absolute path to the fake agent binary
 	BinDir      string // temp dir holding agent symlinks; prepended to PATH
-	NMHome      string // value used as $NM_HOME (daemon DB, socket, config)
+	NMHome      string // value used as $ALAMINO_HOME (daemon DB, socket, config)
 	HomeDir     string // value used as $HOME so git operations don't read user state
 	UpstreamDir string // bare repo serving as origin for the working clone
-	WorkDir     string // working clone where the user runs `no-mistakes init`
+	WorkDir     string // working clone where the user runs `alamino init`
 	AgentLog    string // every fake-agent invocation appended here, one JSON per line
 	Scenario    string // optional path to a scenario yaml; empty = built-in default
 
@@ -61,7 +61,7 @@ type SetupOpts struct {
 	Scenario string
 
 	// AllowRepoCommands controls the per-repo allow_repo_commands opt-in
-	// committed to the trusted default-branch .no-mistakes.yaml (never the
+	// committed to the trusted default-branch .alamino.yaml (never the
 	// global config, and never the pushed branch). The harness models a
 	// trusted single-developer environment (the same user owns the working
 	// clone, gate, and daemon), so it defaults to true: feature-branch
@@ -79,8 +79,8 @@ type SetupOpts struct {
 
 const e2eDaemonStartTimeout = "45s"
 
-// NewHarness builds the no-mistakes + fakeagent binaries (once per test
-// process), creates a temp git repo with origin, writes the no-mistakes
+// NewHarness builds the alamino + fakeagent binaries (once per test
+// process), creates a temp git repo with origin, writes the alamino
 // global config to point at the chosen fake agent, and registers cleanup
 // to stop the daemon and remove temp state at test end.
 func NewHarness(t *testing.T, opts SetupOpts) *Harness {
@@ -91,7 +91,7 @@ func NewHarness(t *testing.T, opts SetupOpts) *Harness {
 
 	nmBin, fakeBin := buildBinaries(t)
 
-	root, err := os.MkdirTemp("", "nm-e2e-*")
+	root, err := os.MkdirTemp("", "alamino-e2e-*")
 	if err != nil {
 		t.Fatalf("mkdir e2e root: %v", err)
 	}
@@ -127,9 +127,9 @@ func NewHarness(t *testing.T, opts SetupOpts) *Harness {
 	// origin) hits the fakeagent stub instead of a real, authenticated
 	// system CLI. antigravity gets a second link under its probed binary
 	// name "agy" (internal/cli/doctor.go searches that name, not the agent
-	// name). nm-fake-provider-plugin is the reference provider plugin; it is
+	// name). alamino-fake-provider-plugin is the reference provider plugin; it is
 	// inert unless a test configures it under provider_plugins.
-	for _, name := range []string{"claude", "codex", "grok", "opencode", "pi", "antigravity", "agy", "gh", "tea", "nm-fake-provider-plugin"} {
+	for _, name := range []string{"claude", "codex", "grok", "opencode", "pi", "antigravity", "agy", "gh", "tea", "alamino-fake-provider-plugin"} {
 		linkPath := filepath.Join(h.BinDir, executableName(name))
 		if err := os.Symlink(fakeBin, linkPath); err != nil {
 			t.Fatalf("symlink %s: %v", linkPath, err)
@@ -137,12 +137,12 @@ func NewHarness(t *testing.T, opts SetupOpts) *Harness {
 	}
 
 	// Process-wide env. t.Setenv mutates os.Environ() for the rest of the
-	// test, so subprocesses spawned by no-mistakes inherit these. The
+	// test, so subprocesses spawned by alamino inherit these. The
 	// daemon re-execs itself, also inheriting them.
 	t.Setenv("PATH", h.BinDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("HOME", h.HomeDir)
 	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(h.HomeDir, "gitconfig-isolated"))
-	t.Setenv("NM_HOME", h.NMHome)
+	t.Setenv("ALAMINO_HOME", h.NMHome)
 	t.Setenv("FAKEAGENT_LOG", h.AgentLog)
 	if h.Scenario != "" {
 		t.Setenv("FAKEAGENT_SCENARIO", h.Scenario)
@@ -159,17 +159,17 @@ func NewHarness(t *testing.T, opts SetupOpts) *Harness {
 	t.Setenv("FAKEAGENT_FIXTURE", fixtureRoot)
 	// Skip launchd/systemd/schtasks installation in the daemon. Without
 	// this the daemon would touch the developer's real launch agents.
-	t.Setenv("NM_TEST_START_DAEMON", "1")
+	t.Setenv("ALAMINO_TEST_START_DAEMON", "1")
 	// Give the daemon room to come up. Startup may spend up to 30s resolving
 	// the login-shell environment before the IPC socket is opened.
-	t.Setenv("NM_TEST_DAEMON_START_TIMEOUT", e2eDaemonStartTimeout)
+	t.Setenv("ALAMINO_TEST_DAEMON_START_TIMEOUT", e2eDaemonStartTimeout)
 
 	// Disable telemetry attempts (the package would no-op anyway, but
 	// avoid a network DNS lookup on each command).
-	t.Setenv("NO_MISTAKES_TELEMETRY", "off")
+	t.Setenv("ALAMINO_TELEMETRY", "off")
 	// Disable background update checks so helper processes do not write
 	// update-check.json while testing.T is removing the temp directory.
-	t.Setenv("NO_MISTAKES_NO_UPDATE_CHECK", "1")
+	t.Setenv("ALAMINO_NO_UPDATE_CHECK", "1")
 
 	h.writeGlobalConfig()
 	h.initGitRepos()
@@ -200,8 +200,8 @@ func shellQuote(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
 }
 
-// writeGlobalConfig writes a no-mistakes global config that pins the
-// agent name and binary path. The path override forces no-mistakes'
+// writeGlobalConfig writes an alamino global config that pins the
+// agent name and binary path. The path override forces alamino's
 // agent.New to use our absolute fake-agent path instead of looking up the
 // agent name in PATH (which would also work, but the override removes a
 // confounding variable when something goes wrong).
@@ -264,7 +264,7 @@ func (h *Harness) initGitRepos() {
 		h.t.Fatalf("write readme: %v", err)
 	}
 	// allow_repo_commands is committed to the trusted default-branch copy of
-	// .no-mistakes.yaml (never global, never the pushed branch). The harness
+	// .alamino.yaml (never global, never the pushed branch). The harness
 	// models a trusted single-developer environment where the same user owns
 	// every branch, so it defaults to true: feature-branch commands run as
 	// before. Security tests override via SetupOpts.AllowRepoCommands = false.
@@ -272,31 +272,31 @@ func (h *Harness) initGitRepos() {
 	if h.allowRepoCommands != nil {
 		allowRepoCommands = *h.allowRepoCommands
 	}
-	repoConfig := filepath.Join(h.WorkDir, ".no-mistakes.yaml")
+	repoConfig := filepath.Join(h.WorkDir, ".alamino.yaml")
 	repoCfg := fmt.Sprintf("ignore_patterns:\n  - '*.generated.go'\n  - 'vendor/**'\nallow_repo_commands: %t\n", allowRepoCommands)
 	if err := os.WriteFile(repoConfig, []byte(repoCfg), 0o644); err != nil {
 		h.t.Fatalf("write repo config: %v", err)
 	}
-	mustGit(h.WorkDir, "add", "README.md", ".no-mistakes.yaml")
+	mustGit(h.WorkDir, "add", "README.md", ".alamino.yaml")
 	mustGit(h.WorkDir, "commit", "-m", "initial commit")
 	mustGit(h.WorkDir, "remote", "add", "origin", h.UpstreamDir)
 	mustGit(h.WorkDir, "push", "-u", "origin", "main")
 }
 
-// Run invokes the no-mistakes binary in the working repo and returns
+// Run invokes the alamino binary in the working repo and returns
 // (stdout+stderr, error). It propagates the harness env via os.Environ().
 func (h *Harness) Run(args ...string) (string, error) {
 	h.t.Helper()
 	return h.RunInDir(h.WorkDir, args...)
 }
 
-// RunInDir invokes the no-mistakes binary in dir and returns stdout+stderr.
+// RunInDir invokes the alamino binary in dir and returns stdout+stderr.
 func (h *Harness) RunInDir(dir string, args ...string) (string, error) {
 	h.t.Helper()
 	return h.RunInDirWithEnv(dir, nil, args...)
 }
 
-// RunInDirWithEnv invokes the no-mistakes binary in dir with env overrides.
+// RunInDirWithEnv invokes the alamino binary in dir with env overrides.
 func (h *Harness) RunInDirWithEnv(dir string, env map[string]string, args ...string) (string, error) {
 	h.t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -388,16 +388,16 @@ func (h *Harness) CommitChange(branch, path, content, message string) string {
 	return string(bytes.TrimSpace(sha))
 }
 
-// PushToGate pushes the current branch through the no-mistakes remote,
+// PushToGate pushes the current branch through the alamino remote,
 // which fires the post-receive hook and triggers a daemon-side pipeline
 // run. Returns the IPC client connected to the daemon's socket.
 func (h *Harness) PushToGate(branch string) {
 	h.t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	out, err := h.runGit(ctx, h.WorkDir, "push", "no-mistakes", branch)
+	out, err := h.runGit(ctx, h.WorkDir, "push", "alamino", branch)
 	if err != nil {
-		h.t.Fatalf("git push no-mistakes %s: %v\n%s", branch, err, out)
+		h.t.Fatalf("git push alamino %s: %v\n%s", branch, err, out)
 	}
 }
 
@@ -852,18 +852,18 @@ var (
 	buildErr  error
 )
 
-// buildBinaries compiles the no-mistakes binary and the fakeagent binary
+// buildBinaries compiles the alamino binary and the fakeagent binary
 // once per `go test` invocation. Both are placed in a per-process build
 // dir; subsequent harnesses reuse them.
 func buildBinaries(t *testing.T) (nmBin, fakeBin string) {
 	t.Helper()
 	buildOnce.Do(func() {
-		dir, err := os.MkdirTemp("", "nm-e2e-bin-*")
+		dir, err := os.MkdirTemp("", "alamino-e2e-bin-*")
 		if err != nil {
 			buildErr = err
 			return
 		}
-		nm := filepath.Join(dir, executableName("no-mistakes"))
+		nm := filepath.Join(dir, executableName("alamino"))
 		fake := filepath.Join(dir, executableName("fakeagent"))
 
 		repoRoot, err := findRepoRoot()
@@ -874,7 +874,7 @@ func buildBinaries(t *testing.T) (nmBin, fakeBin string) {
 		for _, target := range []struct {
 			out, pkg string
 		}{
-			{nm, "./cmd/no-mistakes"},
+			{nm, "./cmd/alamino"},
 			{fake, "./cmd/fakeagent"},
 		} {
 			cmd := exec.Command("go", "build", "-o", target.out, target.pkg)
@@ -919,7 +919,7 @@ func fixtureRootFromRepoRoot(root string) (string, error) {
 }
 
 // findRepoRoot walks up from this source file's directory looking for
-// the go.mod that declares the no-mistakes module. Robust to test
+// the go.mod that declares the alamino module. Robust to test
 // runners that change the working directory.
 func findRepoRoot() (string, error) {
 	_, file, _, ok := runtime.Caller(0)

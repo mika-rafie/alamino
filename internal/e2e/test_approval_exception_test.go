@@ -12,8 +12,8 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // This is a real CLI/daemon/gate journey with a local bare push target and a
@@ -87,7 +87,7 @@ func TestAxiTestApprovalExceptionJourney(t *testing.T) {
 			if out, err := h.Run("init"); err != nil {
 				t.Fatalf("init: %v\n%s", err, out)
 			}
-			h.CommitChange(tc.name, ".no-mistakes.yaml", fmt.Sprintf("commands:\n  test: 'exit %d'\n  lint: 'exit 0'\n", tc.exit), "configure synthetic test")
+			h.CommitChange(tc.name, ".alamino.yaml", fmt.Sprintf("commands:\n  test: 'exit %d'\n  lint: 'exit 0'\n", tc.exit), "configure synthetic test")
 			head := h.CommitChange(tc.name, "feature.txt", "synthetic feature\n", "add feature")
 			out, err := h.Run("axi", "run", "--intent", "Validate the synthetic feature", "--skip", "pr,ci")
 			if err != nil {

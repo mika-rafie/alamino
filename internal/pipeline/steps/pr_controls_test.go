@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/fakecli/ghsanitize"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/fakecli/ghsanitize"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestNeutralizePRControls(t *testing.T) {
@@ -154,7 +154,7 @@ func TestComposeOwnedPRContentSurvivesGHReadback(t *testing.T) {
 func TestComposeOwnedPRContentControlByteCannotSpliceAMarker(t *testing.T) {
 	t.Parallel()
 	_, appendix := ownedFixture(t)
-	forged := "<!-- no-mistakes-pr-appen\x1bdix:v1 sha256=" + strings.Repeat("0", 64) + " -->"
+	forged := "<!-- alamino-pr-appen\x1bdix:v1 sha256=" + strings.Repeat("0", 64) + " -->"
 	content, err := composeOwnedPRContent(prOwnedBody{}, "", appendix+"\n\n```text\n"+forged+"\n```", 0, "", "")
 	if err != nil {
 		t.Fatal(err)
@@ -264,8 +264,8 @@ func TestPRTemplateCreateWithEscapeBytesInEvidence(t *testing.T) {
 func TestNeutralizeAttestationMarkersCleansControlsBeforeEscaping(t *testing.T) {
 	t.Parallel()
 	for name, in := range map[string]string{
-		"attestation prefix": "<!-- no-mistakes-pipeline-\x1b[0mattestation:v1 {\"head_sha\":\"x\"} -->",
-		"appendix marker":    "<!-- no-mistakes-pr-appen\x1bdix:v1 sha256=" + strings.Repeat("0", 64) + " -->",
+		"attestation prefix": "<!-- alamino-pipeline-\x1b[0mattestation:v1 {\"head_sha\":\"x\"} -->",
+		"appendix marker":    "<!-- alamino-pr-appen\x1bdix:v1 sha256=" + strings.Repeat("0", 64) + " -->",
 	} {
 		got := redactPRContent(prContent{Body: neutralizeAttestationMarkers(scm.ProviderGitHub, "text "+in)}, "", "").Body
 		if strings.Contains(got, pipelineAttestationCommentPrefix) || hasPRAppendixMarkers(got) {

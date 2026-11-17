@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Enforce that a pull request was raised through the no-mistakes pipeline.
+"""Enforce that a pull request was raised through the alamino pipeline.
 
 This is the single shared implementation of the `PR must be raised via
-no-mistakes` gate. Enforcing repositories can call the `require-no-mistakes`
+alamino` gate. Enforcing repositories can call the `require-alamino`
 composite action instead of copying this logic into their own workflows; the
 inline copies drifted (several fleet copies never gained the head_sha bind),
 which is exactly what this file exists to prevent.
 
 The verdict is a pure function of the pull request body plus the PR head SHA:
 
-  1. the body carries the no-mistakes signature line;
+  1. the body carries the alamino signature line;
   2. the body carries a parseable v1 pipeline-step attestation comment;
   3. the attestation's head_sha equals the current PR head SHA, so a later push
      cannot pass on an older attestation;
@@ -54,7 +54,7 @@ catch is the case it exists for - a contributor who bypassed the pipeline by
 accident, a malformed or incomplete declaration, and an attestation left stale
 by a later push. It authorizes nothing against an author who forges the format
 on purpose. Authenticated (signed) attestations are the robust fix and are
-tracked separately as backlog item nm-signed-attestations-r1; do not build them
+tracked separately as backlog item alamino-signed-attestations-r1; do not build them
 into this file.
 """
 
@@ -68,9 +68,9 @@ import urllib.error
 import urllib.request
 
 SIGNATURE_MARKER = (
-    "Updates from [git push no-mistakes](https://github.com/kunchenguid/no-mistakes)"
+    "Updates from [git push alamino](https://github.com/mika-rafie/alamino)"
 )
-ATTESTATION_PREFIX = "<!-- no-mistakes-pipeline-attestation:v1 "
+ATTESTATION_PREFIX = "<!-- alamino-pipeline-attestation:v1 "
 ATTESTATION_CLOSING = " -->"
 
 # Fixed on purpose: these are the steps whose completion the gate certifies. A
@@ -224,14 +224,14 @@ def _payload_str(payload: dict, key: str) -> str:
 
 def exemption_reason(facts: Facts) -> str:
     """Return why this PR is exempt from the gate, or "" when it is not."""
-    authors = parse_list(os.environ.get("NM_EXEMPT_AUTHORS") or "")
+    authors = parse_list(os.environ.get("ALAMINO_EXEMPT_AUTHORS") or "")
     if facts.author and facts.author in authors:
         return f"author {facts.author} is a configured exempt author"
 
-    if parse_bool(os.environ.get("NM_EXEMPT_BOT_AUTHORS") or "") and facts.author.endswith("[bot]"):
+    if parse_bool(os.environ.get("ALAMINO_EXEMPT_BOT_AUTHORS") or "") and facts.author.endswith("[bot]"):
         return f"author {facts.author} is a bot and bot authors are exempt"
 
-    for pattern in parse_list(os.environ.get("NM_EXEMPT_HEAD_BRANCHES") or ""):
+    for pattern in parse_list(os.environ.get("ALAMINO_EXEMPT_HEAD_BRANCHES") or ""):
         if facts.head_ref and fnmatch.fnmatchcase(facts.head_ref, pattern):
             return f"head branch {facts.head_ref} matches exempt pattern {pattern}"
 
@@ -242,8 +242,8 @@ def check_signature(facts: Facts) -> None:
     if SIGNATURE_MARKER in facts.body:
         return
     fail(
-        "::error::This PR was not raised through no-mistakes.\n\n"
-        "Contributions to this repository must be submitted via 'git push no-mistakes'.\n"
+        "::error::This PR was not raised through alamino.\n\n"
+        "Contributions to this repository must be submitted via 'git push alamino'.\n"
         "That pipeline runs the required review/test/lint/CI steps and writes a\n"
         "deterministic '## Pipeline' section into the PR body containing:\n\n"
         f"    {SIGNATURE_MARKER}\n\n"
@@ -255,12 +255,12 @@ def check_signature(facts: Facts) -> None:
 def fail_missing_attestation(facts: Facts) -> "NoReturn":  # type: ignore[name-defined]
     fail(
         "::error::This PR is missing structured pipeline step attestation.\n\n"
-        f"This repository requires no-mistakes >= {VERSION_FLOOR} "
+        f"This repository requires alamino >= {VERSION_FLOOR} "
         f"({VERSION_FLOOR_PR}). "
-        "Older no-mistakes that only writes the signature line is not enough.\n\n"
+        "Older alamino that only writes the signature line is not enough.\n\n"
         "The PR body must include a comment of the form:\n"
-        '    <!-- no-mistakes-pipeline-attestation:v1 {"head_sha":"...","steps":[...]} -->\n\n'
-        "Contributions to this repository must be submitted via 'git push no-mistakes'.\n"
+        '    <!-- alamino-pipeline-attestation:v1 {"head_sha":"...","steps":[...]} -->\n\n'
+        "Contributions to this repository must be submitted via 'git push alamino'.\n"
         "See CONTRIBUTING.md for setup and the full workflow.\n\n"
         f"PR author: {facts.author}\n"
     )
@@ -299,7 +299,7 @@ def check_head_bind(facts: Facts, attested_head: str) -> None:
         f"attestation.head_sha: {attested_head or '(missing)'}\n"
         f"PR head: {facts.head_sha or '(missing)'}\n\n"
         "A later push must not pass on an older attestation. "
-        "Re-run 'git push no-mistakes' so the PR body attestation binds to the current head.\n\n"
+        "Re-run 'git push alamino' so the PR body attestation binds to the current head.\n\n"
         "See CONTRIBUTING.md for setup and the full workflow.\n\n"
         f"PR author: {facts.author}\n"
     )
@@ -330,11 +330,11 @@ def check_required_steps(facts: Facts, steps: list) -> None:
         return
     listed = ", ".join(incomplete)
     fail(
-        f"::error::Required no-mistakes pipeline steps are not completed: {listed}.\n\n"
+        f"::error::Required alamino pipeline steps are not completed: {listed}.\n\n"
         "This repository requires "
         f"{', '.join(REQUIRED_STEPS)} to have status=completed. "
         "Quota skips and agent skips are not compliant.\n\n"
-        "Contributions to this repository must be submitted via 'git push no-mistakes'.\n"
+        "Contributions to this repository must be submitted via 'git push alamino'.\n"
         "See CONTRIBUTING.md for setup and the full workflow.\n\n"
         f"PR author: {facts.author}\n"
     )
@@ -370,7 +370,7 @@ def check_test_command_override(facts: Facts, payload: dict) -> None:
         "without a recorded repository opt-in.\n\n"
         f"attestation test.override_reason: {override_reason}\n\n"
         "Set test.allow_approve_over_failure in the trusted default-branch "
-        ".no-mistakes.yaml to a non-empty reason if this repository intentionally "
+        ".alamino.yaml to a non-empty reason if this repository intentionally "
         "allows merging after that approval. The required check stays red "
         "until that opt-in is recorded.\n\n"
         "See CONTRIBUTING.md for setup and the full workflow.\n\n"
@@ -389,7 +389,7 @@ def main() -> int:
     # live-lookup gate exists to close.
     reason = exemption_reason(facts)
     if reason:
-        print(f"Skipping no-mistakes enforcement: {reason}.")
+        print(f"Skipping alamino enforcement: {reason}.")
         emit_output("exempt", "true")
         emit_output("exempt-reason", reason)
         # Exemption is an explicit caller policy, not evidence that the PR ran
@@ -412,19 +412,19 @@ def main() -> int:
         # downgrading to that stale source.
         fail(
             "::error::Could not verify this PR's live body/head via the GitHub API, so "
-            "require-no-mistakes cannot safely evaluate compliance: falling back to the "
+            "require-alamino cannot safely evaluate compliance: falling back to the "
             "workflow's own cached event payload risks certifying a stale, "
             "already-superseded verdict if this job was rerun (see verify.py's module "
             "docstring).\n\n"
             "Add `pull-requests: read` to this workflow's `permissions:` so "
-            "require-no-mistakes can verify against live PR state, or forward explicit "
+            "require-alamino can verify against live PR state, or forward explicit "
             "`pr-body`/`pr-head-sha` inputs to bypass the live lookup entirely.\n\n"
             f"PR author: {facts.author}\n"
         )
 
     check_signature(facts)
     label = f"PR #{facts.number}" if facts.number else "PR"
-    print(f"Found no-mistakes signature in {label} body.")
+    print(f"Found alamino signature in {label} body.")
 
     payload = parse_attestation(facts)
     check_head_bind(facts, payload["head_sha"])
@@ -434,7 +434,7 @@ def main() -> int:
     print("Found structurally compliant pipeline step attestation.")
     print(
         "::warning::PR-body attestation is author-editable and is not cryptographic proof "
-        "that no-mistakes produced it."
+        "that alamino produced it."
     )
     emit_output("compliant", "true")
     return 0

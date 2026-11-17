@@ -11,11 +11,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 type fixExecutionOptions struct {
@@ -332,7 +332,7 @@ func normalizeReviewedPath(value string) string {
 // Anchor integrity: sctx.Run.HeadSHA is the correct, un-clobberable anchor. It
 // is the *recorded* head the pipeline itself produced at its last commit - held
 // in the single daemon process's in-memory Run struct (one shared pointer per
-// run, never re-read from the DB mid-pipeline) and written only by no-mistakes
+// run, never re-read from the DB mid-pipeline) and written only by alamino
 // commit code (commit_fix / rebase / ci_fix / push). An out-of-band `git reset`
 // mutates the worktree HEAD on disk but cannot touch this field, so at the check
 // point the anchor still holds the reviewed head even after a clobber. The guard
@@ -426,7 +426,7 @@ func commitPipelineCorrectionWithCleanup(
 		return nil
 	}
 
-	emptyHooksDir, err := os.MkdirTemp("", "no-mistakes-correction-hooks-")
+	emptyHooksDir, err := os.MkdirTemp("", "alamino-correction-hooks-")
 	if err != nil {
 		return fmt.Errorf("prepare hook-free commit environment: %w", err)
 	}

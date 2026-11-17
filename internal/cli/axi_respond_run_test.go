@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 func TestAxiRespond_RunFlagAnswersTheNamedRunFromOutsideItsWorktree(t *testing.T) {
@@ -167,8 +167,8 @@ func TestAxiRespond_RunFlagGateHelpCarriesTheRunID(t *testing.T) {
 		t.Fatalf("respond --run: %v\n%s", err, out)
 	}
 	for _, want := range []string{
-		"`no-mistakes axi respond --run run-timeout --action approve`",
-		"`no-mistakes axi respond --run run-timeout --action skip`",
+		"`alamino axi respond --run run-timeout --action approve`",
+		"`alamino axi respond --run run-timeout --action skip`",
 		"axi logs --run run-timeout --step",
 	} {
 		if !strings.Contains(out, want) {
@@ -211,7 +211,7 @@ func TestAxiRespond_RunFlagRefusesAnEmptyValueInsteadOfAnsweringTheBranchRun(t *
 func TestAxiRespond_RunFlagRefusalHelpCarriesTheRunID(t *testing.T) {
 	fx := newAxiTimeoutFixture(t, axiTimeoutOpts{
 		respond: func(context.Context, json.RawMessage) (interface{}, error) {
-			return &ipc.RespondResult{OK: false, Refusal: "refused", Help: "inspect it with `no-mistakes axi status`, then retry"}, nil
+			return &ipc.RespondResult{OK: false, Refusal: "refused", Help: "inspect it with `alamino axi status`, then retry"}, nil
 		},
 	})
 	fx.setGetRun(func(context.Context, int) (*ipc.RunInfo, error) { return fx.awaiting(), nil })
@@ -222,7 +222,7 @@ func TestAxiRespond_RunFlagRefusalHelpCarriesTheRunID(t *testing.T) {
 	if !errors.As(err, &ee) || ee.code != 2 {
 		t.Fatalf("error = %v, want exit 2\n%s", err, out)
 	}
-	if !strings.Contains(out, "`no-mistakes axi status --run run-timeout`") {
+	if !strings.Contains(out, "`alamino axi status --run run-timeout`") {
 		t.Fatalf("refusal help dropped the run id:\n%s", out)
 	}
 }

@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/lifecycle"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/lifecycle"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Issue #1691: with --when-idle and runs active, update installs the new
@@ -54,7 +54,7 @@ func TestUpdaterRunWithActiveRunsInstallsAndSchedulesTheRestart(t *testing.T) {
 	if resetCalled {
 		t.Fatal("update must not restart the daemon immediately while a run is active")
 	}
-	if !strings.Contains(stdout.String(), "updated no-mistakes from v1.2.2 to v1.2.3; the daemon restarts after 1 active run finishes") {
+	if !strings.Contains(stdout.String(), "updated alamino from v1.2.2 to v1.2.3; the daemon restarts after 1 active run finishes") {
 		t.Fatalf("stdout should say what the restart waits for, got %q", stdout.String())
 	}
 	if !strings.Contains(stderr.String(), "will finish on the current version") || !strings.Contains(stderr.String(), "feature-a") {
@@ -86,7 +86,7 @@ func TestUpdaterRunWithActiveRunsReportsAFailedSchedule(t *testing.T) {
 	u.scheduleRestart = func() (*ipc.RestartStatusResult, error) { return nil, fmt.Errorf("connect to daemon: refused") }
 
 	err := u.run(context.Background())
-	if err == nil || !strings.Contains(err.Error(), "updated no-mistakes to v1.2.3, but could not schedule the daemon restart") || !strings.Contains(err.Error(), "daemon restart --when-idle") {
+	if err == nil || !strings.Contains(err.Error(), "updated alamino to v1.2.3, but could not schedule the daemon restart") || !strings.Contains(err.Error(), "daemon restart --when-idle") {
 		t.Fatalf("update should report the installed version and the way to finish, got %v", err)
 	}
 	if content, _ := os.ReadFile(execPath); string(content) != "new-binary" {
@@ -264,7 +264,7 @@ func stubDaemonFromAnotherBinary(t *testing.T) {
 	origRunning, origPath := daemonIsRunning, daemonExecutablePath
 	t.Cleanup(func() { daemonIsRunning, daemonExecutablePath = origRunning, origPath })
 	daemonIsRunning = func(*paths.Paths) (bool, error) { return true, nil }
-	daemonExecutablePath = func(*paths.Paths) (string, error) { return "/opt/other/no-mistakes", nil }
+	daemonExecutablePath = func(*paths.Paths) (string, error) { return "/opt/other/alamino", nil }
 }
 
 func TestUpdaterRunWhenIdleRefusesADaemonFromAnotherBinaryWhileRunsAreActive(t *testing.T) {
@@ -302,7 +302,7 @@ func TestUpdaterRunWhenIdleWithNoActiveRunFallsBackToTheTakeoverReset(t *testing
 	if !reset {
 		t.Fatal("update should reset the daemon through the plain takeover path")
 	}
-	if !strings.Contains(stdout.String(), "updated no-mistakes from v1.2.2 to v1.2.3") {
+	if !strings.Contains(stdout.String(), "updated alamino from v1.2.2 to v1.2.3") {
 		t.Fatalf("stdout = %q", stdout.String())
 	}
 }
@@ -332,8 +332,8 @@ func newActiveRunUpdater(t *testing.T) (*updater, string, *bytes.Buffer, *bytes.
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
-	archive := makeTarGz(t, map[string][]byte{"bin/no-mistakes": []byte("new-binary")})
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
+	archive := makeTarGz(t, map[string][]byte{"bin/alamino": []byte("new-binary")})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
 	var server *httptest.Server
@@ -375,13 +375,13 @@ func newActiveRunUpdater(t *testing.T) (*updater, string, *bytes.Buffer, *bytes.
 		t.Fatal(err)
 	}
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	return &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",

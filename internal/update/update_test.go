@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestUpdaterCheckLatestAndRefreshCache(t *testing.T) {
@@ -32,12 +32,12 @@ func TestUpdaterCheckLatestAndRefreshCache(t *testing.T) {
 		{
 			name:        "darwin tarball",
 			platform:    platformSpec{GOOS: "darwin", GOARCH: "arm64"},
-			archiveName: "no-mistakes-v1.2.3-darwin-arm64.tar.gz",
+			archiveName: "alamino-v1.2.3-darwin-arm64.tar.gz",
 		},
 		{
 			name:        "windows zip",
 			platform:    platformSpec{GOOS: "windows", GOARCH: "amd64"},
-			archiveName: "no-mistakes-v1.2.3-windows-amd64.zip",
+			archiveName: "alamino-v1.2.3-windows-amd64.zip",
 		},
 	}
 
@@ -58,7 +58,7 @@ func TestUpdaterCheckLatestAndRefreshCache(t *testing.T) {
 
 			cachePath := filepath.Join(t.TempDir(), "update-check.json")
 			u := &updater{
-				appName:        "no-mistakes",
+				appName:        "alamino",
 				currentVersion: "v1.2.2",
 				platform:       tt.platform,
 				manifestURL:    server.URL + "/releases/download/channels/channels.json",
@@ -99,9 +99,9 @@ func TestUpdaterRunReplacesExecutable(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -128,14 +128,14 @@ func TestUpdaterRunReplacesExecutable(t *testing.T) {
 	}))
 	defer server.Close()
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	stdout := new(bytes.Buffer)
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/releases/download/channels/channels.json",
@@ -155,7 +155,7 @@ func TestUpdaterRunReplacesExecutable(t *testing.T) {
 	if string(content) != "new-binary" {
 		t.Fatalf("executable content = %q", string(content))
 	}
-	if !strings.Contains(stdout.String(), "updated no-mistakes") {
+	if !strings.Contains(stdout.String(), "updated alamino") {
 		t.Fatalf("stdout = %q", stdout.String())
 	}
 }
@@ -164,9 +164,9 @@ func TestUpdaterRunResetsDaemonAfterUpdate(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -190,14 +190,14 @@ func TestUpdaterRunResetsDaemonAfterUpdate(t *testing.T) {
 	}))
 	defer server.Close()
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	resetCalled := false
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",
@@ -222,9 +222,9 @@ func TestUpdaterRunRefusesWithActiveRunsAndListsThem(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -275,7 +275,7 @@ func TestUpdaterRunRefusesWithActiveRunsAndListsThem(t *testing.T) {
 		t.Fatalf("close db: %v", err)
 	}
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -284,7 +284,7 @@ func TestUpdaterRunRefusesWithActiveRunsAndListsThem(t *testing.T) {
 	stderr := new(bytes.Buffer)
 	resetCalled := false
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",
@@ -377,9 +377,9 @@ func TestUpdaterRunFailsWhenDaemonResetFails(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -403,7 +403,7 @@ func TestUpdaterRunFailsWhenDaemonResetFails(t *testing.T) {
 	}))
 	defer server.Close()
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -411,7 +411,7 @@ func TestUpdaterRunFailsWhenDaemonResetFails(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",
@@ -451,9 +451,9 @@ func TestUpdaterRunFailsWhenDaemonResetLeavesDaemonOffline(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -477,14 +477,14 @@ func TestUpdaterRunFailsWhenDaemonResetLeavesDaemonOffline(t *testing.T) {
 	}))
 	defer server.Close()
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	stdout := new(bytes.Buffer)
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",
@@ -520,9 +520,9 @@ func TestUpdaterRunFailsWhenDaemonUsesDifferentExecutable(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -547,11 +547,11 @@ func TestUpdaterRunFailsWhenDaemonUsesDifferentExecutable(t *testing.T) {
 	defer server.Close()
 
 	execDir := t.TempDir()
-	execPath := filepath.Join(execDir, "no-mistakes")
+	execPath := filepath.Join(execDir, "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	otherExecPath := filepath.Join(execDir, "other-no-mistakes")
+	otherExecPath := filepath.Join(execDir, "other-alamino")
 	if err := os.WriteFile(otherExecPath, []byte("other-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -574,7 +574,7 @@ func TestUpdaterRunFailsWhenDaemonUsesDifferentExecutable(t *testing.T) {
 
 	resetCalled := false
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",
@@ -614,9 +614,9 @@ func TestUpdaterRunReplacesDaemonWhenDifferentExecutableConfirmed(t *testing.T) 
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -660,11 +660,11 @@ func TestUpdaterRunReplacesDaemonWhenDifferentExecutableConfirmed(t *testing.T) 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			execDir := t.TempDir()
-			execPath := filepath.Join(execDir, "no-mistakes")
+			execPath := filepath.Join(execDir, "alamino")
 			if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 				t.Fatal(err)
 			}
-			otherExecPath := filepath.Join(execDir, "other-no-mistakes")
+			otherExecPath := filepath.Join(execDir, "other-alamino")
 			if err := os.WriteFile(otherExecPath, []byte("other-binary"), 0o755); err != nil {
 				t.Fatal(err)
 			}
@@ -680,7 +680,7 @@ func TestUpdaterRunReplacesDaemonWhenDifferentExecutableConfirmed(t *testing.T) 
 			stdout := new(bytes.Buffer)
 			stderr := new(bytes.Buffer)
 			u := &updater{
-				appName:        "no-mistakes",
+				appName:        "alamino",
 				currentVersion: "v1.2.2",
 				platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 				manifestURL:    server.URL + "/channels.json",
@@ -711,7 +711,7 @@ func TestUpdaterRunReplacesDaemonWhenDifferentExecutableConfirmed(t *testing.T) 
 			if string(content) != "new-binary" {
 				t.Fatalf("executable content = %q", string(content))
 			}
-			if !strings.Contains(stdout.String(), "updated no-mistakes from v1.2.2 to v1.2.3") {
+			if !strings.Contains(stdout.String(), "updated alamino from v1.2.2 to v1.2.3") {
 				t.Fatalf("stdout should report successful update, got %q", stdout.String())
 			}
 			for _, want := range []string{resolveExecutablePath(otherExecPath), resolveExecutablePath(execPath), tt.want} {
@@ -729,9 +729,9 @@ func TestUpdaterRunFailsWhenDaemonExecutableCannotBeResolved(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
 	archive := makeTarGz(t, map[string][]byte{
-		"bin/no-mistakes": []byte("new-binary"),
+		"bin/alamino": []byte("new-binary"),
 	})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
@@ -756,7 +756,7 @@ func TestUpdaterRunFailsWhenDaemonExecutableCannotBeResolved(t *testing.T) {
 	defer server.Close()
 
 	execDir := t.TempDir()
-	execPath := filepath.Join(execDir, "no-mistakes")
+	execPath := filepath.Join(execDir, "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -779,7 +779,7 @@ func TestUpdaterRunFailsWhenDaemonExecutableCannotBeResolved(t *testing.T) {
 
 	resetCalled := false
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",
@@ -823,7 +823,7 @@ func TestUpdaterRunSkipsDaemonExecutableCheckWhenAlreadyUpToDate(t *testing.T) {
 	}))
 	defer server.Close()
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("current-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -846,7 +846,7 @@ func TestUpdaterRunSkipsDaemonExecutableCheckWhenAlreadyUpToDate(t *testing.T) {
 
 	stdout := new(bytes.Buffer)
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",
@@ -880,7 +880,7 @@ func TestUpdaterMaybeNotifyAndCheck(t *testing.T) {
 	stderr := new(bytes.Buffer)
 	spawned := false
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		cachePath:      cachePath,
 		stderr:         stderr,
@@ -896,7 +896,7 @@ func TestUpdaterMaybeNotifyAndCheck(t *testing.T) {
 
 	u.maybeNotifyAndCheck([]string{"status"})
 
-	if !strings.Contains(stderr.String(), "A new version of no-mistakes is available: v1.2.2 -> v1.2.3") {
+	if !strings.Contains(stderr.String(), "A new version of alamino is available: v1.2.2 -> v1.2.3") {
 		t.Fatalf("stderr = %q", stderr.String())
 	}
 	if !spawned {
@@ -934,7 +934,7 @@ func TestUpdaterCheckLatestBetaUsesManifest(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.3.0-beta.2-darwin-arm64.tar.gz"
+	archiveName := "alamino-v1.3.0-beta.2-darwin-arm64.tar.gz"
 	var apiHits []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.URL.Path, "/repos/") {
@@ -947,7 +947,7 @@ func TestUpdaterCheckLatestBetaUsesManifest(t *testing.T) {
 	defer server.Close()
 
 	u := &updater{
-		appName:            "no-mistakes",
+		appName:            "alamino",
 		currentVersion:     "v1.2.3",
 		platform:           platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:        server.URL + "/releases/download/channels/channels.json",
@@ -1006,14 +1006,14 @@ func fakeNixStoreBinary(t *testing.T) (storeBinary, profileLink string) {
 		t.Fatal(err)
 	}
 	store := filepath.Join(root, "nix", "store")
-	storeBinary = filepath.Join(store, "abc123-no-mistakes-1.2.2", "bin", "no-mistakes")
+	storeBinary = filepath.Join(store, "abc123-alamino-1.2.2", "bin", "alamino")
 	if err := os.MkdirAll(filepath.Dir(storeBinary), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(storeBinary, []byte("store-binary"), 0o555); err != nil {
 		t.Fatal(err)
 	}
-	profileLink = filepath.Join(root, "profile", "bin", "no-mistakes")
+	profileLink = filepath.Join(root, "profile", "bin", "alamino")
 	if err := os.MkdirAll(filepath.Dir(profileLink), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1037,7 +1037,7 @@ func TestInNixStore(t *testing.T) {
 	if inNixStore(nixStoreDir) {
 		t.Fatal("the store directory itself is not an installed binary")
 	}
-	userOwned := filepath.Join(t.TempDir(), "no-mistakes")
+	userOwned := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(userOwned, []byte("binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1055,7 +1055,7 @@ func TestUpdaterRunRefusesNixStoreInstall(t *testing.T) {
 
 	stdout := new(bytes.Buffer)
 	u := &updater{
-		appName:         "no-mistakes",
+		appName:         "alamino",
 		currentVersion:  "v1.2.2",
 		platform:        platformSpec{GOOS: "linux", GOARCH: "amd64"},
 		manifestURL:     server.URL + "/releases/download/channels/channels.json",
@@ -1093,7 +1093,7 @@ func TestUpdaterNixStoreInstallNeverAdvertisesUpdate(t *testing.T) {
 	stderr := new(bytes.Buffer)
 	spawned := false
 	u := &updater{
-		appName:         "no-mistakes",
+		appName:         "alamino",
 		currentVersion:  "v1.2.2",
 		cachePath:       cachePath,
 		nixStoreInstall: true,

@@ -11,18 +11,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	gitpkg "github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	gitpkg "github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
-// Issue #1555: two no-mistakes homes (two NM_HOMEs, typically two OS
+// Issue #1555: two alamino homes (two ALAMINO_HOMEs, typically two OS
 // accounts) share one .git through a linked worktree. Both derive the same
 // repository id from the main checkout, so the shared .git/config holds one
-// remote.no-mistakes.url, the first home's. init must never rewrite it from
+// remote.alamino.url, the first home's. init must never rewrite it from
 // the second home, on a fresh init or on a refresh.
 
-// sharedHome is one no-mistakes home gating a checkout whose .git it shares.
+// sharedHome is one alamino home gating a checkout whose .git it shares.
 type sharedHome struct {
 	p   *paths.Paths
 	d   *db.DB
@@ -54,7 +54,7 @@ func (h *sharedHome) act(t *testing.T) {
 	t.Setenv("GIT_CONFIG_GLOBAL", h.gitconfig)
 }
 
-// init runs Init as this home: with its NM_HOME paths, its database, and its
+// init runs Init as this home: with its ALAMINO_HOME paths, its database, and its
 // own global git config.
 func (h *sharedHome) init(t *testing.T) (*db.Repo, bool, error) {
 	t.Helper()
@@ -115,7 +115,7 @@ func setupSharedGit(t *testing.T, homeLeaf string) (a, b *sharedHome) {
 	return a, b
 }
 
-// literalGateURL is remote.no-mistakes.url exactly as the shared .git/config
+// literalGateURL is remote.alamino.url exactly as the shared .git/config
 // holds it, before any insteadOf rewrite.
 func literalGateURL(t *testing.T, dir string) string {
 	t.Helper()
@@ -142,12 +142,12 @@ const recipePrefix = "  git config --global "
 func assertSharedHomeRefusal(t *testing.T, err error, otherGate, ownGate string) (recipe string) {
 	t.Helper()
 	if err == nil {
-		t.Fatal("init must refuse a gate remote that belongs to another no-mistakes home")
+		t.Fatal("init must refuse a gate remote that belongs to another alamino home")
 	}
 	msg := err.Error()
 	for _, want := range []string{
-		`remote "no-mistakes" already exists with url ` + strconv.Quote(otherGate),
-		"this .git is shared with another NM_HOME",
+		`remote "alamino" already exists with url ` + strconv.Quote(otherGate),
+		"this .git is shared with another ALAMINO_HOME",
 		"this home's gate is " + ownGate,
 	} {
 		if !strings.Contains(msg, want) {
@@ -168,7 +168,7 @@ func assertSharedHomeRefusal(t *testing.T, err error, otherGate, ownGate string)
 
 // The silent overwrite the issue reproduced: B maps A's gate onto its own with
 // a url.insteadOf rewrite, and its refresh then wrote B's path into the shared
-// config, so A's next `git push no-mistakes` reached B's gate.
+// config, so A's next `git push alamino` reached B's gate.
 func TestInitRefreshLeavesAnotherHomesGateRemoteAloneUnderInsteadOf(t *testing.T) {
 	a, b := setupSharedGit(t, "")
 	aGate := literalGateURL(t, a.dir)
@@ -286,9 +286,9 @@ func TestInitRefusalRecipeSurvivesShellSyntaxInGatePaths(t *testing.T) {
 	}
 }
 
-// A refresh keeps the promise a fresh init already made: a no-mistakes remote
+// A refresh keeps the promise a fresh init already made: an alamino remote
 // the operator pointed somewhere else is theirs, not stale gate wiring.
-func TestInitRefreshDoesNotOverwriteACustomNoMistakesRemote(t *testing.T) {
+func TestInitRefreshDoesNotOverwriteACustomAlaminoRemote(t *testing.T) {
 	workDir := setupTestRepo(t)
 	p := paths.WithRoot(t.TempDir())
 	if err := p.EnsureDirs(); err != nil {
@@ -305,10 +305,10 @@ func TestInitRefreshDoesNotOverwriteACustomNoMistakesRemote(t *testing.T) {
 	}
 
 	_, _, err := Init(ctx, d, p, workDir)
-	if err == nil || !strings.Contains(err.Error(), `remote "no-mistakes" already exists with url `+strconv.Quote(customRemote)) {
+	if err == nil || !strings.Contains(err.Error(), `remote "alamino" already exists with url `+strconv.Quote(customRemote)) {
 		t.Fatalf("refresh must refuse a custom remote, got %v", err)
 	}
-	if strings.Contains(err.Error(), "NM_HOME") {
+	if strings.Contains(err.Error(), "ALAMINO_HOME") {
 		t.Errorf("a custom remote is not another home's gate, got:\n%v", err)
 	}
 	if got := literalGateURL(t, workDir); got != customRemote {
@@ -429,7 +429,7 @@ func TestInitRefusesAnotherHomesGateWhenOnlyFetchesReachThisGate(t *testing.T) {
 
 // A remote with several URLs pushes to all of them, so init cannot judge it
 // from one and leaves it alone.
-func TestInitRefusesANoMistakesRemoteWithSeveralURLs(t *testing.T) {
+func TestInitRefusesAAlaminoRemoteWithSeveralURLs(t *testing.T) {
 	workDir := setupTestRepo(t)
 	p := paths.WithRoot(t.TempDir())
 	if err := p.EnsureDirs(); err != nil {
@@ -458,17 +458,17 @@ func TestInitRefusesANoMistakesRemoteWithSeveralURLs(t *testing.T) {
 
 func TestIsSameRepoGateOfAnotherHome(t *testing.T) {
 	root := resolveSymlinks(t, t.TempDir())
-	bareDir := filepath.Join(root, "b", ".no-mistakes", "repos", "abc123.git")
+	bareDir := filepath.Join(root, "b", ".alamino", "repos", "abc123.git")
 	for _, tc := range []struct {
 		name string
 		url  string
 		want bool
 	}{
-		{"same id under another home", filepath.Join(root, "a", ".no-mistakes", "repos", "abc123.git"), true},
-		{"another repository's id", filepath.Join(root, "a", ".no-mistakes", "repos", "def456.git"), false},
+		{"same id under another home", filepath.Join(root, "a", ".alamino", "repos", "abc123.git"), true},
+		{"another repository's id", filepath.Join(root, "a", ".alamino", "repos", "def456.git"), false},
 		{"not under a repos dir", filepath.Join(root, "a", "custom", "abc123.git"), false},
 		{"relative path", filepath.Join("repos", "abc123.git"), false},
-		{"file URL", "file://" + filepath.ToSlash(filepath.Join(root, "a", ".no-mistakes", "repos", "abc123.git")), false},
+		{"file URL", "file://" + filepath.ToSlash(filepath.Join(root, "a", ".alamino", "repos", "abc123.git")), false},
 		{"network URL", "git@example.com:repos/abc123.git", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

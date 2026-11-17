@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // optOutAgent builds an adapter with the trusted opt-out ON, mirroring how the
@@ -317,13 +317,13 @@ func TestOverlayPathShellSafe(t *testing.T) {
 		goos string
 		want bool
 	}{
-		{"windows temp path is safe", `C:\Users\runneradmin\AppData\Local\Temp\nm-omp-gate-1.yml`, "windows", true},
-		{"windows path with space is unsafe", `C:\Users\John Doe\Temp\nm-omp-gate-1.yml`, "windows", false},
-		{"posix temp path is safe", "/tmp/nm-omp-gate-1.yml", "linux", true},
-		{"posix relative-resolved path is safe", "/var/folders/xy/T/nm-omp-gate-1.yml", "darwin", true},
-		{"backslash is unsafe off windows", `/tmp/a\b/nm-omp-gate-1.yml`, "linux", false},
-		{"posix path with space is unsafe", "/tmp/a b/nm-omp-gate-1.yml", "linux", false},
-		{"quote is unsafe on windows too", `C:\Temp\a"b\nm-omp-gate-1.yml`, "windows", false},
+		{"windows temp path is safe", `C:\Users\runneradmin\AppData\Local\Temp\alamino-omp-gate-1.yml`, "windows", true},
+		{"windows path with space is unsafe", `C:\Users\John Doe\Temp\alamino-omp-gate-1.yml`, "windows", false},
+		{"posix temp path is safe", "/tmp/alamino-omp-gate-1.yml", "linux", true},
+		{"posix relative-resolved path is safe", "/var/folders/xy/T/alamino-omp-gate-1.yml", "darwin", true},
+		{"backslash is unsafe off windows", `/tmp/a\b/alamino-omp-gate-1.yml`, "linux", false},
+		{"posix path with space is unsafe", "/tmp/a b/alamino-omp-gate-1.yml", "linux", false},
+		{"quote is unsafe on windows too", `C:\Temp\a"b\alamino-omp-gate-1.yml`, "windows", false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

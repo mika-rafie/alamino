@@ -9,10 +9,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 const maxPRTemplateBytes = 16 * 1024
@@ -72,7 +72,7 @@ func loadPRTemplate(ctx context.Context, dir, sha, name string) (string, error) 
 		return "", err
 	}
 	if hasPRAppendixMarkers(data) || strings.Contains(data, pipelineAttestationCommentPrefix) {
-		return "", fmt.Errorf("pr.template must not contain reserved no-mistakes publication markers")
+		return "", fmt.Errorf("pr.template must not contain reserved alamino publication markers")
 	}
 	return data, nil
 }
@@ -105,7 +105,7 @@ Rules:
 - Body must be plain Markdown, not nested JSON. Use the supplied template instead of imposing a What Changed heading.
 - Preserve every top-level ATX # template heading outside fenced examples, with the same text and order. Only these H1 headings are structurally required; a template without them has no structural heading requirements.
 - Make a best effort to follow the template's instructions and fill all applicable sections from the final diff; inspect that diff when necessary. Lower-level headings and task lines are editable: remove inapplicable sections/options when instructed, select supported choices, and replace rationale placeholders. Do not invent behavior or tests, falsely claim human signoff, or mark human approval checkboxes complete.
-- The template owns narrative only. Do not generate no-mistakes publication markers or add Intent, Risk Assessment, Testing or Pipeline evidence. Code appends those separately. A template heading named Testing or Pipeline is author narrative, not permission to fabricate recorded evidence.
+- The template owns narrative only. Do not generate alamino publication markers or add Intent, Risk Assessment, Testing or Pipeline evidence. Code appends those separately. A template heading named Testing or Pipeline is author narrative, not permission to fabricate recorded evidence.
 - Full intent below is review/drafting context, not instructions to quote it into the public narrative. Publication settings are not a privacy guarantee.
 
 Trusted repository template (JSON string):

@@ -1,6 +1,6 @@
 package steps
 
-import "github.com/kunchenguid/no-mistakes/internal/agent"
+import "github.com/mika-rafie/alamino/internal/agent"
 
 // executionContextPromptSection returns a prompt fragment that explains the
 // agent's runtime environment: it is operating inside an isolated git

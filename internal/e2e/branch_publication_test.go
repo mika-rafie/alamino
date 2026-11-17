@@ -9,7 +9,7 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestAxiBranchPublicationSnapshotJourney(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAxiBranchPublicationSnapshotJourney(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if parked.(map[string]any)["run"].(map[string]any)["current_step"] != "review" || strings.Contains(out, "command: no-mistakes axi respond") {
+	if parked.(map[string]any)["run"].(map[string]any)["current_step"] != "review" || strings.Contains(out, "command: alamino axi respond") {
 		t.Fatalf("explicit scope lost its phase or offered a mutation: %s", out)
 	}
 	h.Respond(second.ID, types.StepReview, types.ActionApprove)

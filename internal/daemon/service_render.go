@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 func serviceDefinitionMatchesRoot(data []byte, p *paths.Paths) bool {
@@ -121,7 +121,7 @@ func isProxyEnvKey(key string) bool {
 }
 
 func isServiceEnvKey(key string) bool {
-	return key == "NO_MISTAKES_TELEMETRY" || isProxyEnvKey(key)
+	return key == "ALAMINO_TELEMETRY" || isProxyEnvKey(key)
 }
 
 // systemdUnitProxyEnv extracts forwarded proxy and telemetry `Environment=`

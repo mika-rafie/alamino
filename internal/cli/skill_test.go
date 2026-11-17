@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/skill"
+	"github.com/mika-rafie/alamino/internal/skill"
 )
 
 func TestSkillInstallOutsideRepository(t *testing.T) {
@@ -15,7 +15,7 @@ func TestSkillInstallOutsideRepository(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	state := filepath.Join(t.TempDir(), "state")
-	t.Setenv("NM_HOME", state)
+	t.Setenv("ALAMINO_HOME", state)
 	t.Chdir(t.TempDir())
 
 	for _, base := range skill.InstallBases {

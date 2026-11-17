@@ -10,12 +10,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Every fixture in this file uses a synthetic home. A test fixture is published
@@ -23,7 +23,7 @@ import (
 // real account may appear here.
 const (
 	fixtureHome         = "/home/testuser"
-	fixtureWorktreePath = fixtureHome + "/.no-mistakes/worktrees/ab12cd/1/svc"
+	fixtureWorktreePath = fixtureHome + "/.alamino/worktrees/ab12cd/1/svc"
 	fixtureWindowsHome  = `C:\Users\testuser`
 )
 
@@ -37,7 +37,7 @@ const (
 // on Windows. With a POSIX fixture the artifact is dropped before rendering, so
 // the case stops testing redaction and quietly asserts nothing - which is
 // exactly how these passed on Linux and macOS while failing on windows-git.
-var fixtureEvidenceDir = filepath.Join(fixtureNativeHome(), ".no-mistakes", "evidence", "run-1")
+var fixtureEvidenceDir = filepath.Join(fixtureNativeHome(), ".alamino", "evidence", "run-1")
 
 func fixtureNativeHome() string {
 	if runtime.GOOS == "windows" {
@@ -118,7 +118,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 					Path:  filepath.Join(fixtureEvidenceDir, "pytest.log"),
 				}},
 			}),
-			wantVisible: []string{"pytest output", fixtureRedactedPath(".no-mistakes", "evidence", "run-1", "pytest.log")},
+			wantVisible: []string{"pytest output", fixtureRedactedPath(".alamino", "evidence", "run-1", "pytest.log")},
 		},
 		{
 			name:        "pytest rootdir header in captured output",
@@ -131,7 +131,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 					Content: "platform linux -- Python 3.12.3, pytest-8.2.0\nrootdir: " + fixtureWorktreePath + "\nconfigfile: pyproject.toml\n2 passed in 0.31s",
 				}},
 			}),
-			wantVisible: []string{"rootdir: ~/.no-mistakes/worktrees/ab12cd/1/svc", "2 passed in 0.31s"},
+			wantVisible: []string{"rootdir: ~/.alamino/worktrees/ab12cd/1/svc", "2 passed in 0.31s"},
 		},
 		{
 			name:        "worktree path assignment inside captured output",
@@ -144,7 +144,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 					Content: `WORKTREE = "` + fixtureWorktreePath + `"` + "\nDEBUG = False",
 				}},
 			}),
-			wantVisible: []string{`WORKTREE = "~/.no-mistakes/worktrees/ab12cd/1/svc"`, "DEBUG = False"},
+			wantVisible: []string{`WORKTREE = "~/.alamino/worktrees/ab12cd/1/svc"`, "DEBUG = False"},
 		},
 		{
 			name:        "the same path repeated many times",
@@ -161,7 +161,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 						"basetemp: " + fixtureHome + "/tmp/pytest-of-testuser",
 				}},
 			}),
-			wantVisible: []string{"cachedir: ~/.no-mistakes/worktrees/ab12cd/1/svc/.pytest_cache"},
+			wantVisible: []string{"cachedir: ~/.alamino/worktrees/ab12cd/1/svc/.pytest_cache"},
 		},
 		{
 			name: "captured output embedded from an evidence file on disk",
@@ -179,7 +179,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 					Path:  "%EVIDENCEFILE%",
 				}},
 			}),
-			wantVisible: []string{"rootdir: ~/.no-mistakes/worktrees/ab12cd/1/svc", "1 passed in 0.10s"},
+			wantVisible: []string{"rootdir: ~/.alamino/worktrees/ab12cd/1/svc", "1 passed in 0.10s"},
 		},
 		{
 			name:        "macOS home root",
@@ -189,10 +189,10 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 				Artifacts: []types.TestArtifact{{
 					Kind:    "command-output",
 					Label:   "pytest",
-					Content: "rootdir: /Users/testuser/.no-mistakes/worktrees/ab12cd/1/svc",
+					Content: "rootdir: /Users/testuser/.alamino/worktrees/ab12cd/1/svc",
 				}},
 			}),
-			wantVisible: []string{"rootdir: ~/.no-mistakes/worktrees/ab12cd/1/svc"},
+			wantVisible: []string{"rootdir: ~/.alamino/worktrees/ab12cd/1/svc"},
 		},
 		{
 			name:        "windows home root",
@@ -202,10 +202,10 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 				Artifacts: []types.TestArtifact{{
 					Kind:    "command-output",
 					Label:   "pytest",
-					Content: `rootdir: C:\Users\testuser\.no-mistakes\worktrees\ab12cd\1\svc`,
+					Content: `rootdir: C:\Users\testuser\.alamino\worktrees\ab12cd\1\svc`,
 				}},
 			}),
-			wantVisible: []string{`rootdir: ~\.no-mistakes\worktrees\ab12cd\1\svc`},
+			wantVisible: []string{`rootdir: ~\.alamino\worktrees\ab12cd\1\svc`},
 		},
 		{
 			name:        "testing summary prose",
@@ -213,7 +213,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 			testFindings: findingsJSON(t, types.Findings{
 				TestingSummary: "Ran the suite from " + fixtureWorktreePath + " and captured the output.",
 			}),
-			wantVisible: []string{"Ran the suite from ~/.no-mistakes/worktrees/ab12cd/1/svc"},
+			wantVisible: []string{"Ran the suite from ~/.alamino/worktrees/ab12cd/1/svc"},
 		},
 		{
 			name:        "tested command detail",
@@ -222,7 +222,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 				Items:  []types.Finding{{Severity: types.FindingSeverityError, Description: "one assertion failed"}},
 				Tested: []string{"python -m pytest " + fixtureWorktreePath + "/tests/test_api.py"},
 			}),
-			wantVisible: []string{"python -m pytest ~/.no-mistakes/worktrees/ab12cd/1/svc/tests/test_api.py"},
+			wantVisible: []string{"python -m pytest ~/.alamino/worktrees/ab12cd/1/svc/tests/test_api.py"},
 		},
 		{
 			name:        "review finding file and description",
@@ -236,7 +236,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 				}},
 				RiskLevel: "low",
 			}),
-			wantVisible: []string{"~/.no-mistakes/worktrees/ab12cd/1/svc/api/handler.py", "~/tmp/fixture.json"},
+			wantVisible: []string{"~/.alamino/worktrees/ab12cd/1/svc/api/handler.py", "~/tmp/fixture.json"},
 		},
 		{
 			name:        "review risk rationale",
@@ -251,7 +251,7 @@ func TestPRStep_BuildPRContentRedactsAbsoluteHomePaths(t *testing.T) {
 			name:          "failed step error text",
 			evidenceDir:   fixtureEvidenceDir,
 			testStepError: "open " + filepath.Join(fixtureEvidenceDir, "pytest.log") + ": no such file or directory",
-			wantVisible:   []string{"open " + fixtureRedactedPath(".no-mistakes", "evidence", "run-1", "pytest.log") + ": no such file or directory"},
+			wantVisible:   []string{"open " + fixtureRedactedPath(".alamino", "evidence", "run-1", "pytest.log") + ": no such file or directory"},
 		},
 		{
 			name:        "agent-authored title and what-changed body",
@@ -326,7 +326,7 @@ func TestPRStep_ExecuteRedactsAbsoluteHomePathsBeforePublishing(t *testing.T) {
 			t.Fatalf("published PR content leaked %q:\n%s", needle, published)
 		}
 	}
-	for _, want := range []string{"rootdir: ~/.no-mistakes/worktrees/ab12cd/1/svc", "evidence now lands under " + fixtureRedactedPath(".no-mistakes", "evidence", "run-1")} {
+	for _, want := range []string{"rootdir: ~/.alamino/worktrees/ab12cd/1/svc", "evidence now lands under " + fixtureRedactedPath(".alamino", "evidence", "run-1")} {
 		if !strings.Contains(published, want) {
 			t.Fatalf("expected %q in published PR content:\n%s", want, published)
 		}
@@ -343,7 +343,7 @@ func TestPRStep_BuildPRContentRedactsAfterClampingToHostLimit(t *testing.T) {
 		evidenceDir: fixtureEvidenceDir,
 		agentBody: "## What Changed\n\n- evidence now lands under " + fixtureEvidenceDir + "\n" +
 			strings.Repeat("- and a long tail of change notes that overruns the host cap\n", 200),
-		wantVisible: []string{"evidence now lands under " + fixtureRedactedPath(".no-mistakes", "evidence", "run-1")},
+		wantVisible: []string{"evidence now lands under " + fixtureRedactedPath(".alamino", "evidence", "run-1")},
 	}
 	limit := scm.MaxPRBodyChars(scm.ProviderAzureDevOps)
 	if limit <= 0 {
@@ -533,7 +533,7 @@ func artifactPathDescription(t *testing.T, schema map[string]any) string {
 // The renderer's allowlist for an absolute artifact path is the worktree or the
 // run's evidence directory (see sanitizeArtifactPath); a path under neither is
 // dropped rather than rendered. The evidence directory defaults to
-// <NM_HOME>/evidence/<run-id> and NM_HOME defaults to a directory under the
+// <ALAMINO_HOME>/evidence/<run-id> and ALAMINO_HOME defaults to a directory under the
 // operator's home, so a schema clause forbidding home directory paths outright
 // would forbid the one path an evidence artifact has to report - an obedient
 // agent would drop its own evidence.
@@ -569,7 +569,7 @@ func TestTestFindingsSchema_KeepsEvidenceDirectoryPathsReportable(t *testing.T) 
 			}),
 			wantVisible: []string{
 				"captured session",
-				fixtureRedactedPath(".no-mistakes", "evidence", "run-1", "session.log"),
+				fixtureRedactedPath(".alamino", "evidence", "run-1", "session.log"),
 			},
 		}
 		content := buildHomePathLeakPRContent(t, tc)
@@ -600,11 +600,11 @@ func TestTestFindingsSchema_KeepsEvidenceDirectoryPathsReportable(t *testing.T) 
 }
 
 // TestPRStep_BuildPRContentRedactsRunWorktreePaths covers evidence text inlined
-// into the PR body: the run worktree and any run worktree under an NM_HOME
+// into the PR body: the run worktree and any run worktree under an ALAMINO_HOME
 // outside the home directory, which home redaction never sees (#1611).
 func TestPRStep_BuildPRContentRedactsRunWorktreePaths(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	dir, baseSHA, headSHA := setupGitRepo(t)
 	ag := &mockAgent{
 		name: "test",
@@ -661,7 +661,7 @@ func TestPRStep_SuppliedBodyIsRedactedBeforePublishing(t *testing.T) {
 			t.Fatalf("supplied body leaked %q:\n%s", needle, got.Body)
 		}
 	}
-	if !strings.Contains(got.Body, "Evidence now lands under "+fixtureRedactedPath(".no-mistakes", "evidence", "run-1")) {
+	if !strings.Contains(got.Body, "Evidence now lands under "+fixtureRedactedPath(".alamino", "evidence", "run-1")) {
 		t.Fatalf("supplied body was not redacted in place:\n%s", got.Body)
 	}
 }

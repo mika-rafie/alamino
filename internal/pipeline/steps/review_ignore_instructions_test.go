@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 func TestReviewStep_IgnorePatternsCannotWaiveTrustedInstructions(t *testing.T) {
@@ -46,18 +46,18 @@ func TestReviewStep_IgnorePatternsCannotWaiveTrustedInstructions(t *testing.T) {
 		{
 			name:   "partially_ignored",
 			pushed: "ignore_patterns: ['*.txt']\n", trusted: trustedRule,
-			wantPaths: []string{".no-mistakes.yaml", "feature.txt"}, wantRule: rule,
+			wantPaths: []string{".alamino.yaml", "feature.txt"}, wantRule: rule,
 		},
 		{
 			name:   "no_ignore_control",
 			pushed: "ignore_patterns: []\n", trusted: trustedRule,
-			wantPaths: []string{".no-mistakes.yaml", "feature.txt"}, wantRule: rule,
+			wantPaths: []string{".alamino.yaml", "feature.txt"}, wantRule: rule,
 		},
 		{
 			name:      "configuration_itself_is_claimed",
 			pushed:    "ignore_patterns: ['*']\n",
-			trusted:   "review:\n  path_instructions:\n    - path: '.no-mistakes.yaml'\n      instructions: 'Inspect configuration changes.'\n",
-			wantPaths: []string{".no-mistakes.yaml"}, wantRule: "Inspect configuration changes.",
+			trusted:   "review:\n  path_instructions:\n    - path: '.alamino.yaml'\n      instructions: 'Inspect configuration changes.'\n",
+			wantPaths: []string{".alamino.yaml"}, wantRule: "Inspect configuration changes.",
 		},
 		{
 			name:   "trusted_ignore_still_skips",
@@ -89,7 +89,7 @@ func TestReviewStep_IgnorePatternsCannotWaiveTrustedInstructions(t *testing.T) {
 				gitCmd(t, dir, "reset", "--hard", baseSHA)
 				headSHA = baseSHA
 			} else {
-				if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte(tc.pushed), 0o600); err != nil {
+				if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte(tc.pushed), 0o600); err != nil {
 					t.Fatal(err)
 				}
 				gitCmd(t, dir, "add", "-A")

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const protectedPathFindingID = "protected-path-refusal"

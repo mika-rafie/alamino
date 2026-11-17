@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Finding represents a single code review or lint finding.
@@ -290,7 +290,7 @@ var testFindingsSchema = json.RawMessage(`{
 		"verdict": {
 			"type": "string",
 			"enum": ["go", "no-go", "inconclusive", "no-surface"],
-			"description": "go when every scenario that could be driven passed and nothing untested puts the intent in doubt; no-go when a scenario failed or the change is not safe to ship; inconclusive when the change has a live-exercisable product surface but too little could be driven live to judge; no-surface when this change has no runtime product surface no-mistakes can drive live"
+			"description": "go when every scenario that could be driven passed and nothing untested puts the intent in doubt; no-go when a scenario failed or the change is not safe to ship; inconclusive when the change has a live-exercisable product surface but too little could be driven live to judge; no-surface when this change has no runtime product surface alamino can drive live"
 		}
 	},
 	"required": ["findings", "summary", "tested", "testing_summary", "artifacts", "scenarios", "verdict"]
@@ -357,7 +357,7 @@ func WithCustomGates(core []pipeline.Step, gates []config.Gate) []pipeline.Step 
 }
 
 // AllSteps returns the fixed core pipeline step sequence.
-// When NM_DEMO=1, it returns mock steps for demo recordings.
+// When ALAMINO_DEMO=1, it returns mock steps for demo recordings.
 func AllSteps() []pipeline.Step {
 	if IsDemoMode() {
 		return DemoSteps()

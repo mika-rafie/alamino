@@ -4,15 +4,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // Issue #1691: `daemon restart --when-idle` with runs active schedules the
 // restart on the running daemon instead of refusing or stopping it.
 func TestDaemonRestartWhenIdleSchedulesInsteadOfStopping(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	createLifecycleGuardRuns(t, paths.WithRoot(nmHome))
 
 	stopCalled, scheduled := false, false

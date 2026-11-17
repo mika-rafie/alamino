@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin/fakeplugin"
+	"github.com/mika-rafie/alamino/internal/scm/plugin/fakeplugin"
 )
 
 func TestIsFakeProviderPlugin(t *testing.T) {
@@ -15,7 +15,7 @@ func TestIsFakeProviderPlugin(t *testing.T) {
 		{argv0: fakeplugin.ExecutableName, want: true},
 		{argv0: fakeplugin.ExecutableName + ".exe", want: true},
 		{argv0: fakeplugin.ExecutableName + ".EXE", want: true},
-		{argv0: "NM-FAKE-PROVIDER-PLUGIN.exe", want: true},
+		{argv0: "ALAMINO-FAKE-PROVIDER-PLUGIN.exe", want: true},
 		{argv0: filepath.Join("usr", "local", "bin", fakeplugin.ExecutableName), want: true},
 		{argv0: filepath.Join("C:", "bin", fakeplugin.ExecutableName+".EXE"), want: true},
 		{argv0: "gh", want: false},

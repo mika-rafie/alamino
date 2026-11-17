@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func TestEnsureDaemonUsesCurrentExecutableAllowsWindowsCaseDifferences(t *testing.T) {
@@ -29,11 +29,11 @@ func TestEnsureDaemonUsesCurrentExecutableAllowsWindowsCaseDifferences(t *testin
 		return true, nil
 	}
 	daemonExecutablePath = func(*paths.Paths) (string, error) {
-		return `c:\program files\no-mistakes\NO-MISTAKES.exe`, nil
+		return `c:\program files\alamino\ALAMINO.exe`, nil
 	}
 
 	u := &updater{
-		executablePath: `C:\Program Files\No-Mistakes\no-mistakes.exe`,
+		executablePath: `C:\Program Files\Alamino\alamino.exe`,
 		paths:          paths.WithRoot(t.TempDir()),
 	}
 
@@ -102,7 +102,7 @@ func TestRunningDaemonExecutablePathUsesPIDFile(t *testing.T) {
 }
 
 func TestRunningDaemonExecutablePathHandlesExecutablePathsWithSpaces(t *testing.T) {
-	if os.Getenv("NO_MISTAKES_TEST_CHILD") == "1" {
+	if os.Getenv("ALAMINO_TEST_CHILD") == "1" {
 		time.Sleep(10 * time.Second)
 		return
 	}
@@ -124,13 +124,13 @@ func TestRunningDaemonExecutablePathHandlesExecutablePathsWithSpaces(t *testing.
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	copyPath := filepath.Join(dir, "no mistakes test binary"+filepath.Ext(originalPath))
+	copyPath := filepath.Join(dir, "alamino test binary"+filepath.Ext(originalPath))
 	if err := os.WriteFile(copyPath, binary, originalInfo.Mode().Perm()); err != nil {
 		t.Fatal(err)
 	}
 
 	cmd := exec.Command(copyPath, "-test.run=^TestRunningDaemonExecutablePathHandlesExecutablePathsWithSpaces$")
-	cmd.Env = append(os.Environ(), "NO_MISTAKES_TEST_CHILD=1")
+	cmd.Env = append(os.Environ(), "ALAMINO_TEST_CHILD=1")
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +168,7 @@ func TestExecutablePathForPIDUsesWindowsResolver(t *testing.T) {
 		if pid != 4321 {
 			t.Fatalf("pid = %d, want %d", pid, 4321)
 		}
-		return `C:\Program Files\no-mistakes\no-mistakes.exe`, nil
+		return `C:\Program Files\alamino\alamino.exe`, nil
 	}
 
 	got, err := executablePathForPID(4321)
@@ -178,7 +178,7 @@ func TestExecutablePathForPIDUsesWindowsResolver(t *testing.T) {
 	if !called {
 		t.Fatal("expected windows resolver to be used")
 	}
-	if got != `C:\Program Files\no-mistakes\no-mistakes.exe` {
+	if got != `C:\Program Files\alamino\alamino.exe` {
 		t.Fatalf("executablePathForPID = %q", got)
 	}
 }
@@ -342,8 +342,8 @@ func TestDefaultResetDaemonStartsTheNewlyInstalledBinary(t *testing.T) {
 
 	dir := t.TempDir()
 	argsFile := filepath.Join(dir, "args")
-	exe := filepath.Join(dir, "no-mistakes")
-	script := "#!/bin/sh\nprintf '%s ' \"$@\" > '" + argsFile + "'\necho \"$NO_MISTAKES_NO_UPDATE_CHECK\" >> '" + argsFile + "'\n"
+	exe := filepath.Join(dir, "alamino")
+	script := "#!/bin/sh\nprintf '%s ' \"$@\" > '" + argsFile + "'\necho \"$ALAMINO_NO_UPDATE_CHECK\" >> '" + argsFile + "'\n"
 	if err := os.WriteFile(exe, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -384,7 +384,7 @@ func TestDefaultResetDaemonReportsTheNewBinarysStartFailure(t *testing.T) {
 		daemonStop = origStop
 	})
 
-	exe := filepath.Join(t.TempDir(), "no-mistakes")
+	exe := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(exe, []byte("#!/bin/sh\necho 'unit refresh failed' >&2\nexit 1\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -429,7 +429,7 @@ func TestDefaultResetDaemonKeepsInProcessStartOnWindows(t *testing.T) {
 		t.Fatal("windows must keep the in-process start")
 		return nil
 	}
-	if err := defaultResetDaemon(&paths.Paths{}, false, `C:\no-mistakes.exe`); err != nil {
+	if err := defaultResetDaemon(&paths.Paths{}, false, `C:\alamino.exe`); err != nil {
 		t.Fatalf("defaultResetDaemon error = %v", err)
 	}
 	if !startCalled {

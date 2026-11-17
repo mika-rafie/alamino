@@ -8,14 +8,14 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/skill"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/skill"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -26,14 +26,14 @@ const recentRunsHomeLimit = 10
 // newAxiCmd builds the agent-facing command tree. Everything under `axi`
 // follows AXI conventions: TOON on stdout, progress on stderr, structured
 // errors, and explicit exit codes. It is the surface an agent (or the
-// /no-mistakes skill) drives; humans use the bare `no-mistakes` TUI instead.
+// /alamino skill) drives; humans use the bare `alamino` TUI instead.
 func newAxiCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "axi",
-		Short: "Agent interface: drive no-mistakes from an autonomous agent",
-		Long: "Agent eXperience Interface for no-mistakes. Prints token-efficient TOON\n" +
+		Short: "Agent interface: drive alamino from an autonomous agent",
+		Long: "Agent eXperience Interface for alamino. Prints token-efficient TOON\n" +
 			"to stdout and is driven entirely by flags (no interactive prompts).\n" +
-			"Running `no-mistakes axi` with no subcommand shows the current state.",
+			"Running `alamino axi` with no subcommand shows the current state.",
 		Args:          cobra.NoArgs,
 		SilenceErrors: true,
 		SilenceUsage:  true,
@@ -255,27 +255,27 @@ func runAxiHome(cmd *cobra.Command) error {
 	help := []string{}
 	switch {
 	case currentActive == nil:
-		help = append(help, `Run `+"`"+`no-mistakes axi run --intent "<what the user set out to accomplish>"`+"`"+` to validate your changes`)
+		help = append(help, `Run `+"`"+`alamino axi run --intent "<what the user set out to accomplish>"`+"`"+` to validate your changes`)
 		if otherActive != nil {
 			help = append(help, fmt.Sprintf("Another active run is on %s; leave it alone unless you are working on that branch", otherActive.Branch))
 		}
 	case gatedOnAnswers:
 		// A review parked on its reviewer's own questions wants an answer, not
 		// a verdict: approving would discard the pass it paused.
-		help = append(help, "Run `no-mistakes axi answer --question <id> --answer \"<one of its options>\"` for each question in the gate; the reviewer resumes when none are open, and the answer that closes the last one follows the run to its next gate or outcome")
+		help = append(help, "Run `alamino axi answer --question <id> --answer \"<one of its options>\"` for each question in the gate; the reviewer resumes when none are open, and the answer that closes the last one follows the run to its next gate or outcome")
 	case gatedOnCoverage:
-		help = append(help, "Run `no-mistakes axi respond --action complete-coverage` to review only the remaining paths using stored coverage")
+		help = append(help, "Run `alamino axi respond --action complete-coverage` to review only the remaining paths using stored coverage")
 	case gated:
-		help = append(help, "Run `no-mistakes axi respond --action approve` to clear the current gate")
+		help = append(help, "Run `alamino axi respond --action approve` to clear the current gate")
 	default:
-		help = append(help, "Run `no-mistakes axi status` to inspect the active run")
+		help = append(help, "Run `alamino axi status` to inspect the active run")
 	}
 	if hasBranchSync {
 		help = append(help, branchSyncAgentGuidance)
 	}
 	help = append(help, preserveGateFixCommitsGuidance)
-	help = append(help, "The calling agent drives AXI gates but does not replace the configured pipeline agent; run `no-mistakes doctor` if no native agent or ACP runner is available")
-	help = append(help, "How to drive the pipeline: `no-mistakes axi run --help`, or the `/no-mistakes` skill (loaded when you invoke `/no-mistakes`)")
+	help = append(help, "The calling agent drives AXI gates but does not replace the configured pipeline agent; run `alamino doctor` if no native agent or ACP runner is available")
+	help = append(help, "How to drive the pipeline: `alamino axi run --help`, or the `/alamino` skill (loaded when you invoke `/alamino`)")
 	fields = append(fields, toon.Field{Key: "help", Value: help})
 
 	emitDoc(cmd, fields...)
@@ -310,7 +310,7 @@ func runsFields(runs []*db.Run, limit int) []toon.Field {
 // repo, and nothing otherwise.
 func repoInitHelp(err error) []string {
 	if err != nil && strings.Contains(err.Error(), "not initialized") {
-		return []string{"Run `no-mistakes init` to set up the gate in this repository"}
+		return []string{"Run `alamino init` to set up the gate in this repository"}
 	}
 	return nil
 }

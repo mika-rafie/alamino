@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestTestBaseAttributionJourney drives test.base_attribution through the
@@ -22,7 +22,7 @@ import (
 func TestTestBaseAttributionJourney(t *testing.T) {
 	type journey struct {
 		name string
-		// trusted is appended to the default-branch .no-mistakes.yaml.
+		// trusted is appended to the default-branch .alamino.yaml.
 		trusted string
 		// testScript and prepareScript are committed on main, so the base
 		// and the head run the same script; their behavior keys on files
@@ -168,7 +168,7 @@ exit 1
 			name:        "pushed_branch_cannot_opt_in",
 			trusted:     "",
 			testScript:  goFailures,
-			branchFiles: map[string]string{"regression": "x\n", ".no-mistakes.yaml": "ignore_patterns:\n  - '*.generated.go'\n  - 'vendor/**'\nallow_repo_commands: true\ncommands:\n  test: sh scripts/test.sh\ntest:\n  base_attribution: true\n"},
+			branchFiles: map[string]string{"regression": "x\n", ".alamino.yaml": "ignore_patterns:\n  - '*.generated.go'\n  - 'vendor/**'\nallow_repo_commands: true\ncommands:\n  test: sh scripts/test.sh\ntest:\n  base_attribution: true\n"},
 			wantPark:    true, wantBaseRun: false,
 			wantAbsent: []string{"Base attribution"},
 		},
@@ -200,7 +200,7 @@ exit 0
 				h.CommitChange("main", "scripts/prepare.sh", "#!/bin/sh\n"+record+tc.prepareScript, "add prepare script")
 			}
 			h.CommitChange("main", "scripts/test.sh", "#!/bin/sh\n"+record+tc.testScript, "add test script")
-			h.CommitChange("main", ".no-mistakes.yaml", config+tc.trusted, "configure test command")
+			h.CommitChange("main", ".alamino.yaml", config+tc.trusted, "configure test command")
 			if out, err := h.runGit(context.Background(), h.WorkDir, "push", "origin", "main"); err != nil {
 				t.Fatalf("push trusted config: %v\n%s", err, out)
 			}
@@ -278,7 +278,7 @@ exit 0
 				if expectedNice != "" && len(fields) == 3 && fields[2] != "nice="+expectedNice {
 					t.Errorf("command ran without the operator's niceness adjustment %s (expected %s): %s", tc.wantNice, expectedNice, line)
 				}
-				if !strings.Contains(line, "no-mistakes-test-base-") {
+				if !strings.Contains(line, "alamino-test-base-") {
 					continue
 				}
 				dir := fields[1]
@@ -289,7 +289,7 @@ exit 0
 					t.Errorf("base checkout %s was not removed (stat err=%v)", dir, err)
 				}
 			}
-			if evidence := os.Getenv("NM_BASE_ATTRIBUTION_EVIDENCE"); evidence != "" {
+			if evidence := os.Getenv("ALAMINO_BASE_ATTRIBUTION_EVIDENCE"); evidence != "" {
 				transcript := "# " + tc.name + "\n\n## Test step status: " + string(step.Status) + "\n\n## Commands ran in (script cwd log)\n" + string(cwds) +
 					"\n## Findings summary\n" + summary + "\n\n## Test step log\n" + logData
 				if step.FindingsJSON != nil {

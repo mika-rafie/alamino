@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // A daemon that exited but left its socket and PID file behind is cleared by
@@ -26,8 +26,8 @@ func TestUpdaterRunStartsDaemonAfterProbeClearsStaleArtifacts(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	archiveName := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
-	archive := makeTarGz(t, map[string][]byte{"bin/no-mistakes": []byte("new-binary")})
+	archiveName := "alamino-v1.2.3-darwin-arm64.tar.gz"
+	archive := makeTarGz(t, map[string][]byte{"bin/alamino": []byte("new-binary")})
 	sum := sha256.Sum256(archive)
 	checksums := fmt.Sprintf("%s  %s\n", hex.EncodeToString(sum[:]), archiveName)
 	var server *httptest.Server
@@ -76,12 +76,12 @@ func TestUpdaterRunStartsDaemonAfterProbeClearsStaleArtifacts(t *testing.T) {
 		return nil
 	}
 
-	execPath := filepath.Join(t.TempDir(), "no-mistakes")
+	execPath := filepath.Join(t.TempDir(), "alamino")
 	if err := os.WriteFile(execPath, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	u := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",

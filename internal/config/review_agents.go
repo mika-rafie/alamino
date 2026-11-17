@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Review-loop role keys. The base roles serve every round. The *_after_round

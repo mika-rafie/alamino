@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 // TestPushStep_RepublishesReviewedRebaseOverRunsOwnPublishedHead reproduces a
@@ -55,7 +55,7 @@ func TestPushStep_RepublishesReviewedRebaseOverRunsOwnPublishedHead(t *testing.T
 			// A pipeline commit lands before the first publication, so the run's
 			// published head differs from its submitted head.
 			write("src/finalize.ts", "export const finalize = () => 1;\n")
-			published := commit("no-mistakes(lint): extract helpers")
+			published := commit("alamino(lint): extract helpers")
 			sctx.Run.HeadSHA = published
 			recordReviewApproval(t, sctx, published)
 			if _, err := (&PushStep{}).Execute(sctx); err != nil {
@@ -112,7 +112,7 @@ func TestPushStep_RepublishesReviewedRebaseOverRunsOwnPublishedHead(t *testing.T
 			}
 			commit("feat: upload intents")
 			write("src/finalize.ts", "export const finalize = () => 1;\n")
-			rebased := commit("no-mistakes(lint): extract helpers")
+			rebased := commit("alamino(lint): extract helpers")
 
 			// recordLocalRepair: the rebased head is recorded and review
 			// authority is revoked until Review approves it again.
@@ -129,7 +129,7 @@ func TestPushStep_RepublishesReviewedRebaseOverRunsOwnPublishedHead(t *testing.T
 				if got := gitCmd(t, gateDir, "rev-parse", "refs/heads/feature"); got != mirrorHead {
 					t.Fatalf("mirror moved to %s, want %s", got, mirrorHead)
 				}
-				if tags := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+				if tags := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 					t.Fatalf("refused publication archived a head: %s", tags)
 				}
 			}
@@ -162,7 +162,7 @@ func TestPushStep_RepublishesReviewedRebaseOverRunsOwnPublishedHead(t *testing.T
 					t.Fatalf("%s = %s, want reviewed rebase %s", dir, got, rebased)
 				}
 			}
-			if got := gitCmd(t, gateDir, "rev-parse", "refs/tags/no-mistakes-abandoned/feature/"+published+"^{commit}"); got != published {
+			if got := gitCmd(t, gateDir, "rev-parse", "refs/tags/alamino-abandoned/feature/"+published+"^{commit}"); got != published {
 				t.Fatalf("replaced published head archived as %s, want %s", got, published)
 			}
 			run, err := sctx.DB.GetRun(sctx.Run.ID)

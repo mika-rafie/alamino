@@ -12,9 +12,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/safepath"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/safepath"
+	"github.com/mika-rafie/alamino/internal/safeurl"
 )
 
 const (
@@ -28,9 +28,9 @@ const (
 	// fetchRef is a scratch ref used to bring the remote evidence tip into the
 	// local object store. Only the resolved sha is used afterwards, so a
 	// concurrent run overwriting the ref cannot redirect this publish.
-	fetchRef = "refs/no-mistakes/evidence-fetch"
+	fetchRef = "refs/alamino/evidence-fetch"
 
-	scratchIndexName = "no-mistakes-evidence-index"
+	scratchIndexName = "alamino-evidence-index"
 )
 
 // Request describes one publication of a run's evidence directory.
@@ -62,8 +62,8 @@ type Request struct {
 	// RunWorktree is the run's worktree. Its absolute path names the local
 	// checkout (the repo id is a hash of it), so published text never keeps it.
 	RunWorktree string
-	// WorktreesRoot is the NM_HOME worktrees directory, the fallback for paths
-	// into any run worktree. NM_HOME may sit outside the home directory, where
+	// WorktreesRoot is the ALAMINO_HOME worktrees directory, the fallback for paths
+	// into any run worktree. ALAMINO_HOME may sit outside the home directory, where
 	// home redaction never reaches.
 	WorktreesRoot string
 	// Message is the evidence commit message.
@@ -247,13 +247,13 @@ func remoteTip(ctx context.Context, repoDir, pushURL, branch string) (string, er
 	return sha, nil
 }
 
-// assertEvidenceBranch refuses a branch that exists but is not a no-mistakes
+// assertEvidenceBranch refuses a branch that exists but is not an alamino
 // evidence branch. This is the guard that makes a wrong configured name
 // harmless: "main" has no marker file, so evidence is never appended to it.
 func assertEvidenceBranch(ctx context.Context, repoDir, tip, branch string) error {
 	content, err := git.RunRaw(ctx, repoDir, "cat-file", "blob", tip+":"+MarkerPath)
 	if err != nil || string(content) != MarkerContent {
-		return fmt.Errorf("refusing to publish evidence: branch %q already exists and is not a no-mistakes evidence branch (invalid %s marker at its tip)", branch, MarkerPath)
+		return fmt.Errorf("refusing to publish evidence: branch %q already exists and is not an alamino evidence branch (invalid %s marker at its tip)", branch, MarkerPath)
 	}
 	return nil
 }
@@ -285,8 +285,8 @@ func commitTree(ctx context.Context, repoDir, tree, parent, message string) (str
 			return "", err
 		}
 	} else {
-		name := configuredIdentity(ctx, repoDir, "user.name", "no-mistakes")
-		email := configuredIdentity(ctx, repoDir, "user.email", "no-mistakes@localhost")
+		name := configuredIdentity(ctx, repoDir, "user.name", "alamino")
+		email := configuredIdentity(ctx, repoDir, "user.email", "alamino@localhost")
 		env = []string{
 			"GIT_AUTHOR_NAME=" + name,
 			"GIT_AUTHOR_EMAIL=" + email,
@@ -299,7 +299,7 @@ func commitTree(ctx context.Context, repoDir, tree, parent, message string) (str
 		args = append(args, "-p", parent)
 	}
 	if strings.TrimSpace(message) == "" {
-		message = "no-mistakes: test evidence"
+		message = "alamino: test evidence"
 	}
 	args = append(args, "-m", message)
 	commit, err := git.RunWithEnv(ctx, repoDir, env, args...)

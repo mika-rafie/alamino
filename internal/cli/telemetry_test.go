@@ -8,10 +8,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 type recordedTelemetryEvent struct {
@@ -109,7 +109,7 @@ func TestInitTracksCommandTelemetry(t *testing.T) {
 
 func TestStatusUninitializedRepoEmitsNoTelemetry(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	chdir(t, tmpDir)
 
 	recorder := &telemetryRecorder{}
@@ -126,8 +126,8 @@ func TestStatusUninitializedRepoEmitsNoTelemetry(t *testing.T) {
 }
 
 func TestDoctorTracksFailedChecksAsError(t *testing.T) {
-	nmHome := filepath.Join(t.TempDir(), "missing-nm-home")
-	t.Setenv("NM_HOME", nmHome)
+	nmHome := filepath.Join(t.TempDir(), "missing-alamino-home")
+	t.Setenv("ALAMINO_HOME", nmHome)
 	t.Setenv("PATH", "/nonexistent")
 
 	recorder := &telemetryRecorder{}
@@ -149,7 +149,7 @@ func TestDoctorTracksFailedChecksAsError(t *testing.T) {
 
 func TestAttachTracksTUIPageview(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 
 	d, err := db.Open(p.DB())

@@ -3,7 +3,7 @@ package azuredevops
 import (
 	"context"
 	"encoding/json"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 	"strings"
 	"testing"
 )

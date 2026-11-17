@@ -34,7 +34,7 @@ demo_raw.gif
 # Environment
 .env
 .env.local
-.no-mistakes/evidence/
+.alamino/evidence/
 
 # Agent scratch HOME inside a run worktree
 # The CI-repair agent reproduces a failing check locally by pointing HOME at a

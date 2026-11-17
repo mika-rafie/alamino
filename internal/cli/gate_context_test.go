@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/gatecontext"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/gatecontext"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestGateControlPolicyCoversEveryMutationEntrypoint(t *testing.T) {
@@ -75,7 +75,7 @@ func TestGateContextRefusalIsStructuredActionableAndPrivacySafe(t *testing.T) {
 		"run: run-safe",
 		"phase: document",
 		"enclosing executor owns validation, push, PR, and CI",
-		"no-mistakes axi status",
+		"alamino axi status",
 		"Return control to the outer executor",
 	} {
 		if !strings.Contains(text, want) {

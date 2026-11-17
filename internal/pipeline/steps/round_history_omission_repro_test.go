@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
 // Reproduction: a finding the user chose to fix in round 1 is carried into the

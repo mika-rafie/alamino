@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
-const nativeAgentEscapedPipeHelperEnv = "NM_AGENT_NATIVE_PIPE_HELPER"
+const nativeAgentEscapedPipeHelperEnv = "ALAMINO_AGENT_NATIVE_PIPE_HELPER"
 
 func TestNativeAgentCommand_WaitDelayClosesEscapedPipeHolder(t *testing.T) {
 	dir := t.TempDir()
@@ -28,8 +28,8 @@ func TestNativeAgentCommand_WaitDelayClosesEscapedPipeHolder(t *testing.T) {
 	cmd := exec.CommandContext(context.Background(), os.Args[0], "-test.run=^TestNativeAgentEscapedPipeHelper$")
 	cmd.Env = append(os.Environ(),
 		nativeAgentEscapedPipeHelperEnv+"=leader",
-		"NM_AGENT_NATIVE_PIPE_READY="+readyFile,
-		"NM_AGENT_NATIVE_PIPE_PID="+pidFile,
+		"ALAMINO_AGENT_NATIVE_PIPE_READY="+readyFile,
+		"ALAMINO_AGENT_NATIVE_PIPE_PID="+pidFile,
 	)
 	shellenv.ConfigureShellCommand(cmd)
 	cmd.WaitDelay = 100 * time.Millisecond
@@ -84,21 +84,21 @@ func TestNativeAgentEscapedPipeHelper(t *testing.T) {
 	case "leader":
 		child := exec.Command(os.Args[0], "-test.run=^TestNativeAgentEscapedPipeHelper$")
 		child.Env = append(os.Environ(), nativeAgentEscapedPipeHelperEnv+"=escaped",
-			"NM_AGENT_NATIVE_PIPE_READY="+os.Getenv("NM_AGENT_NATIVE_PIPE_READY"))
+			"ALAMINO_AGENT_NATIVE_PIPE_READY="+os.Getenv("ALAMINO_AGENT_NATIVE_PIPE_READY"))
 		child.Stdout = os.Stdout
 		child.Stderr = os.Stderr
 		if err := child.Start(); err != nil {
 			os.Exit(2)
 		}
-		_ = os.WriteFile(os.Getenv("NM_AGENT_NATIVE_PIPE_PID"), []byte(strconv.Itoa(child.Process.Pid)), 0o644)
-		if !waitForNativeAgentPipeHelperReady(os.Getenv("NM_AGENT_NATIVE_PIPE_READY"), 5*time.Second) {
+		_ = os.WriteFile(os.Getenv("ALAMINO_AGENT_NATIVE_PIPE_PID"), []byte(strconv.Itoa(child.Process.Pid)), 0o644)
+		if !waitForNativeAgentPipeHelperReady(os.Getenv("ALAMINO_AGENT_NATIVE_PIPE_READY"), 5*time.Second) {
 			os.Exit(3)
 		}
 		_, _ = os.Stdout.WriteString("leader done\nescaped pid " + strconv.Itoa(child.Process.Pid) + "\n")
 		os.Exit(0)
 	case "escaped":
 		_, _ = syscall.Setsid()
-		_ = os.WriteFile(os.Getenv("NM_AGENT_NATIVE_PIPE_READY"), []byte("ready"), 0o644)
+		_ = os.WriteFile(os.Getenv("ALAMINO_AGENT_NATIVE_PIPE_READY"), []byte("ready"), 0o644)
 		time.Sleep(30 * time.Second)
 		os.Exit(0)
 	}
@@ -194,9 +194,9 @@ func TestClaudeAgent_LargeStdinReapsGrandchildHoldingPipesOnLeaderExit(t *testin
 	dir := t.TempDir()
 	readyFile := filepath.Join(dir, "ready")
 	pidFile := filepath.Join(dir, "grandchild.pid")
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "spawn-grandchild")
-	t.Setenv("NM_CLAUDE_STDIN_READY", readyFile)
-	t.Setenv("NM_CLAUDE_STDIN_PID", pidFile)
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "spawn-grandchild")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_READY", readyFile)
+	t.Setenv("ALAMINO_CLAUDE_STDIN_PID", pidFile)
 
 	a := newClaudeStdinHelperAgent(t)
 	result, err := a.runOnce(context.Background(), RunOpts{

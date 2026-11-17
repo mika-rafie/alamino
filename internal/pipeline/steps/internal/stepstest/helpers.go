@@ -16,12 +16,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 var testGitExecutable, testGitErr = testgit.RealGit()
@@ -527,9 +527,9 @@ func NewFakeBitbucketPRAPI(t *testing.T, existingPRID int, existingPRURL string)
 
 func FakeBitbucketEnv(apiBaseURL string) []string {
 	return []string{
-		"NO_MISTAKES_BITBUCKET_EMAIL=test@example.com",
-		"NO_MISTAKES_BITBUCKET_API_TOKEN=test-token",
-		"NO_MISTAKES_BITBUCKET_API_BASE_URL=" + apiBaseURL,
+		"ALAMINO_BITBUCKET_EMAIL=test@example.com",
+		"ALAMINO_BITBUCKET_API_TOKEN=test-token",
+		"ALAMINO_BITBUCKET_API_BASE_URL=" + apiBaseURL,
 	}
 }
 

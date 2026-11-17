@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
-const serviceTelemetryKey = "NO_MISTAKES_TELEMETRY"
+const serviceTelemetryKey = "ALAMINO_TELEMETRY"
 
 // Decode the generated definitions independently of the inheritance allowlist.
 func serviceTelemetryEnvironment(t *testing.T, platform, definition string) map[string]string {
@@ -74,7 +74,7 @@ func TestManagedServiceTelemetry(t *testing.T) {
 				home := t.TempDir()
 				p := paths.WithRoot(t.TempDir())
 				serviceUserHomeDir = func() (string, error) { return home, nil }
-				serviceExecutablePath = func() (string, error) { return "/bin/no-mistakes", nil }
+				serviceExecutablePath = func() (string, error) { return "/bin/alamino", nil }
 				serviceCommandRunner = func(string, ...string) ([]byte, error) { return nil, nil }
 				for _, key := range proxyEnvKeys {
 					t.Setenv(key, "")
@@ -93,7 +93,7 @@ func TestManagedServiceTelemetry(t *testing.T) {
 					install = installSystemdUserService
 					path = systemdUserServicePath(p)
 				}
-				if err := install(p, "/bin/no-mistakes"); err != nil {
+				if err := install(p, "/bin/alamino"); err != nil {
 					t.Fatal(err)
 				}
 				check := func() map[string]string {
@@ -132,13 +132,13 @@ func TestManagedServiceTelemetry(t *testing.T) {
 				}
 				// A real file refresh, such as an upgrade, must retain both values.
 				serviceCommandRunner = func(string, ...string) ([]byte, error) { return nil, nil }
-				if err := install(p, "/new/no-mistakes"); err != nil {
+				if err := install(p, "/new/alamino"); err != nil {
 					t.Fatal(err)
 				}
 				check()
 				// Changing only telemetry must not erase inherited proxies.
 				t.Setenv(serviceTelemetryKey, "1")
-				if err := install(p, "/new/no-mistakes"); err != nil {
+				if err := install(p, "/new/alamino"); err != nil {
 					t.Fatal(err)
 				}
 				value = "1"
@@ -146,7 +146,7 @@ func TestManagedServiceTelemetry(t *testing.T) {
 				// Changing only a proxy must not erase inherited telemetry.
 				t.Setenv(serviceTelemetryKey, "")
 				t.Setenv("HTTPS_PROXY", "http://user:p%40ss&word@proxy.example:8080")
-				if err := install(p, "/new/no-mistakes"); err != nil {
+				if err := install(p, "/new/alamino"); err != nil {
 					t.Fatal(err)
 				}
 				check()
@@ -163,11 +163,11 @@ func assertServiceTelemetryTransport(t *testing.T, env map[string]string, enable
 	// A fresh process resets telemetry.Default's cache and models the service
 	// manager supplying the decoded environment, without launching a daemon.
 	cmd.Env = []string{
-		"NM_SERVICE_TELEMETRY_HELPER=1",
-		"NM_SERVICE_TELEMETRY_ENABLED=" + strconv.FormatBool(enabled),
-		"NO_MISTAKES_UMAMI_HOST=https://telemetry.invalid",
-		"NO_MISTAKES_UMAMI_WEBSITE_ID=synthetic-test",
-		"NM_HOME=" + t.TempDir(),
+		"ALAMINO_SERVICE_TELEMETRY_HELPER=1",
+		"ALAMINO_SERVICE_TELEMETRY_ENABLED=" + strconv.FormatBool(enabled),
+		"ALAMINO_UMAMI_HOST=https://telemetry.invalid",
+		"ALAMINO_UMAMI_WEBSITE_ID=synthetic-test",
+		"ALAMINO_HOME=" + t.TempDir(),
 		"HOME=" + t.TempDir(),
 	}
 	for key, value := range env {
@@ -206,12 +206,12 @@ func TestManagedServiceTelemetryStartup(t *testing.T) {
 						install = installSystemdUserService
 						path = systemdUserServicePath(p)
 					}
-					if err := install(p, "/bin/no-mistakes"); err != nil {
+					if err := install(p, "/bin/alamino"); err != nil {
 						t.Fatal(err)
 					}
 					// Refresh from the saved definition without an installer env value.
 					t.Setenv(serviceTelemetryKey, "")
-					if err := install(p, "/new/no-mistakes"); err != nil {
+					if err := install(p, "/new/alamino"); err != nil {
 						t.Fatal(err)
 					}
 					definition, err := os.ReadFile(path)
@@ -222,8 +222,8 @@ func TestManagedServiceTelemetryStartup(t *testing.T) {
 					if env[serviceTelemetryKey] != saved {
 						t.Fatalf("refreshed telemetry = %q, want %q", env[serviceTelemetryKey], saved)
 					}
-					env["NM_SERVICE_TELEMETRY_PREPARE"] = "1"
-					env["NM_SERVICE_TELEMETRY_SHELL"] = shell
+					env["ALAMINO_SERVICE_TELEMETRY_PREPARE"] = "1"
+					env["ALAMINO_SERVICE_TELEMETRY_SHELL"] = shell
 					assertServiceTelemetryTransport(t, env, false)
 				})
 			}
@@ -232,9 +232,9 @@ func TestManagedServiceTelemetryStartup(t *testing.T) {
 	for _, value := range []string{"", "1"} {
 		t.Run("enabled_control/"+value, func(t *testing.T) {
 			assertServiceTelemetryTransport(t, map[string]string{
-				serviceTelemetryKey:            value,
-				"NM_SERVICE_TELEMETRY_PREPARE": "1",
-				"NM_SERVICE_TELEMETRY_SHELL":   "1",
+				serviceTelemetryKey:                 value,
+				"ALAMINO_SERVICE_TELEMETRY_PREPARE": "1",
+				"ALAMINO_SERVICE_TELEMETRY_SHELL":   "1",
 			}, true)
 		})
 	}
@@ -248,12 +248,12 @@ func (r *serviceTelemetryTransport) RoundTrip(*http.Request) (*http.Response, er
 }
 
 func TestManagedServiceTelemetryTransport(t *testing.T) {
-	if os.Getenv("NM_SERVICE_TELEMETRY_HELPER") != "1" {
+	if os.Getenv("ALAMINO_SERVICE_TELEMETRY_HELPER") != "1" {
 		t.Skip("invoked in a fresh process with a decoded service environment")
 	}
 	transport := &serviceTelemetryTransport{}
 	http.DefaultTransport = transport
-	if os.Getenv("NM_SERVICE_TELEMETRY_PREPARE") == "1" {
+	if os.Getenv("ALAMINO_SERVICE_TELEMETRY_PREPARE") == "1" {
 		oldApply := applyShellEnvToProcess
 		defer func() { applyShellEnvToProcess = oldApply }()
 		applied := false
@@ -264,7 +264,7 @@ func TestManagedServiceTelemetryTransport(t *testing.T) {
 					return nil
 				}
 			}
-			return os.Setenv(serviceTelemetryKey, os.Getenv("NM_SERVICE_TELEMETRY_SHELL"))
+			return os.Setenv(serviceTelemetryKey, os.Getenv("ALAMINO_SERVICE_TELEMETRY_SHELL"))
 		}
 		if err := prepareDaemonEnvironment(); err != nil {
 			t.Fatal(err)
@@ -282,7 +282,7 @@ func TestManagedServiceTelemetryTransport(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := int32(0)
-	if os.Getenv("NM_SERVICE_TELEMETRY_ENABLED") == "true" {
+	if os.Getenv("ALAMINO_SERVICE_TELEMETRY_ENABLED") == "true" {
 		want = 5
 	}
 	if got := transport.events.Load(); got != want {

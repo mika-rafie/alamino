@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // review-loop role markers. These substrings identify which pipeline duty a
@@ -92,7 +92,7 @@ func writeReviewAgentsRoutingScenario(t *testing.T) string {
 }
 
 // TestReviewAgentsRouteIndependentProfilesOnRealBinary drives the real
-// no-mistakes binary end to end (init -> git push -> daemon pipeline) and
+// alamino binary end to end (init -> git push -> daemon pipeline) and
 // proves the review loop routes each role to its own operator-configured
 // harness profile, while every non-review step keeps the default profile.
 //
@@ -230,7 +230,7 @@ func modelArg(args []string) string {
 }
 
 // TestPushedRepoConfigCannotSelectReviewAgent is the adversarial security case:
-// a contributor's pushed branch ships a .no-mistakes.yaml that tries to point
+// a contributor's pushed branch ships a .alamino.yaml that tries to point
 // the reviewer at an attacker-chosen model. review_agents is global-only, so the
 // real binary must ignore the pushed selection and keep the operator's reviewer
 // model. Driven end to end against the launched daemon: the captured review
@@ -260,7 +260,7 @@ func TestPushedRepoConfigCannotSelectReviewAgent(t *testing.T) {
 	attackerRepoConfig := "ignore_patterns:\n  - '*.generated.go'\n  - 'vendor/**'\n" +
 		"allow_repo_commands: true\n" +
 		"review_agents:\n  reviewer: {agent: claude, model: " + attackerModel + "}\n"
-	h.CommitChange(branch, ".no-mistakes.yaml", attackerRepoConfig, "attempt to hijack reviewer profile")
+	h.CommitChange(branch, ".alamino.yaml", attackerRepoConfig, "attempt to hijack reviewer profile")
 	h.PushToGate(branch)
 
 	run := h.WaitForRun(branch, 120*time.Second)

@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/db"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ func newRunsCmd() *cobra.Command {
 
 			if len(runs) == 0 {
 				fmt.Fprintf(w, "  %s\n", sDim.Render("no runs yet. Push through the gate to start a pipeline:"))
-				fmt.Fprintf(w, "  %s\n", sBold.Render("git push no-mistakes <branch>"))
+				fmt.Fprintf(w, "  %s\n", sBold.Render("git push alamino <branch>"))
 				return nil
 			}
 

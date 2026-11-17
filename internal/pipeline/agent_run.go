@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/procreap"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/procreap"
+	"github.com/mika-rafie/alamino/internal/safeurl"
 )
 
 // ErrAgentTimeout is the context cause used when the default per-invocation

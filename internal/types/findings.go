@@ -160,7 +160,7 @@ const (
 // change is safe to ship, independent of individual findings.
 //
 // TestVerdictNoSurface is the honest answer when the change itself has no
-// runtime product no-mistakes can drive live - a CI-workflow-only change, a
+// runtime product alamino can drive live - a CI-workflow-only change, a
 // docs-only change, a pure non-runtime refactor, or anything else with no
 // live-exercisable scenario. It is not a silent skip: the Test step parks
 // for a human to decide whether proceeding without live validation is
@@ -209,7 +209,7 @@ type Finding struct {
 	Source           string `json:"source,omitempty"`
 	UserInstructions string `json:"user_instructions,omitempty"`
 	// DriverInstructions is fix guidance from an agent driving the run through
-	// `no-mistakes axi`. It is kept apart from UserInstructions because it
+	// `alamino axi`. It is kept apart from UserInstructions because it
 	// scopes one fix round and is not a decision the user made.
 	DriverInstructions string `json:"driver_instructions,omitempty"`
 	ReviewScope        string `json:"review_scope,omitempty"`

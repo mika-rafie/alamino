@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // TestInstallWindowsTaskRegistersUserScopedLogonTask registers the real task
@@ -34,7 +34,7 @@ func TestInstallWindowsTaskRegistersUserScopedLogonTask(t *testing.T) {
 	taskName := windowsTaskName(p)
 	t.Cleanup(func() { _, _ = runServiceCommand("schtasks", "/Delete", "/TN", taskName, "/F") })
 
-	exe := filepath.Join(t.TempDir(), "missing", "no-mistakes.exe")
+	exe := filepath.Join(t.TempDir(), "missing", "alamino.exe")
 	if err := installWindowsTask(p, exe); err != nil {
 		t.Fatalf("installWindowsTask: %v", err)
 	}

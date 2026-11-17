@@ -15,7 +15,7 @@ func TestInventoryRegisterUpdateUnregister(t *testing.T) {
 		t.Fatalf("OpenDir: %v", err)
 	}
 
-	home := filepath.Join(dir, "nm-e2e-case", "nmhome")
+	home := filepath.Join(dir, "alamino-e2e-case", "nmhome")
 	if err := os.MkdirAll(home, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestReapAbandonedInventories(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := inv.Register(filepath.Base(dir), filepath.Join(dir, "nm-e2e-case", "nmhome"), "", 0, os.Getpid()); err != nil {
+		if err := inv.Register(filepath.Base(dir), filepath.Join(dir, "alamino-e2e-case", "nmhome"), "", 0, os.Getpid()); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -105,18 +105,18 @@ func TestReapAbandonedInventories(t *testing.T) {
 }
 
 func TestCommandMatchesDaemonRoot(t *testing.T) {
-	home := "/private/tmp/nm-e2e-x/nmhome"
-	cmd := "/tmp/nm-e2e-bin/no-mistakes daemon run --root " + home
+	home := "/private/tmp/alamino-e2e-x/nmhome"
+	cmd := "/tmp/alamino-e2e-bin/alamino daemon run --root " + home
 	if !commandMatchesDaemonRoot(cmd, home) {
 		t.Fatal("expected match for exact root")
 	}
-	if commandMatchesDaemonRoot(cmd, "/Users/me/.no-mistakes") {
+	if commandMatchesDaemonRoot(cmd, "/Users/me/.alamino") {
 		t.Fatal("must not match shared root")
 	}
 	if commandMatchesDaemonRoot("sleep 3600", home) {
 		t.Fatal("must not match non-daemon")
 	}
-	if commandMatchesDaemonRoot("/bin/no-mistakes daemon run --root=/private/tmp/nm-e2e-x/nmhome", home) {
+	if commandMatchesDaemonRoot("/bin/alamino daemon run --root=/private/tmp/alamino-e2e-x/nmhome", home) {
 		// equals form
 	} else {
 		t.Fatal("expected --root= form to match")
@@ -124,9 +124,9 @@ func TestCommandMatchesDaemonRoot(t *testing.T) {
 }
 
 func TestSplitWindowsTokensPreservesRootPath(t *testing.T) {
-	command := `"C:\Program Files\no-mistakes.exe" daemon run --root "C:\Users\tester\AppData\Local\Temp\nm-e2e-1\nmhome"`
+	command := `"C:\Program Files\alamino.exe" daemon run --root "C:\Users\tester\AppData\Local\Temp\alamino-e2e-1\nmhome"`
 	tokens := splitWindowsTokens(command)
-	want := `C:\Users\tester\AppData\Local\Temp\nm-e2e-1\nmhome`
+	want := `C:\Users\tester\AppData\Local\Temp\alamino-e2e-1\nmhome`
 	root, ok := extractRootTokens(tokens)
 	if !ok || root != want {
 		t.Fatalf("root = %q, %v; want %q, true; tokens=%q", root, ok, want, tokens)
@@ -139,7 +139,7 @@ func TestReapAllRetainsEntryWhenProcessCheckIsInconclusive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	nmHome := filepath.Join(dir, "nm-e2e-retry", "nmhome")
+	nmHome := filepath.Join(dir, "alamino-e2e-retry", "nmhome")
 	if err := inv.Register("retry", nmHome, "", 0, os.Getpid()); err != nil {
 		t.Fatal(err)
 	}
@@ -165,10 +165,10 @@ func TestIsAllowedTempRoot(t *testing.T) {
 		path string
 		want bool
 	}{
-		{"/private/tmp/nm-e2e-abc/nmhome", true},
-		{"/tmp/nmh-xyz/nm-home", true},
-		{"/var/folders/xx/nm-e2e-1/nmhome", true},
-		{"/Users/someone/.no-mistakes", false},
+		{"/private/tmp/alamino-e2e-abc/nmhome", true},
+		{"/tmp/nmh-xyz/alamino-home", true},
+		{"/var/folders/xx/alamino-e2e-1/nmhome", true},
+		{"/Users/someone/.alamino", false},
 		{"/", false},
 		{"", false},
 		{".", false},
@@ -177,7 +177,7 @@ func TestIsAllowedTempRoot(t *testing.T) {
 		cases = append(cases, struct {
 			path string
 			want bool
-		}{filepath.Join(home, ".no-mistakes"), false})
+		}{filepath.Join(home, ".alamino"), false})
 	}
 	for _, tc := range cases {
 		if got := isAllowedTempRoot(tc.path); got != tc.want {
@@ -235,7 +235,7 @@ func TestReapAllRefusesSharedRoot(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
-	shared := filepath.Join(home, ".no-mistakes")
+	shared := filepath.Join(home, ".alamino")
 	if err := inv.Register("bad", shared, "", 1, os.Getpid()); err != nil {
 		t.Fatal(err)
 	}

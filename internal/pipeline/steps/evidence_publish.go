@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/evidence"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/evidence"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
 )
 
 // evidenceLinks describes a published evidence commit well enough to turn a
@@ -139,8 +139,8 @@ func joinURLPath(dir, rel string) string {
 	return strings.Join(segments, "/")
 }
 
-// nmWorktreesRoot is the NM_HOME worktrees root published text is redacted
-// against. Without a resolvable NM_HOME only the run's own worktree is
+// nmWorktreesRoot is the ALAMINO_HOME worktrees root published text is redacted
+// against. Without a resolvable ALAMINO_HOME only the run's own worktree is
 // rewritten.
 func nmWorktreesRoot() string {
 	if p, err := paths.New(); err == nil {

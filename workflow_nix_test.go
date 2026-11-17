@@ -35,7 +35,7 @@ func TestNixWorkflowBuildsAndChecksTheFlake(t *testing.T) {
 	for _, want := range []string{
 		"nix flake check --all-systems --no-build",
 		"set -o pipefail",
-		"./result/bin/no-mistakes --version",
+		"./result/bin/alamino --version",
 		"nix-build default.nix",
 	} {
 		if !slices.ContainsFunc(commands, func(command string) bool { return strings.HasPrefix(command, want) }) {

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // statusDoc is the machine-readable shape a driving agent parses out of

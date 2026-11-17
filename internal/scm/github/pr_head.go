@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // VerifyPRHead reads by immutable PR identity, independently of FindPR and any

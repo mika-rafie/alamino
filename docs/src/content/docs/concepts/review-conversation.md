@@ -11,7 +11,7 @@ verdict on the whole round, not an answer to the question that was asked.
 
 The review conversation is **opt-in and off by default**. A repository asks for
 it with trusted
-[`review.conversation: true`](/no-mistakes/reference/repo-config/#reviewconversation)
+[`review.conversation: true`](/alamino/reference/repo-config/#reviewconversation)
 on its default branch; without that, everything on this page is inert and the
 review step behaves exactly as the paragraph above describes. The setting is
 read only from the trusted default-branch copy, in both directions: a pushed
@@ -71,7 +71,7 @@ not a degraded one.
 The conversation stays LOCAL to the run. The files live in the run's evidence
 directory, but the conversation directory is excluded from the evidence-branch
 publication walk, so opting into
-[`test.evidence.store_in_repo`](/no-mistakes/reference/repo-config/) publishes
+[`test.evidence.store_in_repo`](/alamino/reference/repo-config/) publishes
 the run's test evidence and never the conversation. The only published copy is
 the bounded rendering in the PR body, which goes through the home-path redaction
 every published body does. Publishing the raw files instead would put the full
@@ -124,7 +124,7 @@ and a per-adapter support matrix for a capability the agent already has.
 {"id":"q1","answer":"Keep behind a flag","answered_by":"captain","answered_at":"2026-09-15T13:31:40Z","ask_ordinal":1}
 ```
 
-Written by the daemon, and only by the daemon: `no-mistakes axi answer` reaches
+Written by the daemon, and only by the daemon: `alamino axi answer` reaches
 it through `RunManager.HandleAnswerReviewQuestion`, which is the sole writer of
 this file. It has to be, because only it can stamp `ask_ordinal`, and an
 unstamped line settles nothing at all. An answer whose conversation cannot be
@@ -163,7 +163,7 @@ question channel rather than adding to it: when the question history could not
 be read in full, the step emits ONE `ask-user` warning
 (`review-questions-unreadable`) instead of any `question-<id>` row, whatever
 remains open. Every one of those rows would end in "Answer it with:
-`no-mistakes axi answer --question <id>`", and the answer path refuses every
+`alamino axi answer --question <id>`", and the answer path refuses every
 answer for such a conversation, so each row would instruct a command guaranteed
 to fail. The warning names the ids and count of the questions that were still
 open in the part of the history that was read, and points at the run's
@@ -288,7 +288,7 @@ reviewer left to read the answer. So the parked review gate re-checks the
 conversation on a timer (`pipeline.ApprovalGateResumer`) and, once nothing is
 open, resumes the reviewer itself. A live park checks immediately as it
 registers, then on the cadence of
-[`gate_reconcile_interval`](/no-mistakes/reference/global-config/); a park
+[`gate_reconcile_interval`](/alamino/reference/global-config/); a park
 restored by daemon recovery has no immediate check, so its first re-check is
 one `gate_reconcile_interval` away.
 
@@ -347,7 +347,7 @@ fixer and survives a daemon restart, because the session id is persisted in
 | In-run fix round (`sctx.Fixing`) | cold, and the `reviewer` session is dropped first | same reason |
 | A restart back to review (a CI repair's `RestartFrom`) | fresh, the stored identity dropped first | it re-enters the step on a new head inside the same run, so the identity in hand reviewed the OLD head |
 
-The table assumes the default [`session_reuse: true`](/no-mistakes/reference/global-config/#session_reuse). With it off no reviewer identity is persisted and the finalize turn runs cold like every other turn; it still receives the answers, because the finalize prompt is the whole review prompt plus them.
+The table assumes the default [`session_reuse: true`](/alamino/reference/global-config/#session_reuse). With it off no reviewer identity is persisted and the finalize turn runs cold like every other turn; it still receives the answers, because the finalize prompt is the whole review prompt plus them.
 
 `RunSessions` is keyed by `(run, role)`, so an author push that supersedes the
 run starts a new run and therefore a cold reviewer with no extra work. Within a
@@ -367,7 +367,7 @@ gives the reviewer no licence to soften a finding it did not ask about.
 
 That matters for the outstanding finding set. A review finding stays outstanding
 until a later round positively verifies it under the
-[Review carry-forward rule](/no-mistakes/reference/pipeline-steps/#review),
+[Review carry-forward rule](/alamino/reference/pipeline-steps/#review),
 and a fix round earns that right for the findings it dispatched to the fixer.
 
 An answer round earns no pending-verification entries of its own, and the set it
@@ -516,7 +516,7 @@ this run's own `base..head` scope.
 
 The conversation introduces no round cap. By default the pipeline enforces no
 total limit on review fix rounds. A repository can opt into one with trusted
-[`review.max_fix_rounds`](/no-mistakes/reference/repo-config/#reviewmax_fix_rounds),
+[`review.max_fix_rounds`](/alamino/reference/repo-config/#reviewmax_fix_rounds),
 which owns its semantics. An answer round is not a fix round, so answering
 questions never spends that budget.
 

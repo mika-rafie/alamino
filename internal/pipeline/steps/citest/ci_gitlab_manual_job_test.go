@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps/internal/stepstest"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps/internal/stepstest"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // A blocking manual job (`when: manual` with `allow_failure: false`) stops the

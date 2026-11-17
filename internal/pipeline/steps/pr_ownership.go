@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 const (
-	prAppendixNamespace = "no-mistakes-pr-appendix"
+	prAppendixNamespace = "alamino-pr-appendix"
 	prAppendixStart     = "<!-- " + prAppendixNamespace + ":v1 sha256="
 	prAppendixEnd       = "<!-- /" + prAppendixNamespace + ":v1 -->"
 )

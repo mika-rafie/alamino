@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	gitpkg "github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	gitpkg "github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // strandedTestFixOptions shape the issue #1421 fixture's deliberate deviations.
@@ -52,11 +52,11 @@ func newStrandedTestFixFixture(t *testing.T, opts strandedTestFixOptions) (*reco
 	}
 	mustWrite(t, filepath.Join(runWorktree, "review-fix.txt"), "review fix\n")
 	mustRun(t, runWorktree, "add", "review-fix.txt")
-	mustRun(t, runWorktree, "commit", "-m", "no-mistakes(review): fix")
+	mustRun(t, runWorktree, "commit", "-m", "alamino(review): fix")
 	reviewed := mustRun(t, runWorktree, "rev-parse", "HEAD")
 	mustWrite(t, filepath.Join(runWorktree, "test-fix.txt"), "test fix\n")
 	mustRun(t, runWorktree, "add", "test-fix.txt")
-	mustRun(t, runWorktree, "commit", "-m", "no-mistakes(test): fix")
+	mustRun(t, runWorktree, "commit", "-m", "alamino(test): fix")
 	recorded := mustRun(t, runWorktree, "rev-parse", "HEAD")
 	mustRun(t, f.gate, "worktree", "remove", runWorktree)
 	if !objectExists(f.ctx, f.gate, recorded) {
@@ -77,9 +77,9 @@ func newStrandedTestFixFixture(t *testing.T, opts strandedTestFixOptions) (*reco
 
 	// The operator checked the exact preserved head out, as the reporter did,
 	// through a temporary ref because the object is otherwise unreachable.
-	mustRun(t, f.gate, "update-ref", "refs/no-mistakes/test-stranded", recorded)
-	mustRun(t, f.local, "fetch", "--no-tags", f.gate, "refs/no-mistakes/test-stranded")
-	mustRun(t, f.gate, "update-ref", "-d", "refs/no-mistakes/test-stranded")
+	mustRun(t, f.gate, "update-ref", "refs/alamino/test-stranded", recorded)
+	mustRun(t, f.local, "fetch", "--no-tags", f.gate, "refs/alamino/test-stranded")
+	mustRun(t, f.gate, "update-ref", "-d", "refs/alamino/test-stranded")
 	mustRun(t, f.local, "reset", "--hard", recorded)
 
 	f.preserved = recorded
@@ -152,7 +152,7 @@ func commitOutsidePreservedHistory(t *testing.T, f *recoverFixture) string {
 	mustRun(t, side, "add", "side.txt")
 	mustRun(t, side, "commit", "-m", "outside the preserved history")
 	sha := mustRun(t, side, "rev-parse", "HEAD")
-	mustRun(t, f.gate, "update-ref", "refs/no-mistakes/test-side", sha)
+	mustRun(t, f.gate, "update-ref", "refs/alamino/test-side", sha)
 	mustRun(t, f.gate, "worktree", "remove", side)
 	return sha
 }
@@ -186,7 +186,7 @@ func TestRecoverReturnsCustodyAtTheRecordedHeadThatExtendsTheGateBranch(t *testi
 		t.Fatalf("fixture operator HEAD = %s, want the recorded head %s", got, f.preserved)
 	}
 	before, _, _ := f.service.inspect(f.ctx)
-	if before.Safety != "blocked_pipeline_owned_recoverable" || before.NextAction == nil || before.NextAction.Command != "no-mistakes axi sync --recover" {
+	if before.Safety != "blocked_pipeline_owned_recoverable" || before.NextAction == nil || before.NextAction.Command != "alamino axi sync --recover" {
 		t.Fatalf("pre-recovery status = %s / %#v, want the recover_custody offer this test makes honest", before.Safety, before.NextAction)
 	}
 	runsBefore := len(mustRuns(t, f.db, f.repo.ID))

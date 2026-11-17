@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	nmtypes "github.com/kunchenguid/no-mistakes/internal/types"
+	nmtypes "github.com/mika-rafie/alamino/internal/types"
 )
 
 // finding mirrors pipeline/steps.Finding for TUI rendering.

@@ -2,7 +2,7 @@
 
 // Command consoleprobe is a test helper for internal/winres. The test builds
 // it with -ldflags=-H=windowsgui, so it is a GUI-subsystem process without a
-// console, like Task Scheduler or Explorer starting no-mistakes.exe. It starts
+// console, like Task Scheduler or Explorer starting alamino.exe. It starts
 // the command named by its arguments without console creation flags
 // (CREATE_NEW_CONSOLE, CREATE_NO_WINDOW, DETACHED_PROCESS), waits for the
 // child's "ready" line, and observes from outside whether Windows gave the

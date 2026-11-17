@@ -11,8 +11,8 @@ import (
 
 func piOutputEvents(output string) []string {
 	return []string{
-		`{"type":"message_end","message":{"role":"assistant","provider":"openai-codex","model":"gpt-6.1-sol","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"no_mistakes_output","arguments":` + output + `}],"usage":{"input":11,"output":7,"cacheRead":9,"cacheWrite":2}}}`,
-		`{"type":"tool_execution_end","toolCallId":"final-1","toolName":"no_mistakes_output","isError":false,"result":{"content":[],"details":{"output":` + output + `},"terminate":true}}`,
+		`{"type":"message_end","message":{"role":"assistant","provider":"openai-codex","model":"gpt-6.1-sol","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"alamino_output","arguments":` + output + `}],"usage":{"input":11,"output":7,"cacheRead":9,"cacheWrite":2}}}`,
+		`{"type":"tool_execution_end","toolCallId":"final-1","toolName":"alamino_output","isError":false,"result":{"content":[],"details":{"output":` + output + `},"terminate":true}}`,
 	}
 }
 
@@ -113,7 +113,7 @@ func TestPiAgent_StructuredOutputUsesAnEphemeralExtension(t *testing.T) {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Fatalf("extension was not removed: %s: %v", path, err)
 	}
-	if len(logged) != 1 || !strings.Contains(logged[0].Message, "strict schema-constrained no_mistakes_output") {
+	if len(logged) != 1 || !strings.Contains(logged[0].Message, "strict schema-constrained alamino_output") {
 		t.Fatalf("step log must name the strict path: %+v", logged)
 	}
 }
@@ -205,7 +205,7 @@ func TestPiVersionSupportsStrictOutput(t *testing.T) {
 
 func TestPiAgent_ProviderWithoutStrictToolsFallsBackToThePromptPath(t *testing.T) {
 	cwd := t.TempDir()
-	refusal := `{"type":"message_end","message":{"role":"assistant","stopReason":"error","errorMessage":"Tool \"no_mistakes_output\" requires JSON-schema constrained sampling, but strict tools are unsupported.","content":[]}}`
+	refusal := `{"type":"message_end","message":{"role":"assistant","stopReason":"error","errorMessage":"Tool \"alamino_output\" requires JSON-schema constrained sampling, but strict tools are unsupported.","content":[]}}`
 	bin := writePiOutputFixture(t, piStrictVersion, []string{refusal}, piTextEvents(`{"ok":true}`), "")
 	pa := &piAgent{bin: bin}
 	schema := json.RawMessage(`{"type":"object","properties":{"ok":{"type":"boolean"}},"required":["ok"]}`)
@@ -307,7 +307,7 @@ func TestPiAgent_StrictRunWithoutTheOutputToolIsASchemaRejection(t *testing.T) {
 			result, err := (&piAgent{bin: bin}).Run(context.Background(), RunOpts{
 				Prompt: "review", CWD: t.TempDir(), JSONSchema: json.RawMessage(`{"type":"object","properties":{"ok":{"type":"boolean"}},"required":["ok"]}`),
 			})
-			if err == nil || !IsStructuredOutputRejected(err) || !strings.Contains(err.Error(), "no_mistakes_output") {
+			if err == nil || !IsStructuredOutputRejected(err) || !strings.Contains(err.Error(), "alamino_output") {
 				t.Fatalf("a strict run without the output tool must be a schema rejection: %v", err)
 			}
 			if result == nil || result.Output != nil || !result.UsageReported {
@@ -457,7 +457,7 @@ func TestPiParser_OnlyAcceptsTheFinalSuccessfulTerminatingOutput(t *testing.T) {
 		{"failed", []string{good[0], strings.Replace(good[1], `"isError":false`, `"isError":true`, 1)}, ""},
 		{"unterminated", []string{good[0], strings.Replace(good[1], `"terminate":true`, `"terminate":false`, 1)}, ""},
 		{"wrong call", []string{good[0], strings.Replace(good[1], `"toolCallId":"final-1"`, `"toolCallId":"other"`, 1)}, ""},
-		{"wrong tool", []string{good[0], strings.Replace(good[1], `"toolName":"no_mistakes_output"`, `"toolName":"bash"`, 1)}, ""},
+		{"wrong tool", []string{good[0], strings.Replace(good[1], `"toolName":"alamino_output"`, `"toolName":"bash"`, 1)}, ""},
 		{"later assistant", append(append([]string{}, good...), `{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":[{"type":"text","text":"later"}]}}`), ""},
 		{"mixed batch", []string{strings.Replace(good[0], `"content":[`, `"content":[{"type":"toolCall","id":"read-1","name":"read"},`, 1), good[1]}, ""},
 		{"missing result", good[:1], ""},

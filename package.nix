@@ -7,23 +7,21 @@
 }:
 
 let
-  buildinfo = "github.com/kunchenguid/no-mistakes/internal/buildinfo";
+  buildinfo = "github.com/mika-rafie/alamino/internal/buildinfo";
 in
 buildGoModule {
-  pname = "no-mistakes";
+  pname = "alamino";
   inherit version;
 
   src = lib.cleanSource ./.;
   vendorHash = "sha256-maAVBptEtdrGanJHwAPAmuGBorzIMUgK6T+NmIz1kS0=";
-  subPackages = [ "cmd/no-mistakes" ];
+  subPackages = [ "cmd/alamino" ];
 
   env.CGO_ENABLED = 0;
   ldflags = [
     "-X ${buildinfo}.Version=v${version}"
     "-X ${buildinfo}.Commit=${commit}"
     "-X ${buildinfo}.Date=${date}"
-    "-X ${buildinfo}.TelemetryHost=https://a.kunchenguid.com"
-    "-X ${buildinfo}.TelemetryWebsiteID=f959e889-92f5-4121-8a1f-571b10861198"
   ];
 
   # The suite needs a real .git directory, /bin/bash, and wall-clock timing
@@ -32,8 +30,8 @@ buildGoModule {
 
   meta = {
     description = "Local gate that reviews, tests, and fixes every push before it ships";
-    homepage = "https://github.com/kunchenguid/no-mistakes";
+    homepage = "https://github.com/mika-rafie/alamino";
     license = lib.licenses.mit;
-    mainProgram = "no-mistakes";
+    mainProgram = "alamino";
   };
 }

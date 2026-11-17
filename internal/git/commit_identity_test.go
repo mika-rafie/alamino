@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/runenv"
 )
 
 // A checkout can have no local identity and still select a different identity

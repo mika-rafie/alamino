@@ -3,16 +3,16 @@ package cli
 import (
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/safeurl"
 	"github.com/spf13/cobra"
 )
 
 func newEjectCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "eject",
-		Short: "Remove no-mistakes gate from the current repository",
-		Long: `Removes the "no-mistakes" git remote when its only literal URL is inside this
+		Short: "Remove alamino gate from the current repository",
+		Long: `Removes the "alamino" git remote when its only literal URL is inside this
 home's repos directory (any other remote is left in place), deletes the bare
 repo and worktrees, and removes the repo record from the database.`,
 		Args: cobra.NoArgs,

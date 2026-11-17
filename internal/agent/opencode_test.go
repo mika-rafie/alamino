@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
 )
 
 func TestOpencodeAgent_CloseWithoutServer(t *testing.T) {

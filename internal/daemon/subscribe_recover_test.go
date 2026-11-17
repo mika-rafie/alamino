@@ -9,15 +9,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	gitpkg "github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/lifecycle"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	gitpkg "github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/lifecycle"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestSubscribeReceivesEvents(t *testing.T) {
@@ -862,7 +862,7 @@ func TestSkipWorktreeCleanup_CIMonitorInterrupted(t *testing.T) {
 			t.Fatal(err)
 		}
 		gitCmd(t, wtPath, "add", "-A")
-		gitCmd(t, wtPath, "commit", "-m", "no-mistakes: apply CI fixes")
+		gitCmd(t, wtPath, "commit", "-m", "alamino: apply CI fixes")
 		skip, reason := skipWorktreeCleanup(ctx, d, runID, wtPath)
 		if !skip {
 			t.Fatal("worktree with an unpushed commit must be preserved (skip=true)")
@@ -967,11 +967,11 @@ func TestRecoverRefreshesLegacyManagedGateHook(t *testing.T) {
 	}
 	hookPath := filepath.Join(bareDir, "hooks", "post-receive")
 	legacyHook := `#!/bin/sh
-# no-mistakes post-receive hook
+# alamino post-receive hook
 # Notify daemon of push. Non-blocking - push always succeeds.
-NM_BIN='/usr/local/bin/no-mistakes'
+ALAMINO_BIN='/usr/local/bin/alamino'
 while read oldrev newrev refname; do
-  NM_HOOK_HELPER=1 "$NM_BIN" daemon notify-push \
+  ALAMINO_HOOK_HELPER=1 "$ALAMINO_BIN" daemon notify-push \
     --gate "$(pwd)" \
     --ref "$refname" \
     --old "$oldrev" \

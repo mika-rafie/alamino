@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // ErrReviewDidNotPassGreen is returned when ingest is asked to label a run
@@ -27,7 +27,7 @@ type IngestResult struct {
 
 // ParsePostPRMissFinding accepts one finding object. ID and description are
 // required; they are the eval matcher keys. This is the typed source of truth
-// for a confirmed post-PR miss. no-mistakes does not read firstmate ledgers
+// for a confirmed post-PR miss. alamino does not read firstmate ledgers
 // or scrape GitHub review comments.
 //
 // Severity and action are checked against the finding vocabulary that

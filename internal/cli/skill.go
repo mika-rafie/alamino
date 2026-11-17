@@ -3,19 +3,19 @@ package cli
 import (
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/skill"
+	"github.com/mika-rafie/alamino/internal/skill"
 	"github.com/spf13/cobra"
 )
 
 func newSkillCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "skill",
-		Short: "Manage the /no-mistakes agent skill",
+		Short: "Manage the /alamino agent skill",
 	}
 	cmd.AddCommand(&cobra.Command{
 		Use:   "install",
 		Short: "Install or refresh the user-level agent skill",
-		Long: "Install or refresh /no-mistakes in ~/.claude/skills and ~/.agents/skills.\n" +
+		Long: "Install or refresh /alamino in ~/.claude/skills and ~/.agents/skills.\n" +
 			"Works outside a Git repository, without registering a gate or starting the daemon.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {

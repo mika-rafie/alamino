@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestPrepareSubmoduleCheckoutReachesConfiguredCommands drives a daemon run
@@ -45,7 +45,7 @@ func TestPrepareSubmoduleCheckoutReachesConfiguredCommands(t *testing.T) {
 	h.CommitChange(branch, "change.txt", "change\n", "add change")
 	git(h.WorkDir, "-c", "protocol.file.allow=always", "submodule", "add", remote, "module")
 	git(h.WorkDir, "commit", "-m", "add module submodule")
-	h.CommitChange(branch, ".no-mistakes.yaml", "ignore_patterns:\n  - 'vendor/**'\n"+
+	h.CommitChange(branch, ".alamino.yaml", "ignore_patterns:\n  - 'vendor/**'\n"+
 		"commands:\n"+
 		"  prepare: \"git -c protocol.file.allow=always submodule update --init --recursive\"\n"+
 		"  test: \"test -f module/module.txt\"\n"+

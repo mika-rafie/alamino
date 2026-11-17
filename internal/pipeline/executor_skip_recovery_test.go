@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func skipRecoverySteps(t *testing.T, callsPath string, gate types.StepName) []Step {
@@ -71,7 +71,7 @@ func TestExecutor_SkipPersistenceFailureExecutesNoSteps(t *testing.T) {
 // Exit at the durably emitted park, without cancelling the run. Recovery must
 // use the database alone, exactly as after loss of the original daemon process.
 func TestExecutorSkipRecoveryProcess(t *testing.T) {
-	root := os.Getenv("NM_SKIP_FIXTURE_ROOT")
+	root := os.Getenv("ALAMINO_SKIP_FIXTURE_ROOT")
 	if root == "" {
 		return
 	}
@@ -80,7 +80,7 @@ func TestExecutorSkipRecoveryProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run, err := database.GetRun(os.Getenv("NM_SKIP_FIXTURE_RUN"))
+	run, err := database.GetRun(os.Getenv("ALAMINO_SKIP_FIXTURE_RUN"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,16 +88,16 @@ func TestExecutorSkipRecoveryProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	gate := types.StepName(os.Getenv("NM_SKIP_FIXTURE_GATE"))
+	gate := types.StepName(os.Getenv("ALAMINO_SKIP_FIXTURE_GATE"))
 	executor := NewExecutor(database, p, nil, nil, skipRecoverySteps(t, filepath.Join(root, "calls"), gate), func(e ipc.Event) {
 		if e.StepName != nil && *e.StepName == gate && e.Status != nil && *e.Status == string(types.StepStatusAwaitingApproval) {
 			os.Exit(0)
 		}
 	})
-	if os.Getenv("NM_SKIP_FIXTURE_SKIPS") == "push" {
+	if os.Getenv("ALAMINO_SKIP_FIXTURE_SKIPS") == "push" {
 		executor.SetSkippedSteps([]types.StepName{types.StepPush})
 	}
-	if os.Getenv("NM_SKIP_FIXTURE_SKIPS") == "true" {
+	if os.Getenv("ALAMINO_SKIP_FIXTURE_SKIPS") == "true" {
 		executor.SetSkippedSteps([]types.StepName{types.StepRebase, types.StepPush, types.StepPR, types.StepCI})
 	}
 	if err := executor.Execute(context.Background(), run, repo, filepath.Join(root, "checkout")); err != nil {
@@ -134,7 +134,7 @@ func TestExecutor_RequestedSkipsSurviveParkAndRecovery(t *testing.T) {
 							t.Fatal(err)
 						}
 						cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestExecutorSkipRecoveryProcess$")
-						cmd.Env = append(os.Environ(), "NM_SKIP_FIXTURE_ROOT="+p.Root(), "NM_SKIP_FIXTURE_RUN="+run.ID, "NM_SKIP_FIXTURE_GATE="+string(gate), fmt.Sprintf("NM_SKIP_FIXTURE_SKIPS=%t", skipped))
+						cmd.Env = append(os.Environ(), "ALAMINO_SKIP_FIXTURE_ROOT="+p.Root(), "ALAMINO_SKIP_FIXTURE_RUN="+run.ID, "ALAMINO_SKIP_FIXTURE_GATE="+string(gate), fmt.Sprintf("ALAMINO_SKIP_FIXTURE_SKIPS=%t", skipped))
 						if out, err := cmd.CombinedOutput(); err != nil {
 							t.Fatalf("parked process: %v\n%s", err, out)
 						}
@@ -244,7 +244,7 @@ func TestExecutor_SkipRemainingPreservesRequestedSkipsAfterRecovery(t *testing.T
 			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 			defer cancel()
 			cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestExecutorSkipRecoveryProcess$")
-			cmd.Env = append(os.Environ(), "NM_SKIP_FIXTURE_ROOT="+p.Root(), "NM_SKIP_FIXTURE_RUN="+run.ID, "NM_SKIP_FIXTURE_GATE="+string(gate), "NM_SKIP_FIXTURE_SKIPS=push")
+			cmd.Env = append(os.Environ(), "ALAMINO_SKIP_FIXTURE_ROOT="+p.Root(), "ALAMINO_SKIP_FIXTURE_RUN="+run.ID, "ALAMINO_SKIP_FIXTURE_GATE="+string(gate), "ALAMINO_SKIP_FIXTURE_SKIPS=push")
 			if out, err := cmd.CombinedOutput(); err != nil {
 				t.Fatalf("parked process: %v\n%s", err, out)
 			}

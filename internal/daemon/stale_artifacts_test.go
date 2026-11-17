@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // staleDaemonRoot leaves what an exited daemon leaves behind: a socket file
@@ -118,7 +118,7 @@ func TestWaitForDaemonStopAcceptsExitedDaemonThatLeftItsArtifacts(t *testing.T) 
 	started := time.Date(2026, 4, 20, 10, 0, 0, 0, time.UTC)
 	p := staleDaemonRoot(t, []byte(`{"pid":424242,"started_at":"2026-04-20T10:00:00Z"}`))
 	fakeDaemonProcess(t, false, started)
-	t.Setenv("NM_TEST_DAEMON_STOP_TIMEOUT", "1s")
+	t.Setenv("ALAMINO_TEST_DAEMON_STOP_TIMEOUT", "1s")
 	oldKill := daemonKillPID
 	daemonKillPID = func(pid int) error { t.Fatalf("killed pid %d of an exited daemon", pid); return nil }
 	t.Cleanup(func() { daemonKillPID = oldKill })

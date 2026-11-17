@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/testgit"
 )
 
 func TestBaseRemoteSubmissionReconciliationUsesSelectedDestination(t *testing.T) {
@@ -62,16 +62,16 @@ func TestBaseRemoteSubmissionReconciliationUsesSelectedDestination(t *testing.T)
 
 func TestBaseRemotePushOptionsRefuseAmbiguity(t *testing.T) {
 	for _, options := range [][]string{
-		{"no-mistakes.base-remote="},
-		{"no-mistakes.base-remote=--upload-pack=evil"},
-		{"no-mistakes.base-remote=../custom"},
-		{"no-mistakes.base-remote=origin", "no-mistakes.base-remote=custom"},
+		{"alamino.base-remote="},
+		{"alamino.base-remote=--upload-pack=evil"},
+		{"alamino.base-remote=../custom"},
+		{"alamino.base-remote=origin", "alamino.base-remote=custom"},
 	} {
 		if _, err := parseBaseRemotePushOptions(options); err == nil {
 			t.Fatalf("accepted ambiguous or invalid selector %q", options)
 		}
 	}
-	got, err := parseBaseRemotePushOptions([]string{"no-mistakes.base-remote=custom"})
+	got, err := parseBaseRemotePushOptions([]string{"alamino.base-remote=custom"})
 	if err != nil || got != "custom" {
 		t.Fatalf("selector = %q, %v", got, err)
 	}

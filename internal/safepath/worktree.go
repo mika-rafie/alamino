@@ -7,9 +7,9 @@ import (
 )
 
 // Run worktree placeholders. A run worktree lives at
-// <NM_HOME>/worktrees/<repo-id>/<run-id>, where <repo-id> is a short hash of
+// <ALAMINO_HOME>/worktrees/<repo-id>/<run-id>, where <repo-id> is a short hash of
 // the absolute local checkout path: published, it lets anyone confirm a guessed
-// account name and layout offline, and an NM_HOME outside the home directory
+// account name and layout offline, and an ALAMINO_HOME outside the home directory
 // publishes whole. Like Placeholder, neither token is angle-bracketed, because
 // GitHub renders published .md evidence and drops unknown tags.
 const (

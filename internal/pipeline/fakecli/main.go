@@ -18,8 +18,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/fakecli/ghsanitize"
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin/fakeplugin"
+	"github.com/mika-rafie/alamino/internal/pipeline/fakecli/ghsanitize"
+	"github.com/mika-rafie/alamino/internal/scm/plugin/fakeplugin"
 )
 
 // Logging and stateful PR readback consume the same command stdin, not two

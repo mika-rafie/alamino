@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/runenv"
 )
 
 // Result is what Extract returns when it successfully attaches an intent
@@ -26,7 +26,7 @@ type ExtractParams struct {
 	// HomeDir overrides the user's home directory. Empty means use os.UserHomeDir.
 	HomeDir string
 	// OriginCWD is the user's actual repo directory. The caller is responsible
-	// for passing the original working path, NOT the no-mistakes worktree.
+	// for passing the original working path, NOT the alamino worktree.
 	OriginCWD string
 	// DiffFiles is the repo-relative file set used for matching and scoring.
 	DiffFiles []string

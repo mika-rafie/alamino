@@ -7,14 +7,14 @@ import (
 	"sort"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/procreap"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/procreap"
 )
 
 // worktreeReapPolicy bounds how many leftover run-worktree directories
-// survive under the default <NM_HOME>/worktrees tree. A zero Retention
+// survive under the default <ALAMINO_HOME>/worktrees tree. A zero Retention
 // disables age-based reaping and a zero MaxRuns disables the count ceiling,
 // matching evidenceReapPolicy.
 type worktreeReapPolicy struct {
@@ -41,7 +41,7 @@ func worktreeReapPolicyFor(global *config.GlobalConfig) worktreeReapPolicy {
 }
 
 // reapWorktrees bounds leftover run-worktree directories under the default
-// <NM_HOME>/worktrees tree (issue #1093).
+// <ALAMINO_HOME>/worktrees tree (issue #1093).
 //
 // A run's own worktree is already removed the instant its pipeline finishes
 // (RunManager.removeRunWorktree), so on the common path there is nothing here
@@ -67,7 +67,7 @@ func worktreeReapPolicyFor(global *config.GlobalConfig) worktreeReapPolicy {
 // case. Only the default tree is scanned: an operator-configured
 // worktree_roots placement is the operator's own directory, and startup
 // cleanup already reclaims it exactly once per crash, which is this
-// function's counterpart for the tree no-mistakes owns outright.
+// function's counterpart for the tree alamino owns outright.
 func reapWorktrees(d *db.DB, p *paths.Paths, policy worktreeReapPolicy, now time.Time) {
 	removable, _ := defaultTreeOrphanWorktrees(d, p)
 	if len(removable) == 0 {

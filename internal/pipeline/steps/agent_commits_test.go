@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const agentAttribution = "Co-Authored-By: Some Agent <noreply@agent.example>"
@@ -55,7 +55,7 @@ func TestCommitAgentFixes_AgentOwnCommitFollowsFixMessageAndNoTrailers(t *testin
 	if committed {
 		t.Fatal("committed = true, want false: the pipeline made no commit of its own")
 	}
-	if got, want := fullMessage(t, dir, "HEAD"), "no-mistakes(ci): repair widget"; got != want {
+	if got, want := fullMessage(t, dir, "HEAD"), "alamino(ci): repair widget"; got != want {
 		t.Fatalf("commit message = %q, want %q", got, want)
 	}
 	if got := gitCmd(t, dir, "rev-parse", "HEAD~1"); got != headSHA {
@@ -83,11 +83,11 @@ func TestCommitAgentFixes_AgentOwnCommitGetsConfiguredTrailersOnly(t *testing.T)
 	if _, err := commitAgentFixesWithResult(sctx, types.StepLint, "tidy", "fallback", &agent.Result{Provider: "codex", Model: "gpt-5.5"}); err != nil {
 		t.Fatal(err)
 	}
-	want := "no-mistakes(lint): tidy\n\nAssisted-by: no-mistakes:codex:gpt-5.5"
+	want := "alamino(lint): tidy\n\nAssisted-by: alamino:codex:gpt-5.5"
 	if got := fullMessage(t, dir, "HEAD"); got != want {
 		t.Fatalf("commit message = %q, want %q", got, want)
 	}
-	if got := gitTrailers(t, dir); got != "Assisted-by: no-mistakes:codex:gpt-5.5" {
+	if got := gitTrailers(t, dir); got != "Assisted-by: alamino:codex:gpt-5.5" {
 		t.Fatalf("trailers = %q, want only the configured one", got)
 	}
 }
@@ -104,7 +104,7 @@ func TestCommitAgentFixes_EveryAgentCommitInAChainIsRewrittenInOrder(t *testing.
 		t.Fatal(err)
 	}
 	log := gitCmd(t, dir, "log", "--reverse", "--format=%s", headSHA+"..HEAD")
-	if want := "no-mistakes(review): repair\nno-mistakes(review): repair"; log != want {
+	if want := "alamino(review): repair\nalamino(review): repair"; log != want {
 		t.Fatalf("subjects = %q, want %q", log, want)
 	}
 	if strings.Contains(gitCmd(t, dir, "log", "--format=%B", headSHA+"..HEAD"), agentAttribution) {
@@ -134,7 +134,7 @@ func TestCommitAgentFixes_AgentCommitPlusLeftoverEditsBothFollowSettings(t *test
 	if !committed {
 		t.Fatal("committed = false, want true for the leftover edits")
 	}
-	if got, want := gitCmd(t, dir, "log", "--format=%B", headSHA+"..HEAD"), "no-mistakes(test): repair\n\nno-mistakes(test): repair"; got != want {
+	if got, want := gitCmd(t, dir, "log", "--format=%B", headSHA+"..HEAD"), "alamino(test): repair\n\nalamino(test): repair"; got != want {
 		t.Fatalf("messages = %q, want %q", got, want)
 	}
 	if status := gitStatusPorcelain(t, dir); status != "" {
@@ -149,7 +149,7 @@ func TestCommitAgentFixes_ConformingAgentCommitIsLeftAlone(t *testing.T) {
 		t.Fatal(err)
 	}
 	gitCmd(t, dir, "add", "agent.txt")
-	gitCmd(t, dir, "commit", "-m", "no-mistakes(review): repair")
+	gitCmd(t, dir, "commit", "-m", "alamino(review): repair")
 	before := gitCmd(t, dir, "rev-parse", "HEAD")
 
 	if _, err := commitAgentFixesWithResult(sctx, types.StepReview, "repair", "fallback", nil); err != nil {
@@ -216,7 +216,7 @@ func TestCommitAgentFixes_CommitsAtOrBelowTheRecordedHeadAreNeverRewritten(t *te
 	if got := gitCmd(t, dir, "rev-parse", "HEAD~1"); got != authorHead {
 		t.Fatalf("author commit rewritten: parent = %s, want %s", got, authorHead)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(review): repair" {
+	if got := lastCommitMessage(t, dir); got != "alamino(review): repair" {
 		t.Fatalf("agent commit subject = %q", got)
 	}
 }
@@ -249,7 +249,7 @@ func TestExecuteFixMode_AgentOwnCommitFollowsCommitSettings(t *testing.T) {
 	if _, err := executeFixMode(sctx, types.StepLint, fixExecutionOptions{Prompt: "fix it"}); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := fullMessage(t, dir, "HEAD"), "no-mistakes(lint): repair widget"; got != want {
+	if got, want := fullMessage(t, dir, "HEAD"), "alamino(lint): repair widget"; got != want {
 		t.Fatalf("commit message = %q, want %q", got, want)
 	}
 	if sctx.Run.HeadSHA != gitCmd(t, dir, "rev-parse", "HEAD") {
@@ -266,7 +266,7 @@ func TestCIStep_CommitRepair_AgentOwnCommitFollowsCommitSettings(t *testing.T) {
 	if _, err := (&CIStep{}).commitRepair(sctx, "repair CI", &agent.Result{Provider: "claude"}); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := fullMessage(t, dir, "HEAD"), "no-mistakes(ci): repair CI"; got != want {
+	if got, want := fullMessage(t, dir, "HEAD"), "alamino(ci): repair CI"; got != want {
 		t.Fatalf("commit message = %q, want %q", got, want)
 	}
 	if got := gitCmd(t, dir, "rev-parse", "HEAD~1"); got != headSHA {
@@ -285,7 +285,7 @@ func TestCIStep_CommitRepair_RetainedAgentCommitFromAFailedTurnFollowsCommitSett
 	if _, err := (&CIStep{}).commitRepair(sctx, "", nil); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := fullMessage(t, dir, "HEAD"), "no-mistakes(ci): repair failing checks"; got != want {
+	if got, want := fullMessage(t, dir, "HEAD"), "alamino(ci): repair failing checks"; got != want {
 		t.Fatalf("commit message = %q, want %q", got, want)
 	}
 	if got := gitCmd(t, dir, "rev-parse", "HEAD~1"); got != headSHA {
@@ -360,7 +360,7 @@ func TestCIStep_CommitRepair_AlreadyPublishedAgentCommitIsNotRewritten(t *testin
 	if got := gitCmd(t, dir, "rev-parse", "HEAD~1"); got != published {
 		t.Fatalf("parent = %s, want the published commit %s kept as it is", got, published)
 	}
-	if got, want := fullMessage(t, dir, "HEAD"), "no-mistakes(ci): retry summary"; got != want {
+	if got, want := fullMessage(t, dir, "HEAD"), "alamino(ci): retry summary"; got != want {
 		t.Fatalf("unpublished commit message = %q, want %q", got, want)
 	}
 	if got := fullMessage(t, dir, published); !strings.Contains(got, "already on the remote") {

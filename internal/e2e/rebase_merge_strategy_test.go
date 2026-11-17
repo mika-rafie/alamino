@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // These journeys drive rebase.strategy through the real binary: a real gate, a
@@ -21,24 +21,24 @@ import (
 // and that a remote which refuses to have its branch rewritten accepts it.
 
 // harnessRepoConfigWithExtra rebuilds the harness's default-branch
-// .no-mistakes.yaml with extra appended. rebase.strategy is trusted-only, so a
+// .alamino.yaml with extra appended. rebase.strategy is trusted-only, so a
 // journey has to set it the way a maintainer does: committed on the default
 // branch, never on the pushed branch.
 func harnessRepoConfigWithExtra(extra string) string {
 	return "ignore_patterns:\n  - '*.generated.go'\n  - 'vendor/**'\nallow_repo_commands: true\n" + extra
 }
 
-// commitTrustedRepoConfig commits a .no-mistakes.yaml on main and pushes it to
+// commitTrustedRepoConfig commits a .alamino.yaml on main and pushes it to
 // origin, which is where the daemon reads the trusted copy from.
 func commitTrustedRepoConfig(t *testing.T, h *Harness, extra string) {
 	t.Helper()
-	h.CommitChange("main", ".no-mistakes.yaml", harnessRepoConfigWithExtra(extra), "set trusted repo config")
+	h.CommitChange("main", ".alamino.yaml", harnessRepoConfigWithExtra(extra), "set trusted repo config")
 	if out, err := h.runGit(context.Background(), h.WorkDir, "push", "origin", "main"); err != nil {
 		t.Fatalf("push trusted repo config: %v\n%s", err, out)
 	}
 }
 
-// initFromOwnWorktree runs `no-mistakes init` off a branch of its own so the
+// initFromOwnWorktree runs `alamino init` off a branch of its own so the
 // journey's feature branch is never the one init was standing on.
 func initFromOwnWorktree(t *testing.T, h *Harness, name string) {
 	t.Helper()
@@ -173,7 +173,7 @@ func TestRebaseMergeStrategyPublishesAMergeOfTheReviewedHeadJourney(t *testing.T
 // TestRebaseMergeStrategyPushedBranchCannotSelfSelectJourney is the trust
 // boundary, driven rather than reasoned about: the default branch says nothing
 // about rebase.strategy, and the pushed branch declares merge in its own
-// .no-mistakes.yaml. The run must integrate by rebasing anyway, so a
+// .alamino.yaml. The run must integrate by rebasing anyway, so a
 // contributor cannot opt their own branch into a different evidence shape than
 // the maintainer chose.
 func TestRebaseMergeStrategyPushedBranchCannotSelfSelectJourney(t *testing.T) {
@@ -182,7 +182,7 @@ func TestRebaseMergeStrategyPushedBranchCannotSelfSelectJourney(t *testing.T) {
 
 	const branch = "feature/self-select-merge"
 	h.CommitChange(branch, "feature.txt", "feature work\n", "add feature work")
-	submitted := h.CommitChange(branch, ".no-mistakes.yaml",
+	submitted := h.CommitChange(branch, ".alamino.yaml",
 		harnessRepoConfigWithExtra("rebase:\n  strategy: merge\n"),
 		"self-select the merge strategy from the pushed branch")
 
@@ -221,7 +221,7 @@ func TestRebaseMergeStrategyUnparseableTrustedValueFailsRunClosedJourney(t *test
 	const branch = "feature/bad-strategy"
 	// The pushed branch itself carries a VALID config, so the only malformed
 	// copy in play is the trusted one.
-	h.CommitChange(branch, ".no-mistakes.yaml", harnessRepoConfigWithExtra(""), "restore a valid pushed config")
+	h.CommitChange(branch, ".alamino.yaml", harnessRepoConfigWithExtra(""), "restore a valid pushed config")
 	submitted := h.CommitChange(branch, "feature.txt", "feature work\n", "add feature work")
 
 	advanceMain(t, h, "main-advance.txt", "main advanced\n", "advance main under the branch")
@@ -467,7 +467,7 @@ func TestRebaseMergeStrategyRejectsAnUnconcludedMergeJourney(t *testing.T) {
 // precedence the option promises an operator: a machine-wide default applies to
 // a repository that says nothing, and a repository that does say something wins
 // over it. Both halves run against the same daemon, so the only variable
-// between them is the trusted .no-mistakes.yaml.
+// between them is the trusted .alamino.yaml.
 func TestRebaseMergeStrategyGlobalDefaultAndTrustedOverrideJourney(t *testing.T) {
 	h := NewHarness(t, SetupOpts{Agent: "claude", GlobalConfigExtra: "rebase:\n  strategy: merge"})
 	initFromOwnWorktree(t, h, "init-global-default")

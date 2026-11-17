@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
 )
 
 // Opt-in real-harness test: only the model provider is a loopback fixture.
@@ -23,9 +23,9 @@ import (
 // and provide the final answer through the released V2 HTTP API. All OpenCode
 // state/configuration lives in the test's isolated HOME, never the user's DB.
 func TestOpencodeV2_RealHarnessExecutesToolAndReturnsValidatedOutput(t *testing.T) {
-	bin := os.Getenv("NO_MISTAKES_OPENCODE_V2_BIN")
+	bin := os.Getenv("ALAMINO_OPENCODE_V2_BIN")
 	if bin == "" {
-		t.Skip("set NO_MISTAKES_OPENCODE_V2_BIN to an absolute OpenCode 2 binary")
+		t.Skip("set ALAMINO_OPENCODE_V2_BIN to an absolute OpenCode 2 binary")
 	}
 	if !filepath.IsAbs(bin) {
 		t.Fatal("real-harness test requires an absolute OpenCode binary")
@@ -94,9 +94,9 @@ func TestOpencodeV2_RealHarnessExecutesToolAndReturnsValidatedOutput(t *testing.
 	}))
 	defer provider.Close()
 	config := map[string]any{
-		"model":  "nm-fixture/fixture",
+		"model":  "alamino-fixture/fixture",
 		"agents": map[string]any{"title": map[string]any{"disabled": true}},
-		"providers": map[string]any{"nm-fixture": map[string]any{
+		"providers": map[string]any{"alamino-fixture": map[string]any{
 			"package":  "@opencode/ai/providers/openai-compatible",
 			"settings": map[string]any{"baseURL": provider.URL + "/v1", "apiKey": "non-secret-local-fixture"},
 			"models":   map[string]any{"fixture": map[string]any{"limit": map[string]int{"context": 128000, "output": 4096}, "capabilities": map[string]any{"tools": true}}},
@@ -108,7 +108,7 @@ func TestOpencodeV2_RealHarnessExecutesToolAndReturnsValidatedOutput(t *testing.
 		"XDG_STATE_HOME=" + filepath.Join(root, "state"), "XDG_CACHE_HOME=" + filepath.Join(root, "cache"),
 		"OPENCODE_CONFIG_DIR=" + filepath.Join(root, "config", "opencode"), "OPENCODE_CONFIG_CONTENT=" + string(encoded),
 	}
-	a := &opencodeAgent{bin: bin, profile: agentcfg.Profile{Model: "nm-fixture/fixture"}}
+	a := &opencodeAgent{bin: bin, profile: agentcfg.Profile{Model: "alamino-fixture/fixture"}}
 	defer a.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()

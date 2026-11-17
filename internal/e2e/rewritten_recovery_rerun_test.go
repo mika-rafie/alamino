@@ -15,7 +15,7 @@ import (
 // bare push target: a pipeline run publishes a fix commit, someone force-pushes
 // a rewrite of that branch outside the pipeline, `axi sync --recover` rebinds
 // the push binding and anchors the superseded pipeline head under
-// refs/no-mistakes/recover-rewritten/<run>/<generation>, and a fresh `axi run`
+// refs/alamino/recover-rewritten/<run>/<generation>, and a fresh `axi run`
 // of the rewritten head must then be accepted rather than refused because the
 // gate's private mirror still holds the superseded head.
 //
@@ -76,7 +76,7 @@ func TestAxiRewrittenRemoteRecoveryThenFreshRunJourney(t *testing.T) {
 
 	checkOut, _ := h.RunInDir(operator, "axi", "sync", "--check")
 	t.Logf("axi sync --check after rewrite:\n%s", checkOut)
-	if !strings.Contains(checkOut, "remote_rewritten") || !strings.Contains(checkOut, "no-mistakes axi sync --recover") {
+	if !strings.Contains(checkOut, "remote_rewritten") || !strings.Contains(checkOut, "alamino axi sync --recover") {
 		t.Fatalf("rewrite not reported as recoverable:\n%s", checkOut)
 	}
 	recoverOut, err := h.RunInDir(operator, "axi", "sync", "--recover")
@@ -84,13 +84,13 @@ func TestAxiRewrittenRemoteRecoveryThenFreshRunJourney(t *testing.T) {
 	if err != nil || !strings.Contains(recoverOut, "recovered: true") || !strings.Contains(recoverOut, "proof: worktree") {
 		t.Fatalf("rewritten recovery: %v\n%s", err, recoverOut)
 	}
-	anchors := git(operator, "for-each-ref", "--format=%(refname) %(objectname)", "refs/no-mistakes/recover-rewritten/")
+	anchors := git(operator, "for-each-ref", "--format=%(refname) %(objectname)", "refs/alamino/recover-rewritten/")
 	t.Logf("worktree recovery anchors: %s", anchors)
 	if !strings.HasSuffix(anchors, "/1 "+pushedHead) || strings.Contains(anchors, "\n") {
 		t.Fatalf("expected one rewritten anchor at %s, got %q", pushedHead, anchors)
 	}
 	anchorRef := strings.Fields(anchors)[0]
-	if got := git(gateDir, "for-each-ref", "--format=%(refname)", "refs/no-mistakes/"); got != "" {
+	if got := git(gateDir, "for-each-ref", "--format=%(refname)", "refs/alamino/"); got != "" {
 		t.Fatalf("recovery anchored in the gate, not the worktree as the journey requires: %s", got)
 	}
 
@@ -132,7 +132,7 @@ func TestAxiRewrittenRemoteRecoveryThenFreshRunJourney(t *testing.T) {
 	if got := git(gateDir, "rev-parse", "refs/heads/"+branch); got != liveHead {
 		t.Fatalf("gate mirror = %s, want submitted rewritten head %s", got, liveHead)
 	}
-	archive := git(gateDir, "for-each-ref", "--format=%(refname) %(objectname)", "refs/tags/no-mistakes-abandoned/")
+	archive := git(gateDir, "for-each-ref", "--format=%(refname) %(objectname)", "refs/tags/alamino-abandoned/")
 	t.Logf("gate archive of the superseded mirror head: %s", archive)
 	if !strings.Contains(archive, pushedHead) {
 		t.Fatalf("superseded mirror head %s was not archived before deletion: %q", pushedHead, archive)

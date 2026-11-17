@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // runTestStepPrompts runs the Test step once (with a repair turn first when
@@ -278,12 +278,12 @@ func TestTestStep_LogsUnknownTestKeys(t *testing.T) {
 		t.Fatal(err)
 	}
 	prompts, logs, err := runTestStepPrompts(t, dir, baseSHA, headSHA, false, func(sctx *pipeline.StepContext) {
-		sctx.Config.Test.UnknownKeys = []string{"test.path_instruction (default-branch .no-mistakes.yaml)"}
+		sctx.Config.Test.UnknownKeys = []string{"test.path_instruction (default-branch .alamino.yaml)"}
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(strings.Join(logs, "\n"), "warning: ignoring unrecognized test setting(s), which have no effect: test.path_instruction (default-branch .no-mistakes.yaml)") {
+	if !strings.Contains(strings.Join(logs, "\n"), "warning: ignoring unrecognized test setting(s), which have no effect: test.path_instruction (default-branch .alamino.yaml)") {
 		t.Fatalf("unknown key not logged:\n%s", strings.Join(logs, "\n"))
 	}
 	if len(prompts) != len(base) || prompts[0] != base[0] {

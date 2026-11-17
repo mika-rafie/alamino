@@ -9,15 +9,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/winproc"
 	"github.com/spf13/cobra"
 )
 
@@ -202,7 +202,7 @@ func doctorForgeProfiles(
 	for _, profileHost := range hosts {
 		host, owner := config.SplitForgeProfileKey(profileHost)
 		if owner == "" {
-			owner = "no-mistakes"
+			owner = "alamino"
 		}
 		remote := "git@" + host + ":" + owner + "/doctor.git"
 		resolved, err := forgecontext.Resolve(ctx, config.ForgeProfiles{profileHost: profiles[profileHost]}, remote, "")

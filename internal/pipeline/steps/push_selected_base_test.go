@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 func TestMirrorReconciliationUsesSelectedBase(t *testing.T) {
@@ -110,7 +110,7 @@ func TestMirrorReconciliationUsesSelectedBase(t *testing.T) {
 				if got := gitCmd(t, gateDir, "rev-parse", "refs/heads/feature"); got != private {
 					t.Fatalf("planning changed mirror to %s, want %s", got, private)
 				}
-				if tags := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+				if tags := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 					t.Fatalf("planning archived mirror: %s", tags)
 				}
 			})

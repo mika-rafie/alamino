@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Drive the no-mistakes TUI through a real pty and press the yolo key.
+"""Drive the alamino TUI through a real pty and press the yolo key.
 
-argv: <no-mistakes binary> <workdir> <keys> <seconds-before-keys> <seconds-after-keys>
+argv: <alamino binary> <workdir> <keys> <seconds-before-keys> <seconds-after-keys>
 
 The pty is given a non-zero window size before the TUI reads its grid: a 0x0
 grid makes bubbletea exit immediately, which would turn this live check into a

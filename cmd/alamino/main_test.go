@@ -10,26 +10,26 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/daemon"
 )
 
 func TestMain(m *testing.M) {
-	root, err := os.MkdirTemp("", "nm-main-test-")
+	root, err := os.MkdirTemp("", "alamino-main-test-")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "create test NM_HOME: %v\n", err)
+		fmt.Fprintf(os.Stderr, "create test ALAMINO_HOME: %v\n", err)
 		os.Exit(1)
 	}
-	home, err := os.MkdirTemp("", "nm-main-home-")
+	home, err := os.MkdirTemp("", "alamino-main-home-")
 	if err != nil {
 		_ = os.RemoveAll(root)
 		fmt.Fprintf(os.Stderr, "create test HOME: %v\n", err)
 		os.Exit(1)
 	}
-	_ = os.Setenv("NM_HOME", root)
+	_ = os.Setenv("ALAMINO_HOME", root)
 	_ = os.Setenv("HOME", home)
 	_ = os.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, "gitconfig"))
-	_ = os.Setenv("NO_MISTAKES_TELEMETRY", "off")
-	_ = os.Setenv("NO_MISTAKES_NO_UPDATE_CHECK", "1")
+	_ = os.Setenv("ALAMINO_TELEMETRY", "off")
+	_ = os.Setenv("ALAMINO_NO_UPDATE_CHECK", "1")
 
 	code := m.Run()
 
@@ -54,7 +54,7 @@ func TestRunAttemptsOldExecutableCleanupBeforeEarlyRoutes(t *testing.T) {
 			called = true
 			return nil
 		}
-		os.Args = []string{"no-mistakes", "daemon", "log-sink", "--root", ""}
+		os.Args = []string{"alamino", "daemon", "log-sink", "--root", ""}
 		if code := run(); code != 1 {
 			t.Fatalf("run code = %d, want 1", code)
 		}
@@ -75,7 +75,7 @@ func TestRunAttemptsOldExecutableCleanupBeforeEarlyRoutes(t *testing.T) {
 			}
 			return true, nil
 		}
-		os.Args = []string{"no-mistakes", "--update-check", "v1.2.3"}
+		os.Args = []string{"alamino", "--update-check", "v1.2.3"}
 		if code := run(); code != 0 {
 			t.Fatalf("run code = %d, want 0", code)
 		}
@@ -88,7 +88,7 @@ func TestRunAttemptsOldExecutableCleanupBeforeEarlyRoutes(t *testing.T) {
 			return nil
 		}
 		maybeHandleBackgroundCheck = originalBackground
-		os.Args = []string{"no-mistakes", "--version"}
+		os.Args = []string{"alamino", "--version"}
 		if code := run(); code != 0 {
 			t.Fatalf("run code = %d, want 0", code)
 		}
@@ -112,22 +112,22 @@ func TestRunPreparesDaemonStdioBeforeTheDaemonRuns(t *testing.T) {
 		runDaemon = originalRunDaemon
 	})
 	root := t.TempDir()
-	t.Setenv("NM_HOME", os.Getenv("NM_HOME"))
+	t.Setenv("ALAMINO_HOME", os.Getenv("ALAMINO_HOME"))
 
 	var calls []string
 	prepareDaemonRunStdio = func() error {
-		calls = append(calls, "prepare NM_HOME="+os.Getenv("NM_HOME"))
+		calls = append(calls, "prepare ALAMINO_HOME="+os.Getenv("ALAMINO_HOME"))
 		return fmt.Errorf("no usable bootstrap log")
 	}
 	runDaemon = func() error {
 		calls = append(calls, "run")
 		return nil
 	}
-	os.Args = []string{"no-mistakes", "daemon", "run", "--root", root}
+	os.Args = []string{"alamino", "daemon", "run", "--root", root}
 	if code := run(); code != 0 {
 		t.Fatalf("run code = %d, want 0 even when the best-effort preparation fails", code)
 	}
-	want := []string{"prepare NM_HOME=" + root, "run"}
+	want := []string{"prepare ALAMINO_HOME=" + root, "run"}
 	if strings.Join(calls, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("calls = %q, want %q", calls, want)
 	}
@@ -167,7 +167,7 @@ func TestOnlyDaemonRunPreparesDaemonStdio(t *testing.T) {
 		{"daemon", "log-sink", "--root", ""},
 		{"--update-check", "v1.2.3"},
 	} {
-		os.Args = append([]string{"no-mistakes"}, args...)
+		os.Args = append([]string{"alamino"}, args...)
 		_ = run()
 	}
 
@@ -177,7 +177,7 @@ func TestOnlyDaemonRunPreparesDaemonStdio(t *testing.T) {
 		os.Stdin, os.Stdout = originalStdin, originalStdout
 		signal.Reset(os.Interrupt, syscall.SIGTERM)
 	})
-	t.Setenv("NM_HOME", os.Getenv("NM_HOME"))
+	t.Setenv("ALAMINO_HOME", os.Getenv("ALAMINO_HOME"))
 	stdin, stdinWriter, err := os.Pipe()
 	if err != nil {
 		t.Fatal(err)
@@ -192,7 +192,7 @@ func TestOnlyDaemonRunPreparesDaemonStdio(t *testing.T) {
 	}
 	defer stdout.Close()
 	os.Stdin, os.Stdout = stdin, stdout
-	os.Args = []string{"no-mistakes", "daemon", "log-sink", "--root", t.TempDir()}
+	os.Args = []string{"alamino", "daemon", "log-sink", "--root", t.TempDir()}
 	code := run()
 	os.Stdin, os.Stdout = originalStdin, originalStdout
 	if code != 0 {
@@ -209,7 +209,7 @@ func TestOnlyDaemonRunPreparesDaemonStdio(t *testing.T) {
 
 func TestCLILogWriterReturnsDiscardWhenLogsDirMissing(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	w := cliLogWriter()
 	if _, err := w.Write([]byte("hello\n")); err != nil {
@@ -227,7 +227,7 @@ func TestCLILogWriterReturnsDiscardWhenLogsDirMissing(t *testing.T) {
 
 func TestCLILogWriterAppendsToFileWhenLogsDirExists(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	logsDir := filepath.Join(nmHome, "logs")
 	if err := os.MkdirAll(logsDir, 0o755); err != nil {
@@ -254,7 +254,7 @@ func TestCLILogWriterAppendsToFileWhenLogsDirExists(t *testing.T) {
 }
 
 func TestDaemonRunRootFromArgs(t *testing.T) {
-	t.Setenv("NM_DAEMON", "")
+	t.Setenv("ALAMINO_DAEMON", "")
 
 	tests := []struct {
 		name     string
@@ -312,7 +312,7 @@ func TestDaemonLogSinkRootFromArgs(t *testing.T) {
 
 func TestWriteDaemonRunErrorPreservesBootstrapSinkOwnership(t *testing.T) {
 	root := t.TempDir()
-	t.Setenv("NM_HOME", root)
+	t.Setenv("ALAMINO_HOME", root)
 	logDir := filepath.Join(root, "logs")
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		t.Fatal(err)
@@ -357,7 +357,7 @@ func TestWriteDaemonRunErrorPreservesBootstrapSinkOwnership(t *testing.T) {
 }
 
 func TestDaemonRunRootFromArgs_EnvDoesNotForceDaemonModeForProbes(t *testing.T) {
-	t.Setenv("NM_DAEMON", "1")
+	t.Setenv("ALAMINO_DAEMON", "1")
 
 	tests := [][]string{
 		{"--version"},

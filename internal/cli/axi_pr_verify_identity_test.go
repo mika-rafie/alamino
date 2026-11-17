@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
 )
 
 // The oracle is the requested repository, independent of every adapter's
@@ -52,8 +52,8 @@ func TestPRAppendixVerifyRepositoryIdentity(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(tea, "hosts.yml"), []byte("hosts:\n  https://gitea.example:\n    token: synthetic\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("NO_MISTAKES_BITBUCKET_EMAIL", "synthetic@example.test")
-	t.Setenv("NO_MISTAKES_BITBUCKET_API_TOKEN", "synthetic")
+	t.Setenv("ALAMINO_BITBUCKET_EMAIL", "synthetic@example.test")
+	t.Setenv("ALAMINO_BITBUCKET_API_TOKEN", "synthetic")
 	var raw string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -64,7 +64,7 @@ func TestPRAppendixVerifyRepositoryIdentity(t *testing.T) {
 		_, _ = fmt.Fprint(w, raw)
 	}))
 	defer server.Close()
-	t.Setenv("NO_MISTAKES_BITBUCKET_API_BASE_URL", server.URL)
+	t.Setenv("ALAMINO_BITBUCKET_API_BASE_URL", server.URL)
 	for _, tc := range []struct {
 		provider, name, repo, webBase, path string
 	}{

@@ -8,11 +8,11 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gatecontext"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gatecontext"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 	"github.com/spf13/cobra"
 )
 
@@ -26,9 +26,9 @@ func guardGateControl(cmd *cobra.Command) error {
 		return nil
 	}
 	path := cmd.CommandPath()
-	allowOlder := path == "no-mistakes daemon start" || path == "no-mistakes daemon stop" ||
-		path == "no-mistakes daemon restart" || path == "no-mistakes daemon uninstall" ||
-		path == "no-mistakes update"
+	allowOlder := path == "alamino daemon start" || path == "alamino daemon stop" ||
+		path == "alamino daemon restart" || path == "alamino daemon uninstall" ||
+		path == "alamino update"
 	result, older, err := classifyGateControlCaller(cmd.Context(), allowOlder)
 	if err != nil {
 		return err
@@ -46,13 +46,13 @@ func guardGateControl(cmd *cobra.Command) error {
 func mutatesPipelineControl(cmd *cobra.Command) bool {
 	path := cmd.CommandPath()
 	switch path {
-	case "no-mistakes", "no-mistakes init", "no-mistakes eject", "no-mistakes rerun",
-		"no-mistakes axi run", "no-mistakes axi respond", "no-mistakes axi abort", "no-mistakes axi retry",
-		"no-mistakes daemon start", "no-mistakes daemon stop", "no-mistakes daemon restart",
-		"no-mistakes daemon uninstall",
-		"no-mistakes update":
+	case "alamino", "alamino init", "alamino eject", "alamino rerun",
+		"alamino axi run", "alamino axi respond", "alamino axi abort", "alamino axi retry",
+		"alamino daemon start", "alamino daemon stop", "alamino daemon restart",
+		"alamino daemon uninstall",
+		"alamino update":
 		return true
-	case "no-mistakes sync", "no-mistakes axi sync":
+	case "alamino sync", "alamino axi sync":
 		check, err := cmd.Flags().GetBool("check")
 		return err != nil || !check
 	default:
@@ -135,7 +135,7 @@ func classifyGateControlCaller(ctx context.Context, allowOlder bool) (gatecontex
 func emitGateContextRefusal(cmd *cobra.Command, result gatecontext.Result) error {
 	errorFields := []toon.Field{
 		{Key: "code", Value: gatecontext.ErrorCode},
-		{Key: "message", Value: "refusing pipeline control from an active no-mistakes validation step"},
+		{Key: "message", Value: "refusing pipeline control from an active alamino validation step"},
 	}
 	if result.RunID != "" {
 		errorFields = append(errorFields, toon.Field{Key: "run", Value: result.RunID})
@@ -143,10 +143,10 @@ func emitGateContextRefusal(cmd *cobra.Command, result gatecontext.Result) error
 	if result.Phase != "" {
 		errorFields = append(errorFields, toon.Field{Key: "phase", Value: string(result.Phase)})
 	}
-	allowed := []string{"no-mistakes axi status", "no-mistakes axi logs --step <phase>", "no-mistakes doctor"}
+	allowed := []string{"alamino axi status", "alamino axi logs --step <phase>", "alamino doctor"}
 	if result.RunID != "" {
-		allowed[0] = "no-mistakes axi status --run " + result.RunID
-		allowed[1] = "no-mistakes axi logs --run " + result.RunID + " --step <phase>"
+		allowed[0] = "alamino axi status --run " + result.RunID
+		allowed[1] = "alamino axi logs --run " + result.RunID + " --step <phase>"
 	}
 	emitDoc(cmd,
 		toon.Field{Key: "error", Value: toon.NewObject(errorFields...)},

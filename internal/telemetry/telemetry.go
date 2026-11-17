@@ -17,18 +17,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/buildinfo"
+	"github.com/mika-rafie/alamino/internal/buildinfo"
 )
 
 const (
 	defaultHostname = "cli"
-	defaultTitle    = "no-mistakes CLI"
+	defaultTitle    = "alamino CLI"
 	defaultPath     = "/api/send"
-	defaultHost     = "https://a.kunchenguid.com"
 
-	umamiHostEnv      = "NO_MISTAKES_UMAMI_HOST"
-	umamiWebsiteIDEnv = "NO_MISTAKES_UMAMI_WEBSITE_ID"
-	telemetryEnv      = "NO_MISTAKES_TELEMETRY"
+	umamiHostEnv      = "ALAMINO_UMAMI_HOST"
+	umamiWebsiteIDEnv = "ALAMINO_UMAMI_WEBSITE_ID"
+	telemetryEnv      = "ALAMINO_TELEMETRY"
 )
 
 type Fields map[string]any
@@ -94,7 +93,7 @@ func NewClient(cfg Config) (*Client, error) {
 		return nil, fmt.Errorf("website ID is required")
 	}
 	if cfg.App == "" {
-		cfg.App = "no-mistakes"
+		cfg.App = "alamino"
 	}
 	if cfg.Version == "" {
 		cfg.Version = buildinfo.CurrentVersion()
@@ -138,11 +137,17 @@ func Default() Sink {
 		return defaultSink
 	}
 
+	// No collection endpoint is built in. Telemetry stays inert unless a host
+	// is configured at runtime or embedded at build time.
 	host := defaultHostValue()
+	if host == "" {
+		defaultSink = noopSink{}
+		return defaultSink
+	}
 	client, err := NewClient(Config{
 		Host:      host,
 		WebsiteID: websiteID,
-		App:       "no-mistakes",
+		App:       "alamino",
 		Version:   buildinfo.CurrentVersion(),
 		GOOS:      runtime.GOOS,
 		GOARCH:    runtime.GOARCH,
@@ -296,7 +301,7 @@ func (c *Client) send(ctx context.Context, payload []byte) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", fmt.Sprintf("no-mistakes/%s telemetry", c.version))
+	req.Header.Set("User-Agent", fmt.Sprintf("alamino/%s telemetry", c.version))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -328,7 +333,7 @@ func normalizeEndpoint(host string) (string, error) {
 
 func eventURL(app, name string) string {
 	if app == "" {
-		app = "no-mistakes"
+		app = "alamino"
 	}
 	if name == "" {
 		return "app://" + app
@@ -379,9 +384,6 @@ func defaultHostValue() string {
 
 	if host == "" {
 		host = strings.TrimSpace(buildinfo.TelemetryHost)
-	}
-	if host == "" {
-		host = defaultHost
 	}
 
 	return host

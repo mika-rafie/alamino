@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 func TestAxiCoverageContinuationRefusesFixOverridesAndAutomaticApprovals(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAxiCoverageContinuationRefusesFixOverridesAndAutomaticApprovals(t *test
 		{"--reason", "waiver"},
 	} {
 		t.Run(flags[0], func(t *testing.T) {
-			t.Setenv("NM_HOME", t.TempDir())
+			t.Setenv("ALAMINO_HOME", t.TempDir())
 			chdir(t, t.TempDir())
 			args := append([]string{"axi", "respond", "--action", "complete-coverage"}, flags...)
 			out, err := executeCmd(args...)
@@ -35,10 +35,10 @@ func TestAxiCoverageContinuationBindsTheObservedHeadStepAndRound(t *testing.T) {
 	testCoverageContinuationCLI(t, executeCmd)
 }
 
-func TestNoMistakesBinary_CoverageContinuation(t *testing.T) {
-	bin := buildNoMistakesBinary(t)
+func TestAlaminoBinary_CoverageContinuation(t *testing.T) {
+	bin := buildAlaminoBinary(t)
 	testCoverageContinuationCLI(t, func(args ...string) (string, error) {
-		return execNoMistakesErr(t, bin, args...)
+		return execAlaminoErr(t, bin, args...)
 	})
 }
 

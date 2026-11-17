@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// decoyHome is a second no-mistakes root that never has a daemon: a push that
+// decoyHome is a second alamino root that never has a daemon: a push that
 // misroutes to it can only fail, and any state created under it proves the CLI
 // dialed the wrong root.
 func decoyHome(t *testing.T) string {
@@ -26,9 +26,9 @@ func decoyHome(t *testing.T) string {
 }
 
 // TestGateHookBindsPushToTheHomeThatOwnsTheGate drives the reported bug end to
-// end: git never sets NM_HOME for a hook, so whatever the pushing shell
+// end: git never sets ALAMINO_HOME for a hook, so whatever the pushing shell
 // exported used to decide which daemon authorized and ran the push. Pushing
-// with NM_HOME naming a different root must still reach the daemon that owns
+// with ALAMINO_HOME naming a different root must still reach the daemon that owns
 // the gate, and must leave that other root untouched.
 func TestGateHookBindsPushToTheHomeThatOwnsTheGate(t *testing.T) {
 	h := NewHarness(t, SetupOpts{Agent: "claude"})
@@ -42,10 +42,10 @@ func TestGateHookBindsPushToTheHomeThatOwnsTheGate(t *testing.T) {
 	other := decoyHome(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "git", "push", "no-mistakes", branch)
+	cmd := exec.CommandContext(ctx, "git", "push", "alamino", branch)
 	cmd.Dir = h.WorkDir
 	cmd.Env = mergedEnv(os.Environ(), map[string]string{
-		"NM_HOME":             other,
+		"ALAMINO_HOME":        other,
 		"GIT_AUTHOR_NAME":     "E2E Test",
 		"GIT_AUTHOR_EMAIL":    "e2e@example.com",
 		"GIT_COMMITTER_NAME":  "E2E Test",
@@ -53,7 +53,7 @@ func TestGateHookBindsPushToTheHomeThatOwnsTheGate(t *testing.T) {
 	})
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("push with a foreign NM_HOME exported was rejected: %v\n%s", err, out)
+		t.Fatalf("push with a foreign ALAMINO_HOME exported was rejected: %v\n%s", err, out)
 	}
 	t.Logf("git push output:\n%s", out)
 
@@ -71,14 +71,14 @@ func TestGateHookBindsPushToTheHomeThatOwnsTheGate(t *testing.T) {
 		names = append(names, entry.Name())
 	}
 	if len(names) != 1 || names[0] != "repos" {
-		t.Fatalf("push created state under the NM_HOME the shell exported: %v; the push must resolve its root from the gate", names)
+		t.Fatalf("push created state under the ALAMINO_HOME the shell exported: %v; the push must resolve its root from the gate", names)
 	}
 }
 
 // TestPushToAMisshapenGateIsRefusedClosed: a gate that is not laid out as
 // <home>/repos/<id>.git gives the hook no owning root to derive, and admission
 // is a security boundary, so the push must be refused rather than routed to
-// whichever daemon the ambient NM_HOME names.
+// whichever daemon the ambient ALAMINO_HOME names.
 func TestPushToAMisshapenGateIsRefusedClosed(t *testing.T) {
 	h := NewHarness(t, SetupOpts{Agent: "claude"})
 	if out, err := h.Run("init"); err != nil {

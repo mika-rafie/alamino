@@ -20,7 +20,7 @@ import (
 
 const MaxBytes = 16 * 1024
 const MaxPushOptionBytes = 24 * 1024
-const PushOptionPrefix = "no-mistakes.caller-restrictions="
+const PushOptionPrefix = "alamino.caller-restrictions="
 const Source = "caller --caller-restrictions"
 
 // Record contains the exact captured bytes and their caller-side provenance.

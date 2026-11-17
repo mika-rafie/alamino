@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/procreap"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/procreap"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestCleanupOrphanWorktreesSweepsEveryRemovableDirectoryInOneSnapshot bounds

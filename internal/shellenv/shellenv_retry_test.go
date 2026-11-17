@@ -167,7 +167,7 @@ func TestDefaultShellCommandOutput_InteractiveShellFromForegroundTerminal(t *tes
 		t.Skip("zsh is not installed")
 	}
 	const marker = "SHELLENV_PTY_PROBE_OK"
-	if os.Getenv("NM_SHELLENV_PTY_CHILD") == "1" {
+	if os.Getenv("ALAMINO_SHELLENV_PTY_CHILD") == "1" {
 		shellCommandTimeout = 10 * time.Second
 		out, err := defaultShellCommandOutput(zsh, "-l", "-i", "-c", "env -0")
 		if err != nil {
@@ -195,7 +195,7 @@ func TestDefaultShellCommandOutput_InteractiveShellFromForegroundTerminal(t *tes
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, scriptBin, args...)
-	cmd.Env = append(os.Environ(), "NM_SHELLENV_PTY_CHILD=1", "SHELL="+zsh)
+	cmd.Env = append(os.Environ(), "ALAMINO_SHELLENV_PTY_CHILD=1", "SHELL="+zsh)
 	out, err := cmd.CombinedOutput()
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		t.Fatalf("pty child did not finish: %q", out)

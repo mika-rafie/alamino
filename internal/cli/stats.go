@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +29,7 @@ func newStatsCmd() *cobra.Command {
 	var runID string
 	cmd := &cobra.Command{
 		Use:   "stats",
-		Short: "Show historical no-mistakes usage stats",
+		Short: "Show historical alamino usage stats",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return trackCommand("stats", func() error {
@@ -324,7 +324,7 @@ func renderStatsDashboard(stats *db.Stats) string {
 }
 
 func renderStatsBox(lines []string) string {
-	return renderTitledBox(" git push no-mistakes ", statsBoxWidth, lines)
+	return renderTitledBox(" git push alamino ", statsBoxWidth, lines)
 }
 
 // renderTitledBox draws the shared dashboard frame: a rounded box with an

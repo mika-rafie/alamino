@@ -3,7 +3,7 @@ package bitbucket
 import (
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func TestNormalizePRState(t *testing.T) {

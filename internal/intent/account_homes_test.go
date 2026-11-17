@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/runenv"
 )
 
 // Every transcript and SQLite row is invented, including the competing account.

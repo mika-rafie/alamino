@@ -7,8 +7,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // This file owns how the Test step's live-validation contract - the derived

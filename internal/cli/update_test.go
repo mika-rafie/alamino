@@ -43,5 +43,5 @@ func TestUpdateCommandYesFlag(t *testing.T) {
 
 func isolateUpdateCommand(t *testing.T) {
 	t.Helper()
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 // The Review step's per-invocation budget is the effective, merged value: a

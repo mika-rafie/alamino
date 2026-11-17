@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"sync/atomic"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
 )
 
 // MaxFrameBytes is the existing scanner limit for IPC requests, responses, and events.
@@ -400,7 +400,7 @@ type HealthParams struct{}
 type ShutdownParams struct{}
 
 // ScheduleRestartParams asks the daemon to restart through its own executable
-// file once no run is executing. It is how `no-mistakes update` installs a new
+// file once no run is executing. It is how `alamino update` installs a new
 // version without failing runs already in progress.
 type ScheduleRestartParams struct{}
 

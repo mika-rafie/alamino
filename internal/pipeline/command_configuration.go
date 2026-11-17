@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/buildinfo"
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/buildinfo"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 const commandConfigurationFile = "command-config.ndjson"

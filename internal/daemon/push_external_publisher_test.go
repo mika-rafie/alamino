@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 func TestLoadRecoveredConfig_ExternalPublisher(t *testing.T) {
@@ -38,7 +38,7 @@ push:
 
 	// A malformed current trusted declaration cannot become "unset" on restart.
 	gitCmd(t, repo.WorkingPath, "checkout", "-b", "malformed-policy", trusted)
-	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".no-mistakes.yaml"), []byte("push: {external_publisher: {paths: []}}\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".alamino.yaml"), []byte("push: {external_publisher: {paths: []}}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	gitCmd(t, repo.WorkingPath, "commit", "-am", "malformed trusted policy")

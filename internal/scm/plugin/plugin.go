@@ -1,9 +1,9 @@
 // Package plugin implements scm.Host by delegating every provider operation to
 // an operator-configured executable that is an AXI-shaped CLI: subcommands
 // such as "pr find" or "pr checks" with --json, one process per operation,
-// one JSON document on stdout. It is driven the same way no-mistakes drives
+// one JSON document on stdout. It is driven the same way alamino drives
 // forgejo-axi, and lets a machine add PR and CI support for a forge
-// no-mistakes does not ship (for example a private or company-internal host)
+// alamino does not ship (for example a private or company-internal host)
 // without changing this repository.
 //
 // The adapter trusts nothing the plugin returns: every identity (PR number,
@@ -27,9 +27,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 const (
@@ -148,7 +148,7 @@ func (h *Host) Available(ctx context.Context) error {
 		return err
 	}
 	if result.ProtocolVersion != ProtocolVersion {
-		return h.protocolf(CmdStatus, "speaks protocol version %d; this no-mistakes requires version %d", result.ProtocolVersion, ProtocolVersion)
+		return h.protocolf(CmdStatus, "speaks protocol version %d; this alamino requires version %d", result.ProtocolVersion, ProtocolVersion)
 	}
 	if result.MaxPRBodyChars == nil {
 		return h.protocolf(CmdStatus, "response did not include max_pr_body_chars (use 0 for no limit)")
@@ -533,7 +533,7 @@ func (h *Host) SetPRBaseBranch(ctx context.Context, pr *scm.PR, baseBranch strin
 
 // checkBodyBudget refuses a description over the plugin's declared limit
 // before anything is written. The PR step fits bodies under the limit, so
-// reaching this is a no-mistakes bug, not a plugin protocol violation.
+// reaching this is an alamino bug, not a plugin protocol violation.
 func (h *Host) checkBodyBudget(command, body string) error {
 	if limit := h.MaxPRBodyChars(); limit > 0 && scm.PRBodyLen(body) > limit {
 		return fmt.Errorf("provider plugin %q %s: description is %d characters, over the plugin's declared max_pr_body_chars %d", h.opts.Name, command, scm.PRBodyLen(body), limit)
@@ -684,7 +684,7 @@ func (h *Host) call(parent context.Context, command string, args []string, body 
 // writeBodyFile writes a PR description to a fresh 0600 file (os.CreateTemp's
 // mode) that only the daemon's user can read.
 func writeBodyFile(dir, body string) (string, func(), error) {
-	f, err := os.CreateTemp(dir, "no-mistakes-pr-body-*.md")
+	f, err := os.CreateTemp(dir, "alamino-pr-body-*.md")
 	if err != nil {
 		return "", nil, fmt.Errorf("create PR body file: %w", err)
 	}

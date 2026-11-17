@@ -1,5 +1,5 @@
 // Package winres owns the Windows application manifest embedded in
-// no-mistakes.exe and renders the COFF resource objects that carry it.
+// alamino.exe and renders the COFF resource objects that carry it.
 //
 // The manifest's consoleAllocationPolicy=detached setting is what keeps the
 // managed daemon console-less when Task Scheduler starts it (issue #1653):
@@ -11,7 +11,7 @@
 // Go's linker has no manifest support; it links any .syso object in a
 // package directory and merges .rsrc sections into the executable's resource
 // directory. cmd/genwinres writes Object's output for each Targets entry to
-// cmd/no-mistakes, so `go build`, `go install`, `make dist`, and the release
+// cmd/alamino, so `go build`, `go install`, `make dist`, and the release
 // workflow embed the manifest without extra steps, and `make lint` fails if a
 // committed object drifts from this package.
 package winres
@@ -23,11 +23,11 @@ import (
 	"path"
 )
 
-//go:embed no-mistakes.exe.manifest
+//go:embed alamino.exe.manifest
 var manifest []byte
 
 // Manifest returns a copy of the application manifest that every Windows
-// build of no-mistakes.exe embeds.
+// build of alamino.exe embeds.
 func Manifest() []byte {
 	return bytes.Clone(manifest)
 }
@@ -41,7 +41,7 @@ const (
 	ManifestLangID = 0x0409 // en-US
 )
 
-// Target is one Windows architecture no-mistakes ships for.
+// Target is one Windows architecture alamino ships for.
 type Target struct {
 	GOARCH string
 	// Machine is the COFF IMAGE_FILE_MACHINE_* value.
@@ -59,7 +59,7 @@ var Targets = []Target{
 
 // ObjectDir is the package directory, relative to the repository root, whose
 // build links the objects.
-const ObjectDir = "cmd/no-mistakes"
+const ObjectDir = "cmd/alamino"
 
 // ObjectPath returns the object's slash-separated path relative to the
 // repository root. The _windows_<arch> suffix is a Go build constraint, so

@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func TestRepoSlug(t *testing.T) {
@@ -880,7 +880,7 @@ func TestGetChecksRejectsIncompleteWorkflowPagination(t *testing.T) {
 func TestGetPRContentReadsTitleAndBody(t *testing.T) {
 	t.Parallel()
 
-	body := "## Pipeline\n\n" + "Updates from no-mistakes\n"
+	body := "## Pipeline\n\n" + "Updates from alamino\n"
 	encoded, err := json.Marshal(map[string]string{"title": "fix: restamp", "body": body})
 	if err != nil {
 		t.Fatal(err)
@@ -1889,7 +1889,7 @@ func TestAvailableReportsMissingBinaryInsteadOfAuthFailure(t *testing.T) {
 	t.Parallel()
 
 	host := New(func(ctx context.Context, name string, args ...string) *exec.Cmd {
-		return exec.CommandContext(ctx, "no-mistakes-missing-gh-binary")
+		return exec.CommandContext(ctx, "alamino-missing-gh-binary")
 	}, func() bool { return true }, "", "")
 
 	err := host.Available(context.Background())

@@ -10,15 +10,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/gatecontext"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/lifecycle"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/gatecontext"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/lifecycle"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ var (
 func newDaemonCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "daemon",
-		Short: "Manage the no-mistakes daemon",
+		Short: "Manage the alamino daemon",
 	}
 
 	cmd.AddCommand(newDaemonStartCmd())
@@ -84,8 +84,8 @@ func newDaemonAdmitPushCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// Resolve the daemon root from the gate itself, not NM_HOME: this
-			// runs as a git hook helper, and git sets no NM_HOME for a hook.
+			// Resolve the daemon root from the gate itself, not ALAMINO_HOME: this
+			// runs as a git hook helper, and git sets no ALAMINO_HOME for a hook.
 			p, err := paths.ForGate(gatePath)
 			if err != nil {
 				return err
@@ -284,7 +284,7 @@ func normalizeNotifyGatePath(gate string) (string, error) {
 func parseSkipPushOptions(options []string) ([]types.StepName, error) {
 	var steps []types.StepName
 	for _, option := range options {
-		value, ok := strings.CutPrefix(option, "no-mistakes.skip=")
+		value, ok := strings.CutPrefix(option, "alamino.skip=")
 		if !ok {
 			continue
 		}
@@ -315,11 +315,11 @@ func parseSkipSteps(value string) ([]types.StepName, error) {
 // intentPushOptionPrefix carries an agent-supplied intent through a git push.
 // The value is base64-encoded so multi-line or special-character intents
 // survive the push-option transport (which is line-oriented).
-const intentPushOptionPrefix = "no-mistakes.intent="
+const intentPushOptionPrefix = "alamino.intent="
 
 const (
-	launchNoncePushOptionPrefix          = "no-mistakes.launch-nonce="
-	validationGenerationPushOptionPrefix = "no-mistakes.validation-generation="
+	launchNoncePushOptionPrefix          = "alamino.launch-nonce="
+	validationGenerationPushOptionPrefix = "alamino.validation-generation="
 )
 
 func formatLaunchNoncePushOption(nonce string) string {
@@ -368,9 +368,9 @@ func parseOpaquePushOptions(options []string, prefix, label string) (string, err
 }
 
 // prBaseBranchPushOptionPrefix carries a per-run PR base branch through a git push.
-const prBaseBranchPushOptionPrefix = "no-mistakes.pr-base-branch="
+const prBaseBranchPushOptionPrefix = "alamino.pr-base-branch="
 
-const baseRemotePushOptionPrefix = "no-mistakes.base-remote="
+const baseRemotePushOptionPrefix = "alamino.base-remote="
 
 func parseBaseRemotePushOptions(options []string) (string, error) {
 	remote := ""
@@ -447,7 +447,7 @@ func parsePRBaseBranchPushOptions(options []string) (string, error) {
 // omitIntentPushOption carries axi run --no-publish-intent through a git push.
 // Like every publication control it is tighten-only: the option can only ask
 // for omission, never for publication.
-const omitIntentPushOption = "no-mistakes.omit-intent"
+const omitIntentPushOption = "alamino.omit-intent"
 
 // formatOmitIntentPushOption encodes the caller-side omit-intent request as a
 // push option. An absent request formats to no option at all.
@@ -498,7 +498,7 @@ func probeDaemonOmitIntent(client *ipc.Client) error {
 		err = errors.New("daemon declined the omit-intent capability")
 	}
 	if err != nil {
-		return fmt.Errorf("the running daemon is too old to honor --no-publish-intent (%v); restart it with `no-mistakes daemon restart` so the current binary serves it", err)
+		return fmt.Errorf("the running daemon is too old to honor --no-publish-intent (%v); restart it with `alamino daemon restart` so the current binary serves it", err)
 	}
 	return nil
 }
@@ -506,7 +506,7 @@ func probeDaemonOmitIntent(client *ipc.Client) error {
 // reconciledPreviousHeadPushOptionPrefix carries the pre-reconciliation private
 // mirror head through a git push. A reconciled branch is deleted and re-created
 // by that push, so the hook sees no previous head of its own.
-const reconciledPreviousHeadPushOptionPrefix = "no-mistakes.reconciled-previous-head="
+const reconciledPreviousHeadPushOptionPrefix = "alamino.reconciled-previous-head="
 
 // formatReconciledPreviousHeadPushOption encodes the archived pre-reconciliation
 // head as a push option, or returns "" when nothing was reconciled.
@@ -553,7 +553,7 @@ func isHexCommitSHA(value string) bool {
 
 // closingIssuePushOptionPrefix carries one closing issue reference through a git push.
 // Repeating the option preserves the repeatable --closes CLI contract.
-const closingIssuePushOptionPrefix = "no-mistakes.closes="
+const closingIssuePushOptionPrefix = "alamino.closes="
 
 func formatClosingIssueRefsPushOptions(refs []string) []string {
 	options := make([]string, 0, len(refs))
@@ -588,7 +588,7 @@ func formatSkipPushOptions(steps []types.StepName) []string {
 	for _, step := range dedupeSteps(steps) {
 		parts = append(parts, string(step))
 	}
-	return []string{"no-mistakes.skip=" + strings.Join(parts, ",")}
+	return []string{"alamino.skip=" + strings.Join(parts, ",")}
 }
 
 func validStep(step types.StepName) bool {
@@ -603,7 +603,7 @@ func validStep(step types.StepName) bool {
 // validReadableStep accepts everything a run can have recorded a step log for,
 // which includes the repository's own gates. Read-only surfaces use this;
 // validStep stays the stricter answer for anything that CHANGES what a run
-// does. In particular `no-mistakes.skip=` must never accept a gate name, or a
+// does. In particular `alamino.skip=` must never accept a gate name, or a
 // pushed branch could switch off the maintainer's extra check by push option.
 func validReadableStep(step types.StepName) bool {
 	return validStep(step) || step.IsCustomGate()
@@ -687,7 +687,7 @@ func newDaemonStopCmd() *cobra.Command {
 				}
 				fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon stopped\n", sGreen.Render("✓"))
 				if path := daemonLaunchAgentPathFn(p); path != "" {
-					fmt.Fprintf(cmd.OutOrStdout(), "  Service starts again at the next login; LaunchAgent remains at %s. Remove it with `no-mistakes daemon uninstall`.\n", path)
+					fmt.Fprintf(cmd.OutOrStdout(), "  Service starts again at the next login; LaunchAgent remains at %s. Remove it with `alamino daemon uninstall`.\n", path)
 				}
 				return nil
 			})
@@ -722,7 +722,7 @@ func newDaemonUninstallCmd() *cobra.Command {
 					return err
 				}
 				if definition == "" {
-					fmt.Fprintf(cmd.OutOrStdout(), "  No managed daemon service is installed for NM_HOME %s.\n", p.Root())
+					fmt.Fprintf(cmd.OutOrStdout(), "  No managed daemon service is installed for ALAMINO_HOME %s.\n", p.Root())
 				} else {
 					fmt.Fprintf(cmd.OutOrStdout(), "  %s removed managed daemon service: %s\n", sGreen.Render("✓"), definition)
 				}
@@ -847,14 +847,14 @@ func newDaemonRunCmd() *cobra.Command {
 		Args:   cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if root != "" {
-				if err := os.Setenv("NM_HOME", root); err != nil {
-					return fmt.Errorf("set NM_HOME: %w", err)
+				if err := os.Setenv("ALAMINO_HOME", root); err != nil {
+					return fmt.Errorf("set ALAMINO_HOME: %w", err)
 				}
 			}
 			return daemonRun()
 		},
 	}
 
-	cmd.Flags().StringVar(&root, "root", "", "override no-mistakes data directory")
+	cmd.Flags().StringVar(&root, "root", "", "override alamino data directory")
 	return cmd
 }

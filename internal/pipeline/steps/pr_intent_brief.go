@@ -7,10 +7,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/intent"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/intent"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 const (

@@ -3,7 +3,7 @@ package pipeline
 import (
 	"sync"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
 type PublishedPush struct {

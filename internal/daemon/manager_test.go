@@ -11,16 +11,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // --- RunManager integration tests ---
@@ -826,7 +826,7 @@ func TestPushReceivedConcurrentDifferentBranchRunsAvoidSharedConfigLock(t *testi
 	_, headSHA := setupTestGitRepo(t, p, d, repoID)
 
 	// Mirror a real gate: enable the per-worktree config isolation that
-	// `no-mistakes init` installs, which is what lets identity writes avoid the
+	// `alamino init` installs, which is what lets identity writes avoid the
 	// shared config.lock.
 	if err := git.IsolateHooksPath(context.Background(), p.RepoDir(repoID)); err != nil {
 		t.Fatalf("isolate hooks path: %v", err)
@@ -1424,7 +1424,7 @@ func TestResolveRerunHeadUsesPreservedTerminalHeadInsteadOfStaleGateBranch(t *te
 	run := &db.Run{ID: "run-1", Branch: "feature/recover", Status: types.RunFailed, HeadSHA: preserved, SubmittedHeadSHA: &submitted}
 	now := int64(1)
 	run.TerminalHeadVerifiedAt = &now
-	gitCmd(t, work, "push", gate, preserved+":refs/no-mistakes/recover/"+run.ID)
+	gitCmd(t, work, "push", gate, preserved+":refs/alamino/recover/"+run.ID)
 
 	head, err := resolveRerunHead(context.Background(), gate, run.Branch, run)
 	if err != nil {
@@ -1625,7 +1625,7 @@ func TestPushReceivedTracksRunTelemetryAfterPanic(t *testing.T) {
 }
 
 func TestPushReceivedDemoModeBypassesAgentResolution(t *testing.T) {
-	t.Setenv("NM_DEMO", "1")
+	t.Setenv("ALAMINO_DEMO", "1")
 
 	step := &mockPassStep{name: types.StepReview}
 	p, d := startTestDaemonWithSteps(t, func() []pipeline.Step {
@@ -1828,8 +1828,8 @@ func TestPushReceivedRejectsGateFromAnotherHome(t *testing.T) {
 	const repoID = "cross-home-repo"
 	_, headSHA := setupTestGitRepo(t, p, d, repoID)
 
-	// Same repo id, a different NM_HOME: exactly what the default root's daemon
-	// received when a second root's hook shelled out without NM_HOME set.
+	// Same repo id, a different ALAMINO_HOME: exactly what the default root's daemon
+	// received when a second root's hook shelled out without ALAMINO_HOME set.
 	foreignHome := t.TempDir()
 	foreignGate := filepath.Join(foreignHome, "repos", repoID+".git")
 	if err := os.MkdirAll(foreignGate, 0o755); err != nil {
@@ -1908,7 +1908,7 @@ func TestAdmitPushRejectsGateFromAnotherHome(t *testing.T) {
 }
 
 // TestOwnedGateAcceptsARelativeRootSpelling pins the guard against the root
-// spelling: NM_HOME may be relative, while the gate path always arrives
+// spelling: ALAMINO_HOME may be relative, while the gate path always arrives
 // absolute from git rev-parse, so a textual compare would refuse every push to
 // the daemon's own gate.
 func TestOwnedGateAcceptsARelativeRootSpelling(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 )
 
 func TestWithRoot(t *testing.T) {
-	root := filepath.Join("tmp", "nm-test")
+	root := filepath.Join("tmp", "alamino-test")
 	p := WithRoot(root)
 
 	if got := p.Root(); got != root {
@@ -29,7 +29,7 @@ func TestWithRoot(t *testing.T) {
 }
 
 func TestRepoPaths(t *testing.T) {
-	root := filepath.Join("tmp", "nm-test")
+	root := filepath.Join("tmp", "alamino-test")
 	p := WithRoot(root)
 
 	if got := p.ReposDir(); got != filepath.Join(root, "repos") {
@@ -41,7 +41,7 @@ func TestRepoPaths(t *testing.T) {
 }
 
 func TestWorktreePaths(t *testing.T) {
-	root := filepath.Join("tmp", "nm-test")
+	root := filepath.Join("tmp", "alamino-test")
 	p := WithRoot(root)
 
 	if got := p.WorktreesDir(); got != filepath.Join(root, "worktrees") {
@@ -53,7 +53,7 @@ func TestWorktreePaths(t *testing.T) {
 }
 
 func TestLogPaths(t *testing.T) {
-	root := filepath.Join("tmp", "nm-test")
+	root := filepath.Join("tmp", "alamino-test")
 	p := WithRoot(root)
 
 	if got := p.LogsDir(); got != filepath.Join(root, "logs") {
@@ -75,7 +75,7 @@ func TestLogPaths(t *testing.T) {
 
 func TestNewWithEnvOverride(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("NM_HOME", dir)
+	t.Setenv("ALAMINO_HOME", dir)
 
 	p, err := New()
 	if err != nil {
@@ -87,8 +87,8 @@ func TestNewWithEnvOverride(t *testing.T) {
 }
 
 func TestNewRejectsDefaultRootInTests(t *testing.T) {
-	t.Setenv("NM_HOME", "")
-	t.Setenv("NO_MISTAKES_ALLOW_DEFAULT_ROOT_IN_TESTS", "")
+	t.Setenv("ALAMINO_HOME", "")
+	t.Setenv("ALAMINO_ALLOW_DEFAULT_ROOT_IN_TESTS", "")
 
 	_, err := New()
 	if err == nil {
@@ -97,15 +97,15 @@ func TestNewRejectsDefaultRootInTests(t *testing.T) {
 }
 
 func TestNewDefault(t *testing.T) {
-	t.Setenv("NM_HOME", "")
-	t.Setenv("NO_MISTAKES_ALLOW_DEFAULT_ROOT_IN_TESTS", "1")
+	t.Setenv("ALAMINO_HOME", "")
+	t.Setenv("ALAMINO_ALLOW_DEFAULT_ROOT_IN_TESTS", "1")
 
 	p, err := New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	home, _ := os.UserHomeDir()
-	want := filepath.Join(home, ".no-mistakes")
+	want := filepath.Join(home, ".alamino")
 	if p.Root() != want {
 		t.Errorf("Root() = %q, want %q", p.Root(), want)
 	}
@@ -133,7 +133,7 @@ func TestEnsureDirs(t *testing.T) {
 
 // TestForGate covers the routing contract the managed receive hooks depend on:
 // the daemon root that owns a gate is derivable from the gate's own path, so a
-// hook helper never has to trust an NM_HOME that git did not set.
+// hook helper never has to trust an ALAMINO_HOME that git did not set.
 func TestForGate(t *testing.T) {
 	tests := []struct {
 		name string
@@ -141,7 +141,7 @@ func TestForGate(t *testing.T) {
 		want string
 	}{
 		{name: "ordinary root", gate: filepath.Join("/srv", "nm", "repos", "abc123.git"), want: filepath.Join("/srv", "nm")},
-		{name: "default-shaped root", gate: filepath.Join("/home", "u", ".no-mistakes", "repos", "abc123.git"), want: filepath.Join("/home", "u", ".no-mistakes")},
+		{name: "default-shaped root", gate: filepath.Join("/home", "u", ".alamino", "repos", "abc123.git"), want: filepath.Join("/home", "u", ".alamino")},
 		// A gate directly under the filesystem root still has an owning root
 		// ("/"), which a suffix-trimming derivation would flatten to empty and
 		// then reject, refusing every push to that home.
@@ -183,16 +183,16 @@ func TestForGateRefusesPathsThatAreNotManagedGates(t *testing.T) {
 }
 
 // TestForGateIgnoresAmbientNMHome is the regression proper: the hook helpers
-// resolve their root from the gate, so an NM_HOME naming a different root - the
+// resolve their root from the gate, so an ALAMINO_HOME naming a different root - the
 // state a push from an ordinary shell used to produce - cannot retarget them.
 func TestForGateIgnoresAmbientNMHome(t *testing.T) {
-	t.Setenv("NM_HOME", filepath.Join("/some", "other", "root"))
+	t.Setenv("ALAMINO_HOME", filepath.Join("/some", "other", "root"))
 	gate := filepath.Join("/srv", "nm", "repos", "abc123.git")
 	p, err := ForGate(gate)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if want := filepath.Join("/srv", "nm"); p.Root() != want {
-		t.Fatalf("ForGate root = %q, want %q - an exported NM_HOME must not choose the owning daemon", p.Root(), want)
+		t.Fatalf("ForGate root = %q, want %q - an exported ALAMINO_HOME must not choose the owning daemon", p.Root(), want)
 	}
 }

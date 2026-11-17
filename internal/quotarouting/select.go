@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Candidate is one agent considered for ordering, in the configured order.
@@ -53,7 +53,7 @@ type Selection struct {
 	// highest spendPriority first, then unrankable-but-eligible ones, then
 	// ineligible ones - each group keeping the configured order within it.
 	Order []types.AgentName
-	// Choice is the head no-mistakes runs first: the first eligible candidate
+	// Choice is the head alamino runs first: the first eligible candidate
 	// in Order, falling back to Order's head when nobody measured eligible.
 	Choice types.AgentName
 	// Evidence is per candidate in the configured (input) order.

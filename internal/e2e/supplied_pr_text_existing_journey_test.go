@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func readRunPRFreshness(t *testing.T, nmHome, runID string) (titleFresh, bodyFresh bool) {
@@ -45,12 +45,12 @@ func editLivePR(t *testing.T, statePath, branch string, edit func(*statefulGHPR)
 // appendix and attestation exactly once after a supplied-text update.
 func assertPipelineOwnedTail(t *testing.T, label, body string) {
 	t.Helper()
-	for _, marker := range []string{"<!-- no-mistakes-pr-appendix:v1", "no-mistakes-pipeline-attestation"} {
+	for _, marker := range []string{"<!-- alamino-pr-appendix:v1", "alamino-pipeline-attestation"} {
 		if n := strings.Count(body, marker); n < 1 {
 			t.Errorf("%s: body missing %q; body:\n%s", label, marker, body)
 		}
 	}
-	if n := strings.Count(body, "<!-- no-mistakes-pr-appendix:v1"); n > 1 {
+	if n := strings.Count(body, "<!-- alamino-pr-appendix:v1"); n > 1 {
 		t.Errorf("%s: appendix marker repeated %d times; body:\n%s", label, n, body)
 	}
 }
@@ -109,7 +109,7 @@ func TestSuppliedPRTextExistingPRJourney(t *testing.T) {
 	if pr.Title != titleA {
 		t.Errorf("title-only: PR title = %q, want %q", pr.Title, titleA)
 	}
-	if !strings.Contains(pr.Body, "no-mistakes-pipeline-attestation") {
+	if !strings.Contains(pr.Body, "alamino-pipeline-attestation") {
 		t.Errorf("title-only: attestation missing; body:\n%s", pr.Body)
 	}
 

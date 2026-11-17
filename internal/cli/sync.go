@@ -8,9 +8,9 @@ import (
 
 	toON "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/telemetry"
 	"github.com/spf13/cobra"
 )
 
@@ -178,7 +178,7 @@ func runHumanSync(cmd *cobra.Command, check, yes bool) error {
 	}
 	if !yes {
 		if !syncInteractive() {
-			fmt.Fprintln(cmd.OutOrStdout(), "  Non-interactive input cannot confirm this plan. Re-run with `no-mistakes sync --yes`.")
+			fmt.Fprintln(cmd.OutOrStdout(), "  Non-interactive input cannot confirm this plan. Re-run with `alamino sync --yes`.")
 			result = "refused"
 			return &exitError{code: 1}
 		}
@@ -261,9 +261,9 @@ func runHumanRecover(cmd *cobra.Command, keepLocal, yes bool) error {
 	if !yes && state.State != branchsync.StateUserOwned {
 		printHumanSyncState(cmd, state)
 		if !syncInteractive() {
-			retry := "no-mistakes sync --recover --yes"
+			retry := "alamino sync --recover --yes"
 			if keepLocal {
-				retry = "no-mistakes sync --recover --keep-local --yes"
+				retry = "alamino sync --recover --keep-local --yes"
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "  Non-interactive input cannot confirm this recovery. Re-run with `%s`.\n", retry)
 			result = "refused"
@@ -347,7 +347,7 @@ func runHumanAdoptPublished(cmd *cobra.Command, yes bool) error {
 	if !yes {
 		printHumanSyncState(cmd, observed)
 		if !syncInteractive() {
-			fmt.Fprintln(cmd.OutOrStdout(), "  Non-interactive input cannot confirm this recovery. Re-run with `no-mistakes sync --adopt-published --yes`.")
+			fmt.Fprintln(cmd.OutOrStdout(), "  Non-interactive input cannot confirm this recovery. Re-run with `alamino sync --adopt-published --yes`.")
 			result = "refused"
 			return &exitError{code: 1}
 		}
@@ -405,15 +405,15 @@ func humanSyncSummary(state branchsync.State) string {
 	case branchsync.StatePipelineOwned:
 		if state.Safety == "blocked_pipeline_owned_recoverable" {
 			if state.Recovery != nil && state.Recovery.KeepLocal && state.Recovery.Source == "pinned_head" {
-				return "pipeline commits stay at the recovery ref and are not on the branch; recover custody at the current local head with `no-mistakes sync --recover --keep-local`"
+				return "pipeline commits stay at the recovery ref and are not on the branch; recover custody at the current local head with `alamino sync --recover --keep-local`"
 			}
 			if state.Recovery != nil && state.Recovery.KeepLocal {
-				return "later pipeline work is preserved by a verified archive; recover custody at the exact required head with `no-mistakes sync --recover --keep-local`"
+				return "later pipeline work is preserved by a verified archive; recover custody at the exact required head with `alamino sync --recover --keep-local`"
 			}
-			return "run ended without publishing its pipeline commits; recover custody with `no-mistakes sync --recover`. `no-mistakes rerun` resumes validating the selected preserved head, but refuses a known clean caller HEAD mismatch. If heads differ, inspect `no-mistakes axi status` and follow its exact `branch_sync.next_action.command` for custody or synchronization, then submit intended local commits with a fresh `no-mistakes axi run` once custody permits"
+			return "run ended without publishing its pipeline commits; recover custody with `alamino sync --recover`. `alamino rerun` resumes validating the selected preserved head, but refuses a known clean caller HEAD mismatch. If heads differ, inspect `alamino axi status` and follow its exact `branch_sync.next_action.command` for custody or synchronization, then submit intended local commits with a fresh `alamino axi run` once custody permits"
 		}
 		if state.Safety == "blocked_recover_preserved_head_missing" {
-			return "run ended without a recoverable preserved head; recover custody with `no-mistakes sync --recover --keep-local` to keep the current local head"
+			return "run ended without a recoverable preserved head; recover custody with `alamino sync --recover --keep-local` to keep the current local head"
 		}
 		return "pipeline fix is not pushed yet; do not make local follow-up commits"
 	case branchsync.StateCustodyReturned:
@@ -504,7 +504,7 @@ func runAxiSync(cmd *cobra.Command, check, recover, keepLocal, adoptPublished bo
 		help = append(help, "Run `"+state.NextAction.Command+"`")
 	}
 	if state.Safety == "blocked_pipeline_owned_recoverable" && (state.Recovery == nil || !state.Recovery.KeepLocal) {
-		help = append(help, "Run `no-mistakes rerun` instead to resume validating the selected preserved pipeline head; it refuses a known clean caller HEAD mismatch. If heads differ, inspect `no-mistakes axi status` and follow its exact `branch_sync.next_action.command` for custody or synchronization, then submit intended local commits with a fresh `no-mistakes axi run` once custody permits")
+		help = append(help, "Run `alamino rerun` instead to resume validating the selected preserved pipeline head; it refuses a known clean caller HEAD mismatch. If heads differ, inspect `alamino axi status` and follow its exact `branch_sync.next_action.command` for custody or synchronization, then submit intended local commits with a fresh `alamino axi run` once custody permits")
 	}
 	if len(help) > 0 {
 		fields = append(fields, toON.Field{Key: "help", Value: help})
@@ -535,7 +535,7 @@ func runAxiSync(cmd *cobra.Command, check, recover, keepLocal, adoptPublished bo
 func verifiedArchiveRecovery(state branchsync.State) bool {
 	return state.Recovery != nil && state.Recovery.Source == "bound_archive" && state.Recovery.Proof == "verified" &&
 		state.Recovery.KeepLocal && state.NextAction != nil && state.NextAction.Code == "recover_custody" &&
-		state.NextAction.Command == "no-mistakes axi sync --recover --keep-local"
+		state.NextAction.Command == "alamino axi sync --recover --keep-local"
 }
 
 func trackSyncAttempt(command, surface, mode string, state branchsync.State, result string, started time.Time) {

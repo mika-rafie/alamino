@@ -108,7 +108,7 @@ func TestLoadRepoConfig_IntentParsed(t *testing.T) {
 intent:
   enabled: false
 `
-	if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte(yaml), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte(yaml), 0o644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 
@@ -264,7 +264,7 @@ func TestIntentConfigRejectsInvalidPolicies(t *testing.T) {
 
 // The global publication default must live only in global config. The repo
 // raw type has no publication key (compile-enforced), so a pushed branch's
-// .no-mistakes.yaml writing intent.publish_intent is silently ignored and the
+// .alamino.yaml writing intent.publish_intent is silently ignored and the
 // operator's global default always wins. This test pins the observable half:
 // the ignored key parses without error and leaves the resolved defaults.
 func TestRepoConfigCannotExpressIntentPublishIntent(t *testing.T) {

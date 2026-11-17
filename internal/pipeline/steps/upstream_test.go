@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // minimalStepContext builds a StepContext with just enough fields for the
@@ -147,7 +147,7 @@ func TestResolveUpstreamURL_FallsBackToRecordedURL(t *testing.T) {
 }
 
 // TestResolveBranchBaseSHA_FetchesFreshBaseTipBeforeMergeBase reproduces
-// kunchenguid/no-mistakes#997: a worktree's cached origin/<base> ref can be
+// mika-rafie/alamino#997: a worktree's cached origin/<base> ref can be
 // stale relative to the live base branch, so computing merge-base against it
 // picks an ancestor further back than the branch's real cut point and pulls
 // commits that already landed on the base into the PR's drafted diff.
@@ -225,7 +225,7 @@ func TestResolveBranchBaseSHA_FetchesFreshBaseTipBeforeMergeBase(t *testing.T) {
 }
 
 // TestResolveBranchBaseSHA_FetchFailureIsRefusedNotStaleFallback covers the
-// gap kunchenguid flagged on PR #1147 (issue #997's follow-up): a base-branch
+// gap an upstream maintainer flagged on upstream PR #1147 (issue #997's follow-up): a base-branch
 // fetch failure (network/auth/etc) must not silently fall back to whatever
 // stale origin/<base> ref is already cached in the worktree, since that
 // reintroduces the exact stale-base bug this helper exists to eliminate, one
@@ -294,7 +294,7 @@ func TestResolvePushURL_ForkWinsOverCredential(t *testing.T) {
 	if out, err := exec.Command("git", "init", "-q", dir).CombinedOutput(); err != nil {
 		t.Fatalf("git init: %v: %s", err, out)
 	}
-	forkURL := "https://github.com/e-jung/no-mistakes.git"
+	forkURL := "https://github.com/e-jung/alamino.git"
 	sctx := minimalStepContext(t, dir, "https://redacted@github.com/o/r.git")
 	sctx.Repo.ForkURL = forkURL
 	if got := resolvePushURL(sctx); got != forkURL {

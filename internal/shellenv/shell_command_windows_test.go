@@ -79,7 +79,7 @@ func TestConfigureCooperativeShellCommandCancelAllowsCleanup(t *testing.T) {
 	assertCooperativeCancelAllowsCleanup(t)
 }
 
-// Issue #1653: the shipped no-mistakes.exe carries the manifest's
+// Issue #1653: the shipped alamino.exe carries the manifest's
 // consoleAllocationPolicy=detached, which also overrides the CREATE_NEW_CONSOLE
 // the cooperative helper is started with. The real binary as helper must still
 // share a console with its target, or CTRL_BREAK never reaches the command and
@@ -87,17 +87,17 @@ func TestConfigureCooperativeShellCommandCancelAllowsCleanup(t *testing.T) {
 // carries no manifest, so only the real build shows this.
 func TestConfigureCooperativeShellCommandCancelAllowsCleanupWithShippedHelper(t *testing.T) {
 	if testing.Short() {
-		t.Skip("builds no-mistakes.exe")
+		t.Skip("builds alamino.exe")
 	}
 	if _, _, build := windows.RtlGetNtVersionNumbers(); build < consoleAllocationPolicyBuild {
 		t.Skipf("Windows build %d ignores consoleAllocationPolicy (needs %d, Windows 11 24H2 / Server 2025)", build, consoleAllocationPolicyBuild)
 	}
-	exe := filepath.Join(t.TempDir(), "no-mistakes.exe")
+	exe := filepath.Join(t.TempDir(), "alamino.exe")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	build := exec.CommandContext(ctx, "go", "build", "-o", exe, "github.com/kunchenguid/no-mistakes/cmd/no-mistakes")
+	build := exec.CommandContext(ctx, "go", "build", "-o", exe, "github.com/mika-rafie/alamino/cmd/alamino")
 	if out, err := build.CombinedOutput(); err != nil {
-		t.Fatalf("build no-mistakes.exe: %v\n%s", err, out)
+		t.Fatalf("build alamino.exe: %v\n%s", err, out)
 	}
 	old := windowsCooperativeHelperCommandFunc
 	windowsCooperativeHelperCommandFunc = func(eventName, targetPath string, targetArgs []string) (string, []string, error) {
@@ -116,10 +116,10 @@ func assertCooperativeCancelAllowsCleanup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := windowsCommandCancellationHelper(ctx)
 	cmd.Env = append(os.Environ(),
-		"NM_WINDOWS_COMMAND_HELPER=cooperate",
-		"NM_WINDOWS_HELPER_EXE="+os.Args[0],
-		"NM_WINDOWS_COMMAND_READY="+ready,
-		"NM_WINDOWS_COMMAND_CLEANUP="+cleanup,
+		"ALAMINO_WINDOWS_COMMAND_HELPER=cooperate",
+		"ALAMINO_WINDOWS_HELPER_EXE="+os.Args[0],
+		"ALAMINO_WINDOWS_COMMAND_READY="+ready,
+		"ALAMINO_WINDOWS_COMMAND_CLEANUP="+cleanup,
 	)
 	ConfigureCooperativeShellCommand(cmd)
 	var output bytes.Buffer
@@ -151,9 +151,9 @@ func TestConfigureCooperativeShellCommandCancelForcesNonCooperatingTree(t *testi
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := windowsCommandCancellationHelper(ctx)
 	cmd.Env = append(os.Environ(),
-		"NM_WINDOWS_COMMAND_HELPER=ignore",
-		"NM_WINDOWS_HELPER_EXE="+os.Args[0],
-		"NM_WINDOWS_COMMAND_READY="+ready,
+		"ALAMINO_WINDOWS_COMMAND_HELPER=ignore",
+		"ALAMINO_WINDOWS_HELPER_EXE="+os.Args[0],
+		"ALAMINO_WINDOWS_COMMAND_READY="+ready,
 	)
 	ConfigureCooperativeShellCommand(cmd)
 	var output bytes.Buffer
@@ -191,20 +191,20 @@ func TestConfigureCooperativeShellCommandCancelForcesNonCooperatingTree(t *testi
 }
 
 func TestWindowsCommandCancellationHelper(t *testing.T) {
-	mode := os.Getenv("NM_WINDOWS_COMMAND_HELPER")
+	mode := os.Getenv("ALAMINO_WINDOWS_COMMAND_HELPER")
 	if mode == "" {
 		return
 	}
 	interrupts := make(chan os.Signal, 1)
 	signal.Notify(interrupts, os.Interrupt)
 	defer signal.Stop(interrupts)
-	if err := os.WriteFile(os.Getenv("NM_WINDOWS_COMMAND_READY"), []byte(strconv.Itoa(os.Getpid())), 0o600); err != nil {
+	if err := os.WriteFile(os.Getenv("ALAMINO_WINDOWS_COMMAND_READY"), []byte(strconv.Itoa(os.Getpid())), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if mode == "linger" {
 		// A child that is merely finishing when the leader exits: it stays in
 		// the job a moment longer, then leaves on its own (issue #1614).
-		ms, _ := strconv.Atoi(os.Getenv("NM_WINDOWS_COMMAND_LINGER_MS"))
+		ms, _ := strconv.Atoi(os.Getenv("ALAMINO_WINDOWS_COMMAND_LINGER_MS"))
 		time.Sleep(time.Duration(ms) * time.Millisecond)
 		return
 	}
@@ -213,7 +213,7 @@ func TestWindowsCommandCancellationHelper(t *testing.T) {
 		}
 	}
 	<-interrupts
-	if err := os.WriteFile(os.Getenv("NM_WINDOWS_COMMAND_CLEANUP"), []byte("cleaned"), 0o600); err != nil {
+	if err := os.WriteFile(os.Getenv("ALAMINO_WINDOWS_COMMAND_CLEANUP"), []byte("cleaned"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -267,7 +267,7 @@ func windowsCommandCancellationHelper(ctx context.Context) *exec.Cmd {
 	// as the job leader proves the control event reaches a real descendant and
 	// that an early shell exit cannot cut the descendant's cleanup window short.
 	return exec.CommandContext(ctx, "cmd.exe", "/d", "/c",
-		`%NM_WINDOWS_HELPER_EXE% -test.run=TestWindowsCommandCancellationHelper`)
+		`%ALAMINO_WINDOWS_HELPER_EXE% -test.run=TestWindowsCommandCancellationHelper`)
 }
 
 type windowsCommandCancellationTestRun struct {
@@ -412,13 +412,13 @@ func TestShellCommandGroupActiveRefusesChildAlivePastWindow(t *testing.T) {
 	// cmd.exe does not understand that, so the line is passed through verbatim.
 	cmd := exec.CommandContext(context.Background(), "cmd.exe")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		CmdLine: `cmd.exe /d /c start "" /b "%NM_WINDOWS_HELPER_EXE%" -test.run=TestWindowsCommandCancellationHelper`,
+		CmdLine: `cmd.exe /d /c start "" /b "%ALAMINO_WINDOWS_HELPER_EXE%" -test.run=TestWindowsCommandCancellationHelper`,
 	}
 	cmd.Env = append(os.Environ(),
-		"NM_WINDOWS_COMMAND_HELPER=ignore",
-		"NM_WINDOWS_HELPER_EXE="+os.Args[0],
-		"NM_WINDOWS_COMMAND_READY="+ready,
-		"NM_WINDOWS_COMMAND_CLEANUP="+filepath.Join(dir, "cleanup"),
+		"ALAMINO_WINDOWS_COMMAND_HELPER=ignore",
+		"ALAMINO_WINDOWS_HELPER_EXE="+os.Args[0],
+		"ALAMINO_WINDOWS_COMMAND_READY="+ready,
+		"ALAMINO_WINDOWS_COMMAND_CLEANUP="+filepath.Join(dir, "cleanup"),
 	)
 	ConfigureShellCommand(cmd)
 	if _, ok := shellCommandJob(cmd); !ok {
@@ -471,14 +471,14 @@ func TestShellCommandGroupActiveAcceptsChildFinishingInsideWindow(t *testing.T) 
 	ready := filepath.Join(dir, "ready")
 	cmd := exec.CommandContext(context.Background(), "cmd.exe")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		CmdLine: `cmd.exe /d /c start "" /b "%NM_WINDOWS_HELPER_EXE%" -test.run=TestWindowsCommandCancellationHelper`,
+		CmdLine: `cmd.exe /d /c start "" /b "%ALAMINO_WINDOWS_HELPER_EXE%" -test.run=TestWindowsCommandCancellationHelper`,
 	}
 	cmd.Env = append(os.Environ(),
-		"NM_WINDOWS_COMMAND_HELPER=linger",
-		"NM_WINDOWS_COMMAND_LINGER_MS=700",
-		"NM_WINDOWS_HELPER_EXE="+os.Args[0],
-		"NM_WINDOWS_COMMAND_READY="+ready,
-		"NM_WINDOWS_COMMAND_CLEANUP="+filepath.Join(dir, "cleanup"),
+		"ALAMINO_WINDOWS_COMMAND_HELPER=linger",
+		"ALAMINO_WINDOWS_COMMAND_LINGER_MS=700",
+		"ALAMINO_WINDOWS_HELPER_EXE="+os.Args[0],
+		"ALAMINO_WINDOWS_COMMAND_READY="+ready,
+		"ALAMINO_WINDOWS_COMMAND_CLEANUP="+filepath.Join(dir, "cleanup"),
 	)
 	ConfigureShellCommand(cmd)
 	if _, ok := shellCommandJob(cmd); !ok {

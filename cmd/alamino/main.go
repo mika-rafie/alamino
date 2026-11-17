@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/cli"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/update"
+	"github.com/mika-rafie/alamino/internal/cli"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/update"
 )
 
 var cleanupOldExecutable = update.CleanupOldExecutable
@@ -47,7 +47,7 @@ func run() int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	} else if ok {
-		if err := os.Setenv("NM_HOME", root); err != nil {
+		if err := os.Setenv("ALAMINO_HOME", root); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
@@ -62,7 +62,7 @@ func run() int {
 		return 1
 	} else if ok {
 		if root != "" {
-			if err := os.Setenv("NM_HOME", root); err != nil {
+			if err := os.Setenv("ALAMINO_HOME", root); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				return 1
 			}

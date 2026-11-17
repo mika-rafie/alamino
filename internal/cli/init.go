@@ -8,21 +8,21 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/skill"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/skill"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 	"github.com/spf13/cobra"
 )
 
-const banner = `_  _ ____    _  _ _ ____ ___ ____ _  _ ____ ____
-|\ | |  |    |\/| | [__   |  |__| |_/  |___ [__
-| \| |__|    |  | | ___]  |  |  | | \_ |___ ___]`
+const banner = `____ _    ____ _  _ _ _  _ ____
+|__| |    |__| |\/| | |\ | |  |
+|  | |___ |  | |  | | | \| |__|`
 
 func newInitCmd() *cobra.Command {
 	var forkURL string
@@ -30,10 +30,10 @@ func newInitCmd() *cobra.Command {
 	var skipUserSkill bool
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize no-mistakes gate for the current repository",
+		Short: "Initialize alamino gate for the current repository",
 		Long: "Sets up or refreshes a local bare repo as a gate, installs a post-receive hook,\n" +
 			"best-effort isolates the gate hook path from shared local git config writes when Git supports `config --worktree`,\n" +
-			"adds or repairs the \"no-mistakes\" git remote, and records the repo in the database.\n\n" +
+			"adds or repairs the \"alamino\" git remote, and records the repo in the database.\n\n" +
 			"Run this from inside a git repository that has an \"origin\" remote.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -73,7 +73,7 @@ func newInitCmd() *cobra.Command {
 				}
 
 				// Install the agent skill at user level so agents can drive
-				// no-mistakes via `/no-mistakes` in any repo. Best-effort: a
+				// alamino via `/alamino` in any repo. Best-effort: a
 				// skill write failure must not undo a successful gate setup. With
 				// --skip-user-skill the installer is not invoked at all.
 				var skillErr error
@@ -91,7 +91,7 @@ func newInitCmd() *cobra.Command {
 				fmt.Fprintf(w, "  %s %s\n", sGreen.Render("✓"), headline)
 				fmt.Fprintln(w)
 				fmt.Fprintf(w, "  %s  %s\n", sDim.Render("  repo"), repo.WorkingPath)
-				fmt.Fprintf(w, "  %s  no-mistakes → %s\n", sDim.Render("  gate"), p.RepoDir(repo.ID))
+				fmt.Fprintf(w, "  %s  alamino → %s\n", sDim.Render("  gate"), p.RepoDir(repo.ID))
 				remoteURL := repo.UpstreamURL
 				if repo.ForkURL != "" {
 					remoteURL = safeurl.Redact(remoteURL)
@@ -105,7 +105,7 @@ func newInitCmd() *cobra.Command {
 				} else if skillErr != nil {
 					fmt.Fprintf(w, "  %s  %s\n", sDim.Render(" skill"), sYellow.Render("skipped: "+skillErr.Error()))
 				} else {
-					fmt.Fprintf(w, "  %s  %s %s\n", sDim.Render(" skill"), sGreen.Render("/no-mistakes"), sDim.Render("installed for agents at user level"))
+					fmt.Fprintf(w, "  %s  %s %s\n", sDim.Render(" skill"), sGreen.Render("/alamino"), sDim.Render("installed for agents at user level"))
 				}
 				if resolvedWorktreeRoot != "" {
 					printWorktreeRootGuidance(w, p, repo.WorkingPath, resolvedWorktreeRoot)
@@ -115,14 +115,14 @@ func newInitCmd() *cobra.Command {
 				}
 				fmt.Fprintln(w)
 				fmt.Fprintf(w, "  %s\n", sDim.Render("Push through the gate with:"))
-				fmt.Fprintf(w, "  %s\n", sBold.Render("git push no-mistakes <branch>"))
+				fmt.Fprintf(w, "  %s\n", sBold.Render("git push alamino <branch>"))
 				return nil
 			})
 		},
 	}
 	cmd.Flags().StringVar(&forkURL, "fork-url", "", "GitHub fork remote URL to push branches to while opening PRs against origin")
 	cmd.Flags().StringVar(&worktreeRoot, "worktree-root", "", "Directory to create this repository's run worktrees in, so directory-scoped toolchain config (mise, direnv) reaches them; prints the worktree_roots entry to add to the global config")
-	cmd.Flags().BoolVar(&skipUserSkill, "skip-user-skill", false, "Do not install or refresh the /no-mistakes agent skill at user level (~/.claude/skills and ~/.agents/skills)")
+	cmd.Flags().BoolVar(&skipUserSkill, "skip-user-skill", false, "Do not install or refresh the /alamino agent skill at user level (~/.claude/skills and ~/.agents/skills)")
 	return cmd
 }
 
@@ -132,7 +132,7 @@ func newInitCmd() *cobra.Command {
 // where it would be read by a daemon with an unrelated working directory.
 //
 // It also refuses every placement the daemon refuses to start on, through the
-// same owner (worktrees.CheckPlacement) and against the same checkouts: NM_HOME,
+// same owner (worktrees.CheckPlacement) and against the same checkouts: ALAMINO_HOME,
 // the checkout being initialized, every checkout the config names, and every
 // registered repository (db.RepoWorkingPaths, which is where the daemon's startup
 // gate reads them too).
@@ -259,7 +259,7 @@ func checkoutClaimingWorktreeRoot(p *paths.Paths, checkout, root string) (string
 }
 
 // printWorktreeRootGuidance reports the worktree_roots entry that places this
-// repository's run worktrees in the requested directory. no-mistakes never
+// repository's run worktrees in the requested directory. alamino never
 // rewrites the global config - it is a hand-maintained file with the
 // operator's own comments - so init prints the exact entry to add instead of
 // editing it, and says nothing further when the entry is already in effect.

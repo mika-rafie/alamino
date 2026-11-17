@@ -43,20 +43,20 @@ func runPi(args []string, input io.Reader, scenario *Scenario) int {
 	}
 	structured := false
 	for i, arg := range args {
-		if arg == "--extension" && i+1 < len(args) && strings.HasPrefix(filepath.Base(args[i+1]), "no-mistakes-pi-output-") {
+		if arg == "--extension" && i+1 < len(args) && strings.HasPrefix(filepath.Base(args[i+1]), "alamino-pi-output-") {
 			structured = true
 		}
 	}
 	if structured {
 		msg["stopReason"] = "toolUse"
-		msg["content"] = []any{map[string]any{"type": "toolCall", "id": "final-1", "name": "no_mistakes_output", "arguments": json.RawMessage(action.structuredJSON())}}
+		msg["content"] = []any{map[string]any{"type": "toolCall", "id": "final-1", "name": "alamino_output", "arguments": json.RawMessage(action.structuredJSON())}}
 	}
 	enc := json.NewEncoder(os.Stdout)
 	_ = enc.Encode(map[string]any{"type": "session", "version": 3, "id": session})
 	_ = enc.Encode(map[string]any{"type": "message_end", "message": msg})
 	if structured {
 		_ = enc.Encode(map[string]any{
-			"type": "tool_execution_end", "toolCallId": "final-1", "toolName": "no_mistakes_output", "isError": false,
+			"type": "tool_execution_end", "toolCallId": "final-1", "toolName": "alamino_output", "isError": false,
 			"result": map[string]any{"terminate": true, "details": map[string]any{"output": json.RawMessage(action.structuredJSON())}},
 		})
 	}

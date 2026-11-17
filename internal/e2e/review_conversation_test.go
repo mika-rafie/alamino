@@ -12,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // The question the fake reviewer asks mid-pass, and the answer the operator
-// sends back with `no-mistakes axi answer`.
+// sends back with `alamino axi answer`.
 const (
 	conversationQuestionText = "Should the new flag default to off for existing installations?"
 	conversationAnswerText   = "default off"
@@ -31,7 +31,7 @@ const (
 	conversationRetractionReason = "the answer settles the default, so the finding it was contingent on no longer holds"
 )
 
-// trustedRepoConfigWithReviewConversation is the .no-mistakes.yaml a maintainer
+// trustedRepoConfigWithReviewConversation is the .alamino.yaml a maintainer
 // commits to the default branch to turn the conversation on. It is trusted-only,
 // so this is the only place it can come from.
 const trustedRepoConfigWithReviewConversation = `ignore_patterns:
@@ -116,7 +116,7 @@ func reviewConversationScenario(t *testing.T) string {
 // conversation as an operator experiences it: a maintainer turns
 // `review.conversation` on in the trusted default-branch config, the reviewer
 // asks a question while it reviews, the run parks for a human answer,
-// `no-mistakes axi answer` settles it, and the same reviewer finishes its pass.
+// `alamino axi answer` settles it, and the same reviewer finishes its pass.
 //
 // It also drives the two boundaries the feature is only safe with. `--yes` must
 // stand aside at an open question instead of handing it to the fixer, and
@@ -179,7 +179,7 @@ func TestReviewConversationJourney(t *testing.T) {
 		"question-q1",
 		conversationQuestionText,
 		"default off",
-		"no-mistakes axi answer --question",
+		"alamino axi answer --question",
 	} {
 		if !strings.Contains(statusOut, want) {
 			t.Errorf("axi status at the question gate does not show %q:\n%s", want, statusOut)
@@ -435,14 +435,14 @@ func TestReviewConversationNeverReachesTheEvidenceBranch(t *testing.T) {
 
 	// A GitHub-shaped origin rewritten to the local bare repo: evidence links
 	// are only derivable for GitHub, and the rewrite keeps every push local.
-	const originURL = "https://github.com/owner/no-mistakes.git"
+	const originURL = "https://github.com/owner/alamino.git"
 	configureGitURLRewrite(t, h, originURL, h.UpstreamDir)
 	if out, err := h.runGit(t.Context(), h.WorkDir, "remote", "set-url", "origin", originURL); err != nil {
 		t.Fatalf("set github-shaped origin: %v\n%s", err, out)
 	}
 	t.Setenv("FAKEAGENT_GH_MODE", "fork-pr")
 	t.Setenv("FAKEAGENT_GH_LOG", filepath.Join(filepath.Dir(h.AgentLog), "gh-evidence.log"))
-	t.Setenv("FAKEAGENT_GH_PARENT", "owner/no-mistakes")
+	t.Setenv("FAKEAGENT_GH_PARENT", "owner/alamino")
 
 	pushMainRepoConfig(t, h, trustedRepoConfigWithConversationAndEvidenceBranch)
 
@@ -484,7 +484,7 @@ func TestReviewConversationNeverReachesTheEvidenceBranch(t *testing.T) {
 
 	// Read the published evidence branch out of the upstream repository the
 	// pipeline actually pushed to.
-	tree, err := h.runGit(t.Context(), h.UpstreamDir, "ls-tree", "-r", "--name-only", "no-mistakes/evidence")
+	tree, err := h.runGit(t.Context(), h.UpstreamDir, "ls-tree", "-r", "--name-only", "alamino/evidence")
 	if err != nil {
 		t.Fatalf("evidence branch was not published: %v\n%s", err, tree)
 	}
@@ -525,7 +525,7 @@ func TestReviewConversationNeverReachesTheEvidenceBranch(t *testing.T) {
 
 	// And no blob on that branch carries the conversation's text, whatever it
 	// was named.
-	blobs, err := h.runGit(t.Context(), h.UpstreamDir, "grep", "-I", "-l", "-e", conversationAnswerText, "-e", conversationQuestionText, "-e", conversationAnsweredBy, "no-mistakes/evidence")
+	blobs, err := h.runGit(t.Context(), h.UpstreamDir, "grep", "-I", "-l", "-e", conversationAnswerText, "-e", conversationQuestionText, "-e", conversationAnsweredBy, "alamino/evidence")
 	if err == nil {
 		t.Errorf("the evidence branch carries the conversation's text:\n%s", blobs)
 	}
@@ -649,7 +649,7 @@ func lastScreenFrame(raw string) string {
 	return strings.Join(lines, "\n")
 }
 
-// pushedRepoConfigEnablingTheConversation is the .no-mistakes.yaml a
+// pushedRepoConfigEnablingTheConversation is the .alamino.yaml a
 // contributor ships on their own branch to try to turn the conversation on for
 // the review that gates them.
 const pushedRepoConfigEnablingTheConversation = `ignore_patterns:
@@ -674,7 +674,7 @@ func TestPushedBranchCannotEnableTheReviewConversation(t *testing.T) {
 
 	branch := "feature/untrusted-conversation"
 	h.CommitChange(branch, "feature.txt", "flag = true\n", "add the feature flag")
-	h.CommitChange(branch, ".no-mistakes.yaml", pushedRepoConfigEnablingTheConversation,
+	h.CommitChange(branch, ".alamino.yaml", pushedRepoConfigEnablingTheConversation,
 		"contributor: turn the review conversation on from my own branch")
 	fw := h.AddWorktree(branch)
 

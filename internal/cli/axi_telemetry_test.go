@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 // TestAxiMutationCommandsEmitPageviews verifies that state-changing axi
@@ -29,7 +29,7 @@ func TestAxiMutationCommandsEmitPageviews(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			t.Setenv("NM_HOME", t.TempDir())
+			t.Setenv("ALAMINO_HOME", t.TempDir())
 			chdir(t, tmpDir)
 
 			recorder := &telemetryRecorder{}
@@ -67,7 +67,7 @@ func TestAxiReadSurfacesEmitNoTelemetry(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			t.Setenv("NM_HOME", t.TempDir())
+			t.Setenv("ALAMINO_HOME", t.TempDir())
 			chdir(t, tmpDir)
 
 			recorder := &telemetryRecorder{}
@@ -98,7 +98,7 @@ func TestReadSurfacesEmitZeroTelemetryUnderPolling(t *testing.T) {
 	for _, args := range cases {
 		t.Run(strings.Join(args, "-"), func(t *testing.T) {
 			tmpDir := t.TempDir()
-			t.Setenv("NM_HOME", t.TempDir())
+			t.Setenv("ALAMINO_HOME", t.TempDir())
 			chdir(t, tmpDir)
 
 			recorder := &telemetryRecorder{}
@@ -121,7 +121,7 @@ func TestReadSurfacesEmitZeroTelemetryUnderPolling(t *testing.T) {
 // TUI pageview carries entrypoint/run_status.
 func TestAxiRunPageviewCarriesFlags(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	chdir(t, tmpDir)
 
 	recorder := &telemetryRecorder{}
@@ -148,7 +148,7 @@ func TestAxiRunPageviewCarriesFlags(t *testing.T) {
 // Supplied PR text is user content: telemetry records only that it was given.
 func TestAxiRunPageviewRecordsPRTextAsBooleansOnly(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	chdir(t, tmpDir)
 	recorder := &telemetryRecorder{}
 	restore := telemetry.SetDefaultForTesting(recorder)
@@ -173,7 +173,7 @@ func TestAxiRunPageviewRecordsPRTextAsBooleansOnly(t *testing.T) {
 
 func TestAxiRespondPageviewSanitizesInvalidAction(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	chdir(t, tmpDir)
 
 	recorder := &telemetryRecorder{}

@@ -10,11 +10,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const testAttachmentURL = "https://github.com/user-attachments/assets/c919a728-162d-435e-83a4-a8636a76a8aa"
@@ -177,8 +177,8 @@ func TestPRStep_StoreInRepoKeepsCommitLinkAndAttachment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tip := gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence")
-	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.no-mistakes/evidence/feature/add-login/checkout.png"
+	tip := gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence")
+	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.alamino/evidence/feature/add-login/checkout.png"
 	if !strings.Contains(content.Body, "![Checkout screenshot]("+testAttachmentURL+")") {
 		t.Fatalf("expected attachment embed, got:\n%s", content.Body)
 	}
@@ -214,8 +214,8 @@ func TestPRStep_AttachMediaOptOutDisablesUploads(t *testing.T) {
 				t.Fatalf("disabled attachments must not be embedded, got:\n%s", content.Body)
 			}
 			if storeInRepo {
-				tip := gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence")
-				wantLink := "https://github.com/example/widgets/blob/" + tip + "/.no-mistakes/evidence/feature/add-login/checkout.png"
+				tip := gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence")
+				wantLink := "https://github.com/example/widgets/blob/" + tip + "/.alamino/evidence/feature/add-login/checkout.png"
 				if !strings.Contains(content.Body, "[Checkout screenshot]("+wantLink+")") {
 					t.Fatalf("expected commit-pinned evidence link %q, got:\n%s", wantLink, content.Body)
 				}
@@ -428,8 +428,8 @@ func TestPRStep_OversizedImagePreservesCommittedPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tip := gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence")
-	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.no-mistakes/evidence/feature/add-login/oversize.png"
+	tip := gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence")
+	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.alamino/evidence/feature/add-login/oversize.png"
 	if !strings.Contains(content.Body, wantLink) {
 		t.Fatalf("expected committed evidence path to be preserved, got:\n%s", content.Body)
 	}
@@ -459,8 +459,8 @@ func TestPRStep_UnsupportedImagePreservesCommittedPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tip := gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence")
-	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.no-mistakes/evidence/feature/add-login/checkout.bmp"
+	tip := gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence")
+	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.alamino/evidence/feature/add-login/checkout.bmp"
 	if !strings.Contains(content.Body, wantLink) {
 		t.Fatalf("expected committed evidence path to be preserved, got:\n%s", content.Body)
 	}

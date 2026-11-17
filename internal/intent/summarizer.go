@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agent"
 )
 
 // maxTranscriptBytes caps the size of transcript text we send to the
@@ -49,7 +49,7 @@ type Summarizer interface {
 	Summarize(ctx context.Context, s *Session, change SummaryContext) (string, error)
 }
 
-// agentSummarizer calls a no-mistakes agent to produce the summary.
+// agentSummarizer calls an alamino agent to produce the summary.
 //
 // cwd is the working directory passed to the agent. This MUST be set to
 // the same directory the pipeline steps will run in (the worktree). Some

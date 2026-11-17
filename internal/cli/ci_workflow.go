@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/git"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/git"
 	"github.com/spf13/cobra"
 )
 
@@ -78,11 +78,11 @@ func newCIWorkflowCmd() *cobra.Command {
 	var force bool
 	cmd := &cobra.Command{
 		Use:   "ci-workflow",
-		Short: "Generate .github/workflows/ci.yml from .no-mistakes.yaml commands",
-		Long: "Emits .github/workflows/ci.yml that mirrors the canonical checks pinned in .no-mistakes.yaml.\n" +
+		Short: "Generate .github/workflows/ci.yml from .alamino.yaml commands",
+		Long: "Emits .github/workflows/ci.yml that mirrors the canonical checks pinned in .alamino.yaml.\n" +
 			"The workflow runs on push to the default branch and on all pull requests, registering\n" +
-			"real GitHub checks that the no-mistakes gate's CI step can monitor.\n\n" +
-			"Run this from inside a git repository that has been initialized with 'no-mistakes init'.",
+			"real GitHub checks that the alamino gate's CI step can monitor.\n\n" +
+			"Run this from inside a git repository that has been initialized with 'alamino init'.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return trackCommand("ci-workflow", func() error {
@@ -117,7 +117,7 @@ func generateCIWorkflow(dir string, force bool) error {
 	// Extract test command (required)
 	test := cfg.Commands.Test
 	if test == "" {
-		return fmt.Errorf("ci-workflow: commands.test not configured in .no-mistakes.yaml")
+		return fmt.Errorf("ci-workflow: commands.test not configured in .alamino.yaml")
 	}
 
 	// Extract lint command (optional; empty means combined document+lint)

@@ -21,7 +21,7 @@ Does a live TypeSafe evaluation succeed with the production client, and does the
 
 ## Live TypeSafe scenario
 
-Two gated tests, skipped unless `NO_MISTAKES_JEV_LIVE=1` and `TYPESAFE_API_KEY` are set, so `go test ./...` never hits the network.
+Two gated tests, skipped unless `ALAMINO_JEV_LIVE=1` and `TYPESAFE_API_KEY` are set, so `go test ./...` never hits the network.
 
 - `TestEvaluate_LiveTypeSafeAPI` (`internal/jev`) posts one batched score question to `https://api.typesafe.ai/v1/systemone` with the pinned model.
 - `TestReviewStep_LiveTypeSafePrebrief` (`internal/pipeline/steps`) drives the production `ReviewStep` pre-brief path (real client, no fake) on the `setupJevRepo` fixture, with a mock reviewer so the measurement is Jev billed tokens and latency, not an agent review.

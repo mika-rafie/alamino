@@ -23,7 +23,7 @@ import (
 //
 // This is not a documented REST or GraphQL API. gh itself already depends on
 // the same unofficial HTTP endpoint, and Homebrew still lagged 2.99.0 when
-// this shipped, so no-mistakes posts the request from Go rather than requiring
+// this shipped, so alamino posts the request from Go rather than requiring
 // `gh --attach` on PATH. The request shape is:
 //
 //	POST {uploadsPrefix}user-attachments/assets

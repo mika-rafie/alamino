@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -65,7 +65,7 @@ func resolveReviewer(client *ipc.Client, repoID string, request *agentcfg.Review
 	return &resolved, nil
 }
 
-const reviewerPushPrefix = "no-mistakes.reviewer-profile="
+const reviewerPushPrefix = "alamino.reviewer-profile="
 
 func formatReviewerPushOptions(p *agentcfg.ReviewerProfile) []string {
 	if p == nil {

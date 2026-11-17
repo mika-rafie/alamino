@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // TestEjectSweepsRecordedWorktreesBeforeRemovingThem is eject's half of the

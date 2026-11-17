@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
 )
 
 // These fixtures implement the published V2 OpenAPI and session-event contract,

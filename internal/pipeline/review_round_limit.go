@@ -3,8 +3,8 @@ package pipeline
 import (
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // HasReviewFixRoundLimit identifies an exhausted Review budget. Automatic

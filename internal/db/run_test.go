@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/buildinfo"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/buildinfo"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestReadOnlyRunsBeforeAdditiveMigrations(t *testing.T) {
@@ -117,11 +117,11 @@ func TestRunInsertAndUpdatePreserveBuildIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get run: %v", err)
 	}
-	if got.NoMistakesVersion == nil || *got.NoMistakesVersion != buildinfo.CurrentVersion() {
-		t.Fatalf("no-mistakes version = %v, want %q", got.NoMistakesVersion, buildinfo.CurrentVersion())
+	if got.AlaminoVersion == nil || *got.AlaminoVersion != buildinfo.CurrentVersion() {
+		t.Fatalf("alamino version = %v, want %q", got.AlaminoVersion, buildinfo.CurrentVersion())
 	}
-	if got.NoMistakesBuildSHA == nil || *got.NoMistakesBuildSHA != buildinfo.Commit {
-		t.Fatalf("no-mistakes build SHA = %v, want %q", got.NoMistakesBuildSHA, buildinfo.Commit)
+	if got.AlaminoBuildSHA == nil || *got.AlaminoBuildSHA != buildinfo.Commit {
+		t.Fatalf("alamino build SHA = %v, want %q", got.AlaminoBuildSHA, buildinfo.Commit)
 	}
 }
 

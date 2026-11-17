@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 // claudeMaxRetries is the number of additional attempts past the initial
@@ -383,7 +383,7 @@ func finalizeClaudeResult(result *claudeResult, schema json.RawMessage, usage To
 
 // buildArgs constructs the claude CLI arguments. User-supplied extraArgs
 // (from agent_args_override in the global config) are inserted ahead of the
-// managed flags, so user choices win over no-mistakes' defaults. If the user
+// managed flags, so user choices win over alamino's defaults. If the user
 // supplied their own permission mode, the default --dangerously-skip-permissions
 // is not added. A non-empty resumeID continues that session via --resume
 // (never --fork-session: the session identity must stay stable so later

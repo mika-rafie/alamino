@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 )
 
 // namesPath reports whether a refusal identifies path to the operator who has
@@ -121,7 +121,7 @@ func TestRecordedDirResolvesUnrecordedRunsToTheDefaultTree(t *testing.T) {
 	}
 }
 
-// Validate is the layer internal/config cannot be: it knows where NM_HOME is,
+// Validate is the layer internal/config cannot be: it knows where ALAMINO_HOME is,
 // and every placement inside it collides with the daemon's own state. Under
 // worktrees a run worktree is indistinguishable from the per-repository
 // directories the default placement owns and sweeps; under logs a run's
@@ -137,7 +137,7 @@ func TestLayout_ValidateRefusesRootInsideAppState(t *testing.T) {
 		"a per-repository directory":     filepath.Join(p.WorktreesDir(), "repo1"),
 		"the run log directory":          p.LogsDir(),
 		"the gates directory":            p.ReposDir(),
-		"NM_HOME itself":                 p.Root(),
+		"ALAMINO_HOME itself":            p.Root(),
 	} {
 		err := worktrees.New(p, map[string]string{checkout: root}).Validate()
 		if err == nil {
@@ -161,7 +161,7 @@ func TestLayout_ValidateRefusesRootInsideItsCheckout(t *testing.T) {
 
 	for _, root := range []string{
 		filepath.Join(checkout, "runs"),
-		filepath.Join(checkout, ".no-mistakes", "runs"),
+		filepath.Join(checkout, ".alamino", "runs"),
 	} {
 		err := worktrees.New(p, map[string]string{checkout: root}).Validate()
 		if err == nil {
@@ -226,12 +226,12 @@ func TestLayout_ValidateAcceptsPlacementOutsideAppState(t *testing.T) {
 	}
 	layout := worktrees.New(p, map[string]string{checkout: filepath.Join(dir, "work", "repo1-runs")})
 	if err := layout.Validate(); err != nil {
-		t.Errorf("placement outside NM_HOME rejected: %v", err)
+		t.Errorf("placement outside ALAMINO_HOME rejected: %v", err)
 	}
 }
 
 // Contains is what recognizes the pathological placements: a root inside the
-// checkout it serves, or inside the directory no-mistakes already owns.
+// checkout it serves, or inside the directory alamino already owns.
 func TestContains(t *testing.T) {
 	dir := t.TempDir()
 	inside := filepath.Join(dir, "runs")
@@ -254,11 +254,11 @@ func TestContains(t *testing.T) {
 // worktree that IS paths.RunLogDir, so removing it takes the run's logs).
 func TestContainsFollowsTheFilesystemAcrossCaseVariantSpellings(t *testing.T) {
 	base := t.TempDir()
-	home := filepath.Join(base, "nm-home")
+	home := filepath.Join(base, "alamino-home")
 	if err := os.MkdirAll(filepath.Join(home, "logs"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	variantHome := filepath.Join(base, strings.ToUpper("nm-home"))
+	variantHome := filepath.Join(base, strings.ToUpper("alamino-home"))
 	variantChild := filepath.Join(variantHome, "logs")
 
 	// Whether the two spellings are one directory is the volume's answer, not
@@ -275,20 +275,20 @@ func TestContainsFollowsTheFilesystemAcrossCaseVariantSpellings(t *testing.T) {
 			home, variantChild, got, sameDirectory, sameDirectory)
 	}
 	// A genuinely different sibling stays outside on every volume.
-	if worktrees.Contains(home, filepath.Join(base, "nm-home-elsewhere", "logs")) {
-		t.Error("a sibling directory was reported as inside NM_HOME")
+	if worktrees.Contains(home, filepath.Join(base, "alamino-home-elsewhere", "logs")) {
+		t.Error("a sibling directory was reported as inside ALAMINO_HOME")
 	}
 }
 
-// The placement guard is what that agreement protects: a root under NM_HOME must
+// The placement guard is what that agreement protects: a root under ALAMINO_HOME must
 // be refused however the operator spelled the path to it.
 func TestCheckPlacementRefusesCaseVariantAppStateRoot(t *testing.T) {
 	base := t.TempDir()
-	home := filepath.Join(base, "nm-home")
+	home := filepath.Join(base, "alamino-home")
 	if err := os.MkdirAll(filepath.Join(home, "logs"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	variantRoot := filepath.Join(base, strings.ToUpper("nm-home"), "logs")
+	variantRoot := filepath.Join(base, strings.ToUpper("alamino-home"), "logs")
 
 	sameDirectory := false
 	if a, err := os.Stat(home); err == nil {
@@ -304,7 +304,7 @@ func TestCheckPlacementRefusesCaseVariantAppStateRoot(t *testing.T) {
 	checkout := filepath.Join(base, "src", "repo1")
 	err := worktrees.CheckPlacement(p, checkout, variantRoot)
 	if err == nil {
-		t.Fatalf("root %q was accepted; it is NM_HOME's own log directory on this volume", variantRoot)
+		t.Fatalf("root %q was accepted; it is ALAMINO_HOME's own log directory on this volume", variantRoot)
 	}
 	if !namesPath(err, variantRoot) {
 		t.Errorf("refusal %q does not name the offending root", err)

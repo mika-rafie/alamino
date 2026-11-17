@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func TestStartInstallsSystemdUnitAndStartsManagedDaemon(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("systemd unit rendering depends on POSIX path formatting")
 	}
-	p := paths.WithRoot(filepath.Join(t.TempDir(), "nm-home"))
+	p := paths.WithRoot(filepath.Join(t.TempDir(), "alamino-home"))
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestStartInstallsSystemdUnitAndStartsManagedDaemon(t *testing.T) {
 	defer cleanup()
 	runtimeGOOS = "linux"
 	serviceUserHomeDir = func() (string, error) { return home, nil }
-	serviceExecutablePath = func() (string, error) { return "/usr/local/bin/no-mistakes", nil }
+	serviceExecutablePath = func() (string, error) { return "/usr/local/bin/alamino", nil }
 
 	var commands []string
 	serviceCommandRunner = func(name string, args ...string) ([]byte, error) {
@@ -50,8 +50,8 @@ func TestStartInstallsSystemdUnitAndStartsManagedDaemon(t *testing.T) {
 	}
 	text := string(data)
 	for _, want := range []string{
-		"Description=no-mistakes background daemon",
-		"ExecStart=/usr/local/bin/no-mistakes daemon run --root " + p.Root(),
+		"Description=alamino background daemon",
+		"ExecStart=/usr/local/bin/alamino daemon run --root " + p.Root(),
 		"WorkingDirectory=" + p.Root(),
 		"Environment=\"HOME=" + home + "\"",
 		"Restart=always",
@@ -77,7 +77,7 @@ func TestStartInstallsSystemdUnitAndStartsManagedDaemon(t *testing.T) {
 }
 
 func TestInstallSystemdUserServiceDoesNotRemoveLegacyUnitForDifferentRoot(t *testing.T) {
-	p := paths.WithRoot(filepath.Join(t.TempDir(), "nm-home"))
+	p := paths.WithRoot(filepath.Join(t.TempDir(), "alamino-home"))
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}
@@ -92,8 +92,8 @@ func TestInstallSystemdUserServiceDoesNotRemoveLegacyUnitForDifferentRoot(t *tes
 	if err := os.MkdirAll(filepath.Dir(legacyPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	otherRoot := filepath.Join(t.TempDir(), "other-nm-home")
-	legacyUnit := renderSystemdUnit("/usr/local/bin/no-mistakes", paths.WithRoot(otherRoot), home)
+	otherRoot := filepath.Join(t.TempDir(), "other-alamino-home")
+	legacyUnit := renderSystemdUnit("/usr/local/bin/alamino", paths.WithRoot(otherRoot), home)
 	if err := os.WriteFile(legacyPath, []byte(legacyUnit), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestInstallSystemdUserServiceDoesNotRemoveLegacyUnitForDifferentRoot(t *tes
 		return nil, nil
 	}
 
-	if err := installSystemdUserService(p, "/usr/local/bin/no-mistakes"); err != nil {
+	if err := installSystemdUserService(p, "/usr/local/bin/alamino"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(legacyPath); err != nil {
@@ -116,7 +116,7 @@ func TestInstallSystemdUserServiceDoesNotRemoveLegacyUnitForDifferentRoot(t *tes
 }
 
 func TestInstallSystemdUserServiceKeepsLegacyUnitOnEnableFailure(t *testing.T) {
-	p := paths.WithRoot(filepath.Join(t.TempDir(), "nm-home"))
+	p := paths.WithRoot(filepath.Join(t.TempDir(), "alamino-home"))
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +145,7 @@ func TestInstallSystemdUserServiceKeepsLegacyUnitOnEnableFailure(t *testing.T) {
 		return nil, nil
 	}
 
-	err := installSystemdUserService(p, "/usr/local/bin/no-mistakes")
+	err := installSystemdUserService(p, "/usr/local/bin/alamino")
 	if err == nil {
 		t.Fatal("installSystemdUserService should fail when enable fails")
 	}
@@ -249,7 +249,7 @@ func TestRenderSystemdUnitForwardsProxyEnv(t *testing.T) {
 	t.Setenv("HTTPS_PROXY", "http://127.0.0.1:7897")
 	t.Setenv("NO_PROXY", "localhost,127.0.0.1")
 
-	unit := renderSystemdUnit("/usr/local/bin/no-mistakes", paths.WithRoot(t.TempDir()), "/home/u")
+	unit := renderSystemdUnit("/usr/local/bin/alamino", paths.WithRoot(t.TempDir()), "/home/u")
 	for _, want := range []string{
 		`Environment="HTTPS_PROXY=http://127.0.0.1:7897"`,
 		`Environment="NO_PROXY=localhost,127.0.0.1"`,
@@ -274,7 +274,7 @@ func TestRenderSystemdUnitForwardsEveryProxyEnvKey(t *testing.T) {
 		proxyEnv = append(proxyEnv, [2]string{key, "val-" + key})
 	}
 
-	unit := renderSystemdUnitWithProxyEnv("/usr/local/bin/no-mistakes", paths.WithRoot(t.TempDir()), "/home/u", proxyEnv)
+	unit := renderSystemdUnitWithProxyEnv("/usr/local/bin/alamino", paths.WithRoot(t.TempDir()), "/home/u", proxyEnv)
 	for _, key := range proxyEnvKeys {
 		want := `Environment="` + key + "=val-" + key + `"`
 		if !strings.Contains(unit, want) {
@@ -297,7 +297,7 @@ func TestRenderSystemdUnitEscapesPercentInProxyEnv(t *testing.T) {
 		{"HTTPS_PROXY", "http://user:p%40ss%3Aw0rd@proxy:8080"},
 	}
 
-	unit := renderSystemdUnitWithProxyEnv("/usr/local/bin/no-mistakes", paths.WithRoot(t.TempDir()), "/home/u", proxyEnv)
+	unit := renderSystemdUnitWithProxyEnv("/usr/local/bin/alamino", paths.WithRoot(t.TempDir()), "/home/u", proxyEnv)
 	want := `Environment="HTTPS_PROXY=http://user:p%%40ss%%3Aw0rd@proxy:8080"`
 	if !strings.Contains(unit, want) {
 		t.Fatalf("systemd unit should double %% in proxy env so it survives specifier expansion, want %q, got:\n%s", want, unit)
@@ -311,7 +311,7 @@ func TestWriteServiceFileTightensModeWhenProxyPresent(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("POSIX file modes (0644/0600) are not enforced on Windows; the proxy-bearing service file is only generated on macOS/Linux")
 	}
-	t.Setenv("NO_MISTAKES_TELEMETRY", "")
+	t.Setenv("ALAMINO_TELEMETRY", "")
 	for _, key := range proxyEnvKeys {
 		t.Setenv(key, "")
 	}
@@ -355,7 +355,7 @@ func TestWriteServiceFileReplacesAtomicallyWhenProxyPresent(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("POSIX file modes (0644/0600) are not enforced on Windows; the proxy-bearing service file is only generated on macOS/Linux")
 	}
-	t.Setenv("NO_MISTAKES_TELEMETRY", "")
+	t.Setenv("ALAMINO_TELEMETRY", "")
 	for _, key := range proxyEnvKeys {
 		t.Setenv(key, "")
 	}

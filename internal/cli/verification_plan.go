@@ -7,7 +7,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-const verificationPlanPushOptionPrefix = "no-mistakes.verification-plan="
+const verificationPlanPushOptionPrefix = "alamino.verification-plan="
 
 func formatVerificationPlanPushOptions(id string) []string {
 	if id == "" {

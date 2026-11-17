@@ -17,30 +17,30 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/eval"
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/procreap"
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/eval"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/procreap"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 )
 
 // StepFactory creates pipeline steps for a run. Defaults to steps.AllSteps.
@@ -868,7 +868,7 @@ func (m *RunManager) closeSubscribers(runID string) {
 // direct IPC client - would otherwise re-resolve that id under this daemon's
 // own root, admitting or validating a foreign repository's push against local
 // state. The --gate value arrives absolute and symlink-resolved from git
-// rev-parse while the owned path is built from NM_HOME exactly as spelled, so
+// rev-parse while the owned path is built from ALAMINO_HOME exactly as spelled, so
 // compare through sameGateDir - canonicalRoot's "same root" (relative against
 // absolute, symlinked against real, /var -> /private/var on macOS, case on
 // Windows) plus a filesystem identity check for spellings that differ only in
@@ -922,7 +922,7 @@ func branchFromRef(ref string) string {
 	return strings.TrimPrefix(ref, "refs/heads/")
 }
 
-// loadTrustedRepoConfig reads .no-mistakes.yaml from the trusted
+// loadTrustedRepoConfig reads .alamino.yaml from the trusted
 // default-branch commit (trustedSHA - the exact SHA startRun just fetched and
 // resolved) in the worktree and parses it. Reading at a pinned SHA, rather
 // than the origin/<defaultBranch> remote-tracking ref, closes the stale-ref
@@ -941,7 +941,7 @@ func loadTrustedRepoConfig(ctx context.Context, wtDir, trustedSHA, runID string)
 		// potentially stale origin/<defaultBranch> ref.
 		return nil
 	}
-	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".no-mistakes.yaml")
+	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".alamino.yaml")
 	if err != nil {
 		// Path absent on the default branch is the common "repo has no
 		// trusted commands" case; log at debug so it isn't noisy. Other
@@ -959,21 +959,21 @@ func loadTrustedRepoConfig(ctx context.Context, wtDir, trustedSHA, runID string)
 }
 
 // assertGateTrustedConfigReadable fails a run LOUD when the trusted
-// default-branch copy of .no-mistakes.yaml could not be READ at all. This is the
+// default-branch copy of .alamino.yaml could not be READ at all. This is the
 // security correction for disable_project_settings: that field is a boundary
 // honored only from the trusted copy, so an unreadable trusted config must NOT
-// be silently treated as "not opted out" - no-mistakes cannot know whether the
+// be silently treated as "not opted out" - alamino cannot know whether the
 // repo relies on the boundary, so it refuses to run rather than risk launching a
 // gate agent with the project instructions loaded.
 //
 // It distinguishes "could not read the trusted config at all" (abort) from
-// "read the trusted tree fine, there is simply no .no-mistakes.yaml on the
+// "read the trusted tree fine, there is simply no .alamino.yaml on the
 // default branch" (the common ordinary-repo case, which is NOT opted out and
 // must proceed). Abort cases:
 //   - no known default branch to read a trusted copy from,
 //   - the default branch could not be fetched/resolved to a pinned SHA,
 //   - the pinned commit or tree is not readable (missing object / partial fetch),
-//   - the trusted .no-mistakes.yaml is present but unreadable or unparseable.
+//   - the trusted .alamino.yaml is present but unreadable or unparseable.
 func assertGateTrustedConfigReadable(ctx context.Context, wtDir, defaultBranch, trustedSHA string) error {
 	return assertTrustedConfigReadable(ctx, wtDir, defaultBranch, trustedSHA, "disable_project_settings")
 }
@@ -991,19 +991,19 @@ func assertTrustedConfigReadable(ctx context.Context, wtDir, defaultBranch, trus
 	if _, err := git.Run(ctx, wtDir, "rev-parse", "-q", "--verify", trustedSHA+"^{commit}"); err != nil {
 		return fmt.Errorf("cannot evaluate %s: trusted default-branch commit %s is not readable: %w", policy, trustedSHA, err)
 	}
-	entry, err := git.Run(ctx, wtDir, "ls-tree", trustedSHA, "--", ".no-mistakes.yaml")
+	entry, err := git.Run(ctx, wtDir, "ls-tree", trustedSHA, "--", ".alamino.yaml")
 	if err != nil {
 		return fmt.Errorf("cannot evaluate %s: trusted default-branch tree at %s is not readable: %w", policy, trustedSHA, err)
 	}
 	if entry == "" {
 		return nil
 	}
-	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".no-mistakes.yaml")
+	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".alamino.yaml")
 	if err != nil {
-		return fmt.Errorf("cannot evaluate %s: trusted .no-mistakes.yaml at %s is present but not readable: %w", policy, trustedSHA, err)
+		return fmt.Errorf("cannot evaluate %s: trusted .alamino.yaml at %s is present but not readable: %w", policy, trustedSHA, err)
 	}
 	if _, err := config.LoadRepoFromBytes([]byte(content)); err != nil {
-		return fmt.Errorf("cannot evaluate %s: trusted .no-mistakes.yaml at %s is present but unparseable: %w", policy, trustedSHA, err)
+		return fmt.Errorf("cannot evaluate %s: trusted .alamino.yaml at %s is present but unparseable: %w", policy, trustedSHA, err)
 	}
 	return nil
 }
@@ -1428,7 +1428,7 @@ func (m *RunManager) handleRerun(ctx context.Context, repoID, branch, previousRu
 		return "", err
 	}
 	if callerHeadSHA != "" && callerHeadSHA != headSHA {
-		return "", fmt.Errorf("refusing rerun: selected head %s differs from clean local head %s; inspect `no-mistakes axi status` and reconcile custody before using `no-mistakes axi run` to submit the local head", headSHA, callerHeadSHA)
+		return "", fmt.Errorf("refusing rerun: selected head %s differs from clean local head %s; inspect `alamino axi status` and reconcile custody before using `alamino axi run` to submit the local head", headSHA, callerHeadSHA)
 	}
 	selectedRun := latestForBranch
 	if previousRunID != "" {
@@ -1555,10 +1555,10 @@ func resolveRerunHead(ctx context.Context, gateDir, branch string, latest *db.Ru
 	if refExists {
 		preserved, preserveErr := git.Run(ctx, gateDir, "rev-parse", recoveryRef+"^{commit}")
 		if preserveErr != nil {
-			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at non-commit object %s; inspect with `no-mistakes axi status` and reconcile custody first", latest.ID, refTarget)
+			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at non-commit object %s; inspect with `alamino axi status` and reconcile custody first", latest.ID, refTarget)
 		}
 		if preserved != latest.HeadSHA {
-			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at %s, not recorded unpublished head %s; inspect with `no-mistakes axi status` and reconcile custody first", latest.ID, preserved, latest.HeadSHA)
+			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at %s, not recorded unpublished head %s; inspect with `alamino axi status` and reconcile custody first", latest.ID, preserved, latest.HeadSHA)
 		}
 		return preserved, nil
 	}
@@ -1568,7 +1568,7 @@ func resolveRerunHead(ctx context.Context, gateDir, branch string, latest *db.Ru
 		}
 		return preserved, nil
 	}
-	return "", fmt.Errorf("refusing rerun from stale gate head %s: terminal run %s recorded unpublished head %s, but that head is unavailable; inspect with `no-mistakes axi status` and reconcile custody first", gateHead, latest.ID, latest.HeadSHA)
+	return "", fmt.Errorf("refusing rerun from stale gate head %s: terminal run %s recorded unpublished head %s, but that head is unavailable; inspect with `alamino axi status` and reconcile custody first", gateHead, latest.ID, latest.HeadSHA)
 }
 
 // fetchRunDefaultBranch uses a selected destination's private ref when pinned.
@@ -1603,7 +1603,7 @@ func fetchTrustedDefaultBranchSHA(ctx context.Context, gateDir string, repo *db.
 	if strings.TrimSpace(repo.DefaultBranch) == "" {
 		return "", fmt.Errorf("cannot evaluate %s: repository has no known default branch to read trusted config from", purpose)
 	}
-	privateRef := fmt.Sprintf("refs/no-mistakes/pi-profile/%d-%d", os.Getpid(), time.Now().UnixNano())
+	privateRef := fmt.Sprintf("refs/alamino/pi-profile/%d-%d", os.Getpid(), time.Now().UnixNano())
 	defer func() {
 		_, _ = git.Run(context.WithoutCancel(ctx), gateDir, "update-ref", "--no-deref", "-d", privateRef)
 	}()
@@ -1671,19 +1671,19 @@ func applyPinnedIntentCheck(cfg *config.Config, run *db.Run) error {
 
 func (m *RunManager) effectiveIntentCheckBeforeRun(ctx context.Context, repo *db.Repo, global *config.GlobalConfig, trustedSHA string) (config.IntentCheck, error) {
 	gateDir := m.paths.RepoDir(repo.ID)
-	entry, err := git.Run(ctx, gateDir, "ls-tree", trustedSHA, "--", ".no-mistakes.yaml")
+	entry, err := git.Run(ctx, gateDir, "ls-tree", trustedSHA, "--", ".alamino.yaml")
 	if err != nil {
 		return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted tree is unreadable: %w", err)
 	}
 	trusted := config.IntentCheck{Mode: config.IntentCheckOff}
 	if entry != "" {
-		content, err := git.ShowFile(ctx, gateDir, trustedSHA, ".no-mistakes.yaml")
+		content, err := git.ShowFile(ctx, gateDir, trustedSHA, ".alamino.yaml")
 		if err != nil {
 			return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted config is unreadable: %w", err)
 		}
 		trusted, err = config.ParseIntentCheckYAML([]byte(content))
 		if err != nil {
-			return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted .no-mistakes.yaml is invalid: %w", err)
+			return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted .alamino.yaml is invalid: %w", err)
 		}
 	}
 	return config.MergeIntentChecks(global.Intent.Check, trusted), nil
@@ -1727,20 +1727,20 @@ func loadRepoConfigAtSHA(ctx context.Context, dir, sha, purpose string) (*config
 	if _, err := git.Run(ctx, dir, "rev-parse", "-q", "--verify", sha+"^{commit}"); err != nil {
 		return nil, fmt.Errorf("cannot evaluate %s: submitted commit %s is not readable: %w", purpose, sha, err)
 	}
-	entry, err := git.Run(ctx, dir, "ls-tree", sha, "--", ".no-mistakes.yaml")
+	entry, err := git.Run(ctx, dir, "ls-tree", sha, "--", ".alamino.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("cannot evaluate %s: submitted tree at %s is not readable: %w", purpose, sha, err)
 	}
 	if entry == "" {
 		return &config.RepoConfig{}, nil
 	}
-	content, err := git.ShowFile(ctx, dir, sha, ".no-mistakes.yaml")
+	content, err := git.ShowFile(ctx, dir, sha, ".alamino.yaml")
 	if err != nil {
-		return nil, fmt.Errorf("cannot evaluate %s: submitted .no-mistakes.yaml at %s is present but not readable: %w", purpose, sha, err)
+		return nil, fmt.Errorf("cannot evaluate %s: submitted .alamino.yaml at %s is present but not readable: %w", purpose, sha, err)
 	}
 	cfg, err := config.LoadRepoFromBytes([]byte(content))
 	if err != nil {
-		return nil, fmt.Errorf("cannot evaluate %s: submitted .no-mistakes.yaml at %s is present but unparseable: %w", purpose, sha, err)
+		return nil, fmt.Errorf("cannot evaluate %s: submitted .alamino.yaml at %s is present but unparseable: %w", purpose, sha, err)
 	}
 	return cfg, nil
 }
@@ -2134,7 +2134,7 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		return "", fmt.Errorf("load repo config: %w", err)
 	}
 	// SECURITY: load the code-executing selection fields (commands.* and
-	// agent) from the trusted default-branch copy of .no-mistakes.yaml rather
+	// agent) from the trusted default-branch copy of .alamino.yaml rather
 	// than the pushed SHA. The worktree is checked out at headSHA (the
 	// contributor's branch), so reading repoCfg above would honor a
 	// contributor's commands/agent and let any pushed SHA run arbitrary shell
@@ -2702,7 +2702,7 @@ func (m *RunManager) HandleAnswerReviewQuestion(runID, questionID, answer, answe
 	dir := exec.ReviewConversationAnswerDir(runID)
 	if dir == "" {
 		if !exec.ReviewConversationEnabled() {
-			return nil, fmt.Errorf("run %s has no review conversation: set review.conversation: true in .no-mistakes.yaml on the default branch to let the reviewer ask questions", runID)
+			return nil, fmt.Errorf("run %s has no review conversation: set review.conversation: true in .alamino.yaml on the default branch to let the reviewer ask questions", runID)
 		}
 		return nil, fmt.Errorf("run %s has no review conversation directory", runID)
 	}
@@ -2746,7 +2746,7 @@ func (m *RunManager) HandleAnswerReviewQuestion(runID, questionID, answer, answe
 	// answer that closed nothing, which reads fine, stays recorded and is
 	// deliberately not an error.
 	if before.QuestionsIncomplete {
-		return nil, fmt.Errorf("run %s's review question history could not be read to the end (%s), so an answer cannot be bound to the ask it settles; nothing was recorded - read that file for the questions asked, and resolve the parked review with `no-mistakes axi respond` instead", runID, filepath.Join(dir, reviewqa.QuestionsFile))
+		return nil, fmt.Errorf("run %s's review question history could not be read to the end (%s), so an answer cannot be bound to the ask it settles; nothing was recorded - read that file for the questions asked, and resolve the parked review with `alamino axi respond` instead", runID, filepath.Join(dir, reviewqa.QuestionsFile))
 	}
 	wasOpen := false
 	askOrdinal := 0

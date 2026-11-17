@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestGitSafeEnvAppliesRunOverlayBeforeGateEnvironment(t *testing.T) {
@@ -84,7 +84,7 @@ func TestGitSafeEnv_CouplesPWDToWorkdir(t *testing.T) {
 }
 
 // TestGitSafeEnv_StampsGateRoleMarker locks in the ambient-authority containment
-// marker: every spawned gate agent must carry NO_MISTAKES_GATE=1 so a
+// marker: every spawned gate agent must carry ALAMINO_GATE=1 so a
 // cooperating orchestration harness in the target repo can recognize the gate
 // agent and refuse to let it drive the fleet. If this regresses, a gate agent
 // validating a firstmate-shaped repo becomes indistinguishable from a real
@@ -102,10 +102,10 @@ func TestGitSafeEnv_StampsGateRoleMarker(t *testing.T) {
 func TestGitSafeEnvIsObservedBySpawnedProcess(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=^TestAgentEnvProbe$")
 	cmd.Env = gitSafeEnv(t.TempDir(), []string{
-		"NM_HOME=/isolated/eval",
+		"ALAMINO_HOME=/isolated/eval",
 		GateRoleEnvVar + "=0",
 		CompactAdviserDisableEnvVar + "=0",
-		"NM_TEST_ENV_PROBE=1",
+		"ALAMINO_TEST_ENV_PROBE=1",
 	})
 	output, err := cmd.Output()
 	if err != nil {
@@ -191,7 +191,7 @@ func TestEverySupportedAdapterCarriesTheRunOverlayAndGateMarker(t *testing.T) {
 // zero-overlay spelling of the overlay-aware one, so a caller that has no
 // run-scoped forge context cannot drift onto a different environment policy.
 func TestGitSafeEnvIsTheEmptyOverlayCase(t *testing.T) {
-	extra := []string{"NM_HOME=/isolated/eval"}
+	extra := []string{"ALAMINO_HOME=/isolated/eval"}
 	plain := gitSafeEnv("/work/dir", extra)
 	overlaid := gitSafeEnvWithOverlay("/work/dir", runenv.Overlay{}, extra)
 
@@ -205,16 +205,16 @@ func TestGitSafeEnvIsTheEmptyOverlayCase(t *testing.T) {
 	if resolved[CompactAdviserDisableEnvVar] != "1" {
 		t.Errorf("%s = %q, want \"1\"", CompactAdviserDisableEnvVar, resolved[CompactAdviserDisableEnvVar])
 	}
-	if resolved["NM_HOME"] != "/isolated/eval" {
-		t.Errorf("NM_HOME = %q, want /isolated/eval", resolved["NM_HOME"])
+	if resolved["ALAMINO_HOME"] != "/isolated/eval" {
+		t.Errorf("ALAMINO_HOME = %q, want /isolated/eval", resolved["ALAMINO_HOME"])
 	}
 }
 
 func TestAgentEnvProbe(t *testing.T) {
-	if os.Getenv("NM_TEST_ENV_PROBE") != "1" {
+	if os.Getenv("ALAMINO_TEST_ENV_PROBE") != "1" {
 		return
 	}
-	fmt.Printf("%s|%s|%s", os.Getenv("NM_HOME"), os.Getenv(GateRoleEnvVar), os.Getenv(CompactAdviserDisableEnvVar))
+	fmt.Printf("%s|%s|%s", os.Getenv("ALAMINO_HOME"), os.Getenv(GateRoleEnvVar), os.Getenv(CompactAdviserDisableEnvVar))
 }
 
 // TestGitSafeEnv_GateMarkerWinsOverAmbient guards that a target repo (or a

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // reviewAgentsOverrideConfig is an operator global config whose review loop
@@ -136,7 +136,7 @@ func assertAgent(t *testing.T, role string, inv *Invocation, want string) {
 // only the reviewer role (OpenCode instead of the global claude reviewer),
 // while the global fixer and the default agent for other steps stay as they
 // are. A repository whose origin does not match keeps every global role, and a
-// pushed branch cannot reach the override or review_agents from .no-mistakes.yaml.
+// pushed branch cannot reach the override or review_agents from .alamino.yaml.
 func TestRepositoryOverrideReviewAgentsRouteOnRealBinary(t *testing.T) {
 	const overrideRemote = "https://example.invalid/acme/raise.git"
 
@@ -194,7 +194,7 @@ func TestRepositoryOverrideReviewAgentsRouteOnRealBinary(t *testing.T) {
 			t.Fatalf("set forge-shaped origin: %v\n%s", err, out)
 		}
 		h.CommitChange(branch, "feature.txt", "contributor change\n", "add feature")
-		h.CommitChange(branch, ".no-mistakes.yaml",
+		h.CommitChange(branch, ".alamino.yaml",
 			"allow_repo_commands: true\n"+
 				"review_agents:\n  reviewer: {agent: claude, model: "+attacker+"}\n"+
 				"repository_overrides:\n  "+remote+":\n    review_agents:\n      reviewer: {agent: opencode, model: "+attacker+"}\n",

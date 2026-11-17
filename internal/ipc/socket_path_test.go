@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 var socketPathLimit = len(syscall.RawSockaddrUnix{}.Path) - 1
@@ -39,7 +39,7 @@ func requireTooLong(t *testing.T, err error, path string) {
 	if !errors.As(err, &tooLong) {
 		t.Fatalf("error = %v, want *SocketPathTooLongError", err)
 	}
-	for _, want := range []string{"NM_HOME", path, "shorter"} {
+	for _, want := range []string{"ALAMINO_HOME", path, "shorter"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q does not mention %q", err, want)
 		}

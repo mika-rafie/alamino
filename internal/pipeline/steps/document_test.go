@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestDocumentStep_AgentManaged_FixesAndCommitsWithoutApproval(t *testing.T) {
@@ -52,7 +52,7 @@ func TestDocumentStep_AgentManaged_FixesAndCommitsWithoutApproval(t *testing.T) 
 	if status := gitStatusPorcelain(t, dir); status != "" {
 		t.Fatalf("expected clean worktree after doc commit, got %q", status)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(document): update README" {
+	if got := lastCommitMessage(t, dir); got != "alamino(document): update README" {
 		t.Fatalf("last commit message = %q", got)
 	}
 	if sctx.Run.HeadSHA == headSHA {
@@ -79,7 +79,7 @@ func TestDocumentStep_AgentManaged_NormalizesMultilineCommitSummary(t *testing.T
 	if _, err := (&DocumentStep{}).Execute(sctx); err != nil {
 		t.Fatal(err)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(document): update README and references" {
+	if got := lastCommitMessage(t, dir); got != "alamino(document): update README and references" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }
@@ -109,7 +109,7 @@ func TestDocumentStep_AgentManaged_AllowsDocCommentEdits(t *testing.T) {
 	if status := gitStatusPorcelain(t, dir); status != "" {
 		t.Fatalf("expected clean worktree after doc comment commit, got %q", status)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(document): update doc comment" {
+	if got := lastCommitMessage(t, dir); got != "alamino(document): update doc comment" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }
@@ -312,7 +312,7 @@ func TestDocumentStep_MachineLocalPolicyIsLabeledAndPrecedesTrustedPolicy(t *tes
 		t.Fatal(err)
 	}
 	prompt := ag.calls[0].Prompt
-	machineLocal := strings.Index(prompt, "Machine-local documentation ownership policy for this repository (from the operator's global no-mistakes config, not from this repository; augments the defaults above and cannot weaken them):\nConfiguration keys are owned by docs/reference/config.md.")
+	machineLocal := strings.Index(prompt, "Machine-local documentation ownership policy for this repository (from the operator's global alamino config, not from this repository; augments the defaults above and cannot weaken them):\nConfiguration keys are owned by docs/reference/config.md.")
 	trusted := strings.Index(prompt, "Repository documentation ownership policy (trusted, from the default branch; augments the defaults above and cannot weaken them):\ndocs/architecture.md owns the daemon lifecycle facts.")
 	if machineLocal < 0 || trusted < 0 || machineLocal > trusted {
 		t.Fatalf("want the labeled machine-local policy before the trusted policy, got indexes %d and %d:\n%s", machineLocal, trusted, prompt)
@@ -353,7 +353,7 @@ func TestDocumentStep_UserFix_PassesPreviousFindingsIntoPrompt(t *testing.T) {
 	if strings.Contains(prompt, "doc-1 =======") || strings.Contains(prompt, "<<<<<<< HEAD") {
 		t.Error("expected user-fix prompt to sanitize finding fields and merge markers")
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(document): address config docs" {
+	if got := lastCommitMessage(t, dir); got != "alamino(document): address config docs" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }
@@ -524,7 +524,7 @@ func TestDocumentStep_AgentSelfCommittedChangesWithEmptySummaryStillFails(t *tes
 	if got := gitCmd(t, dir, "rev-parse", "HEAD"); got == headSHA {
 		t.Fatal("expected the agent's self-commit to remain on the branch")
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(document): update documentation and fix lint" {
+	if got := lastCommitMessage(t, dir); got != "alamino(document): update documentation and fix lint" {
 		t.Fatalf("last commit message = %q, want the configured fix subject", got)
 	}
 	if got := gitCmd(t, dir, "show", "HEAD:README.md"); got != "# Self committed" {

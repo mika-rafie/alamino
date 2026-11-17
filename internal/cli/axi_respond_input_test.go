@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 func TestAxiRespondInputRejectsBeforeDaemon(t *testing.T) {
@@ -36,8 +36,8 @@ func TestAxiRespondInputRejectsBeforeDaemon(t *testing.T) {
 		{"two stdin", []string{"--instructions", "-", "--add-finding", "-"}, "", "only one respond input may read stdin"},
 		{"invalid utf8", []string{"--instructions-file", writeIntentFile(t, "\xff")}, "", "must be valid UTF-8"},
 		{"nonregular", []string{"--instructions-file", t.TempDir()}, "", "regular file"},
-		{"oversized source file", []string{"--instructions-file", writeIntentFile(t, strings.Repeat("x", 49123))}, "", "read --instructions-file: input exceeds the 49122-byte"},
-		{"oversized source stdin", []string{"--instructions", "-"}, strings.Repeat("x", 49123), "read --instructions stdin: input exceeds the 49122-byte"},
+		{"oversized source file", []string{"--instructions-file", writeIntentFile(t, strings.Repeat("x", 49126))}, "", "read --instructions-file: input exceeds the 49125-byte"},
+		{"oversized source stdin", []string{"--instructions", "-"}, strings.Repeat("x", 49126), "read --instructions stdin: input exceeds the 49125-byte"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := newAxiRespondCmd()
@@ -110,7 +110,7 @@ func TestAxiRespondFileExpandedFrameRefused(t *testing.T) {
 			fx := newAxiTimeoutFixture(t, axiTimeoutOpts{responded: &responded})
 			fx.setGetRun(func(context.Context, int) (*ipc.RunInfo, error) { return fx.awaiting(), nil })
 			// Each '<' becomes six JSON bytes and guidance is repeated for each ID.
-			text := strings.Repeat("<", 49122)
+			text := strings.Repeat("<", 49125)
 			cmd := newAxiRespondCmd()
 			args := []string{"--action", "fix", "--findings", "R1,R2,R3,R4"}
 			if stdin {

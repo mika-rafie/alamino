@@ -11,12 +11,12 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func questionFindings(t *testing.T, findingsJSON string) []types.Finding {
@@ -983,7 +983,7 @@ func TestUnreadableQuestionHistoryParksEvenWithNothingOpen(t *testing.T) {
 // TestUnreadableQuestionHistoryReplacesTheAnswerableRows covers the other half
 // of that condition, and it is the one an appending reviewer actually reaches:
 // the line cap drops a question line while the retained window still holds open
-// questions. Every "question-<id>" row ends in "Answer it with: no-mistakes axi
+// questions. Every "question-<id>" row ends in "Answer it with: alamino axi
 // answer --question <id>", and RunManager.HandleAnswerReviewQuestion refuses
 // every answer for a conversation whose history is incomplete, so each row
 // instructed a command guaranteed to fail. One marker replaces them all, and it

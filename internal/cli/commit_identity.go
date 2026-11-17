@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/runenv"
 )
 
 func captureSubmissionIdentity(ctx context.Context, client *ipc.Client, dir string) (*git.CommitIdentity, error) {
@@ -75,7 +75,7 @@ func captureHookIdentity(ctx context.Context, client *ipc.Client, p *paths.Paths
 			return nil, fmt.Errorf("cannot prove the pushing checkout identity: %w", err)
 		}
 		if identity != nil && *identity != candidate {
-			return nil, fmt.Errorf("cannot prove the pushing checkout identity: worktree identities differ; submit with no-mistakes axi run")
+			return nil, fmt.Errorf("cannot prove the pushing checkout identity: worktree identities differ; submit with alamino axi run")
 		}
 		if identity == nil {
 			identity = &candidate
@@ -87,7 +87,7 @@ func captureHookIdentity(ctx context.Context, client *ipc.Client, p *paths.Paths
 	return identity, nil
 }
 
-const commitIdentityPushOptionPrefix = "no-mistakes.commit-identity="
+const commitIdentityPushOptionPrefix = "alamino.commit-identity="
 
 func formatCommitIdentityPushOption(identity git.CommitIdentity) string {
 	data, _ := json.Marshal(identity)

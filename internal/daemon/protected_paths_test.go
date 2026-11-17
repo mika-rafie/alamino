@@ -9,14 +9,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 type protectedPathPushRetryStep struct {
@@ -320,21 +320,21 @@ func TestProtectedPathPushApprovalCannotSkipPublicationOrDiscardEdits(t *testing
 	repo, headSHA := setupTestGitRepo(t, p, database, "protected-publication")
 	// Exercise the manager's real trusted-config fetch: the pushed branch tries
 	// to remove protection even though the trusted branch opts into repo commands.
-	configFile := filepath.Join(repo.WorkingPath, ".no-mistakes.yaml")
+	configFile := filepath.Join(repo.WorkingPath, ".alamino.yaml")
 	if err := os.WriteFile(configFile, []byte("protected_paths: ['*.txt']\nallow_repo_commands: true\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	gitCmd(t, repo.WorkingPath, "add", ".no-mistakes.yaml")
+	gitCmd(t, repo.WorkingPath, "add", ".alamino.yaml")
 	gitCmd(t, repo.WorkingPath, "commit", "-m", "protect text files on trusted main")
 	gitCmd(t, repo.WorkingPath, "push", "gate", "HEAD:refs/heads/main")
 	if err := os.WriteFile(configFile, []byte("protected_paths: []\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	gitCmd(t, repo.WorkingPath, "add", ".no-mistakes.yaml")
+	gitCmd(t, repo.WorkingPath, "add", ".alamino.yaml")
 	gitCmd(t, repo.WorkingPath, "commit", "-m", "try to remove protection on feature")
 	gitCmd(t, repo.WorkingPath, "push", "gate", "HEAD:refs/heads/feature")
 	headSHA = gitOutput(t, repo.WorkingPath, "rev-parse", "HEAD")
-	t.Logf("trusted main config:\n%s\npushed feature config:\n%s", gitOutput(t, p.RepoDir(repo.ID), "show", "refs/heads/main:.no-mistakes.yaml"), gitOutput(t, p.RepoDir(repo.ID), "show", "refs/heads/feature:.no-mistakes.yaml"))
+	t.Logf("trusted main config:\n%s\npushed feature config:\n%s", gitOutput(t, p.RepoDir(repo.ID), "show", "refs/heads/main:.alamino.yaml"), gitOutput(t, p.RepoDir(repo.ID), "show", "refs/heads/feature:.alamino.yaml"))
 	publicationDir := filepath.Join(t.TempDir(), "published.git")
 	gitCmd(t, "", "init", "--bare", publicationDir)
 	if _, err := database.UpdateRepoForkURL(repo.ID, publicationDir); err != nil {

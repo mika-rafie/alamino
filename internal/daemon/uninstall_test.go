@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func TestUninstallStopsAndRemovesOnlyThisInstancesLaunchAgent(t *testing.T) {

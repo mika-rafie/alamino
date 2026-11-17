@@ -9,9 +9,9 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/logstore"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/logstore"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 type bootstrapCapture struct {
@@ -30,7 +30,7 @@ func startBootstrapCapture(p *paths.Paths) (*bootstrapCapture, error) {
 		return nil, fmt.Errorf("create bootstrap input: %w", err)
 	}
 	cmd := exec.Command(exe, "daemon", "log-sink", "--root", p.Root())
-	cmd.Env = upsertEnv(os.Environ(), "NM_DAEMON_HELPER_PROCESS", "bootstrap-sink")
+	cmd.Env = upsertEnv(os.Environ(), "ALAMINO_DAEMON_HELPER_PROCESS", "bootstrap-sink")
 	cmd.Stdin = sinkInput
 	cmd.Stderr = os.Stderr
 	ready, err := cmd.StdoutPipe()

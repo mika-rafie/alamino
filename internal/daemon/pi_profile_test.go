@@ -7,13 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestPiProfileTrustedRepoPiOverrideAcceptsGlobalAuto(t *testing.T) {
@@ -203,10 +203,10 @@ func TestPiProfileFeatureBranchOnlyPiCannotAuthorize(t *testing.T) {
 	defer d.Close()
 	repo, _ := setupTestGitRepo(t, p, d, "feature-only-pi")
 	gitCmd(t, repo.WorkingPath, "checkout", "-b", "feature")
-	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".no-mistakes.yaml"), []byte("agent: pi\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".alamino.yaml"), []byte("agent: pi\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	gitCmd(t, repo.WorkingPath, "add", ".no-mistakes.yaml")
+	gitCmd(t, repo.WorkingPath, "add", ".alamino.yaml")
 	gitCmd(t, repo.WorkingPath, "commit", "-m", "feature-only Pi selection")
 	gitCmd(t, repo.WorkingPath, "push", "gate", "HEAD:refs/heads/feature")
 	head := gitOutput(t, repo.WorkingPath, "rev-parse", "HEAD")
@@ -232,8 +232,8 @@ func TestPiProfileConfigFailuresDoNotSupersedeActiveRun(t *testing.T) {
 	}{
 		{name: "malformed global config", diagnostic: "load global config"},
 		{name: "unavailable trusted ref", diagnostic: "failed to fetch trusted default branch"},
-		{name: "malformed trusted config", diagnostic: "trusted .no-mistakes.yaml"},
-		{name: "malformed submitted config", diagnostic: "submitted .no-mistakes.yaml"},
+		{name: "malformed trusted config", diagnostic: "trusted .alamino.yaml"},
+		{name: "malformed submitted config", diagnostic: "submitted .alamino.yaml"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := paths.WithRoot(t.TempDir())
@@ -258,10 +258,10 @@ func TestPiProfileConfigFailuresDoNotSupersedeActiveRun(t *testing.T) {
 			case "malformed submitted config":
 				_ = commitDefaultBranchConfig(t, repo.WorkingPath, "agent: pi\n")
 				gitCmd(t, repo.WorkingPath, "checkout", "-b", "feature")
-				if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".no-mistakes.yaml"), []byte("agent: : {{not yaml\n"), 0o644); err != nil {
+				if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".alamino.yaml"), []byte("agent: : {{not yaml\n"), 0o644); err != nil {
 					t.Fatal(err)
 				}
-				gitCmd(t, repo.WorkingPath, "add", ".no-mistakes.yaml")
+				gitCmd(t, repo.WorkingPath, "add", ".alamino.yaml")
 				gitCmd(t, repo.WorkingPath, "commit", "-m", "malformed submitted config")
 				gitCmd(t, repo.WorkingPath, "push", "gate", "HEAD:refs/heads/feature")
 				head = gitOutput(t, repo.WorkingPath, "rev-parse", "HEAD")

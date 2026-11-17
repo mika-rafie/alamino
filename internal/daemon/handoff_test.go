@@ -9,10 +9,10 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func newHandoffFixture(t *testing.T, ready bool) (*db.DB, *db.Run, *RunManager, context.Context, context.CancelCauseFunc, chan struct{}) {

@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // These tests are the regression for incident run 01KXC3SD5NZYMERGDS68Z1C8ER:
@@ -188,7 +188,7 @@ func TestCommitAgentFixes_AllowsForwardAgentCommit(t *testing.T) {
 		t.Fatal(err)
 	}
 	gitCmd(t, dir, "add", "-A")
-	gitCmd(t, dir, "commit", "-m", "no-mistakes(review): apply fix")
+	gitCmd(t, dir, "commit", "-m", "alamino(review): apply fix")
 	forward := gitCmd(t, dir, "rev-parse", "HEAD")
 
 	// Pipeline then commits its own working-tree edits on top - must succeed.

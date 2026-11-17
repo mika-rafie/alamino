@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
-// Stats summarizes historical no-mistakes usage across all repositories.
+// Stats summarizes historical alamino usage across all repositories.
 type Stats struct {
 	TotalRepos       int
 	TotalRuns        int

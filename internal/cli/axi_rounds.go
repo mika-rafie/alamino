@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 	toon "github.com/toon-format/toon-go"
 )

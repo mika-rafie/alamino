@@ -1,11 +1,11 @@
-// Command publish-channels writes the no-mistakes update channel manifest
+// Command publish-channels writes the alamino update channel manifest
 // (channels.json) and uploads it to a dedicated GitHub prerelease tagged
 // `channels`. The updater reads that asset over the un-rate-limited release
 // download CDN instead of the REST API.
 //
 // Usage (CI):
 //
-//	GH_REPO=kunchenguid/no-mistakes GH_TOKEN=... go run ./cmd/publish-channels
+//	GH_REPO=mika-rafie/alamino GH_TOKEN=... go run ./cmd/publish-channels
 package main
 
 import (
@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/update"
+	"github.com/mika-rafie/alamino/internal/update"
 )
 
 const (
@@ -51,7 +51,7 @@ func run() error {
 		return err
 	}
 
-	dir, err := os.MkdirTemp("", "nm-channels-")
+	dir, err := os.MkdirTemp("", "alamino-channels-")
 	if err != nil {
 		return fmt.Errorf("create temp dir: %w", err)
 	}
@@ -75,7 +75,7 @@ func ensureChannelsRelease(repo string) error {
 	if err := ghRun("release", "view", channelsTag, "--repo", repo); err == nil {
 		return nil
 	}
-	notes := "Channel index for `no-mistakes update`. Not a product release; the updater reads " + channelsAsset + " from this tag over the GitHub release-asset CDN."
+	notes := "Channel index for `alamino update`. Not a product release; the updater reads " + channelsAsset + " from this tag over the GitHub release-asset CDN."
 	return ghRun(
 		"release", "create", channelsTag,
 		"--repo", repo,

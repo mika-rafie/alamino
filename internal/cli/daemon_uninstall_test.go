@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func TestDaemonUninstallReportsRemovedDefinitionAndNoService(t *testing.T) {
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	prev, prevSupported := daemonUninstallFn, daemonUninstallSupportedFn
 	t.Cleanup(func() { daemonUninstallFn, daemonUninstallSupportedFn = prev, prevSupported })
 	daemonUninstallSupportedFn = func() bool { return true }
@@ -32,7 +32,7 @@ func TestDaemonUninstallReportsRemovedDefinitionAndNoService(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if !strings.Contains(out, "No managed daemon service is installed for NM_HOME "+p.Root()) {
+				if !strings.Contains(out, "No managed daemon service is installed for ALAMINO_HOME "+p.Root()) {
 					t.Fatalf("uninstall must explain the no-op: %q", out)
 				}
 			}
@@ -42,7 +42,7 @@ func TestDaemonUninstallReportsRemovedDefinitionAndNoService(t *testing.T) {
 
 func TestDaemonUninstallRefusesActiveRunsUnlessForced(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	createLifecycleGuardRuns(t, paths.WithRoot(nmHome))
 	prev, prevSupported := daemonUninstallFn, daemonUninstallSupportedFn
 	t.Cleanup(func() { daemonUninstallFn, daemonUninstallSupportedFn = prev, prevSupported })
@@ -63,17 +63,17 @@ func TestDaemonUninstallRefusesActiveRunsUnlessForced(t *testing.T) {
 }
 
 func TestDaemonStopNamesRetainedLaunchAgentAndUninstallCommand(t *testing.T) {
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	prevStop, prevPath := daemonStopFn, daemonLaunchAgentPathFn
 	t.Cleanup(func() { daemonStopFn, daemonLaunchAgentPathFn = prevStop, prevPath })
 	daemonStopFn = func(*paths.Paths) error { return nil }
-	file := "/tmp/home/Library/LaunchAgents/com.kunchenguid.no-mistakes.daemon.test.plist"
+	file := "/tmp/home/Library/LaunchAgents/io.github.mika-rafie.alamino.daemon.test.plist"
 	daemonLaunchAgentPathFn = func(*paths.Paths) string { return file }
 	out, err := executeCmd("daemon", "stop")
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"daemon stopped", "starts again at the next login", file, "no-mistakes daemon uninstall"} {
+	for _, want := range []string{"daemon stopped", "starts again at the next login", file, "alamino daemon uninstall"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("stop must contain %q: %q", want, out)
 		}
@@ -87,7 +87,7 @@ func TestDaemonStopNamesRetainedLaunchAgentAndUninstallCommand(t *testing.T) {
 
 func TestDaemonUninstallOnUnsupportedPlatformChangesNothingAndSucceeds(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	createLifecycleGuardRuns(t, paths.WithRoot(nmHome))
 	prev, prevSupported := daemonUninstallFn, daemonUninstallSupportedFn
 	t.Cleanup(func() { daemonUninstallFn, daemonUninstallSupportedFn = prev, prevSupported })

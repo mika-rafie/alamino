@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 func renderLocalBranchStatus(state *branchsync.State, refreshing bool, width int) string {
@@ -30,7 +30,7 @@ func renderLocalBranchStatus(state *branchsync.State, refreshing bool, width int
 				}
 				footer = "u recover custody"
 			} else if state.NextAction != nil && state.NextAction.Code == "recover_custody" {
-				message = "Run ended without a recoverable preserved head. Keep the current local head and return custody with `no-mistakes axi sync --recover --keep-local`."
+				message = "Run ended without a recoverable preserved head. Keep the current local head and return custody with `alamino axi sync --recover --keep-local`."
 			} else {
 				message = "Local branch unchanged; the pipeline fix is not pushed yet. Do not make follow-up commits."
 			}
@@ -150,7 +150,7 @@ func renderRecoverConfirmation(state branchsync.State, width int) string {
 	} else if pinnedKeepLocalRecovery(&state) {
 		b.WriteString("\nThe worktree does not move.")
 	} else {
-		b.WriteString("\nDirty worktrees and divergence that cannot be proven contained refuse without changes; `no-mistakes sync --recover --keep-local` keeps the current head instead.")
+		b.WriteString("\nDirty worktrees and divergence that cannot be proven contained refuse without changes; `alamino sync --recover --keep-local` keeps the current head instead.")
 	}
 	return renderBoxWithFooter("Confirm custody recovery", b.String(), width, "u/enter recover  ·  esc cancel")
 }

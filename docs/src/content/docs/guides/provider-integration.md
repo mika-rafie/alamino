@@ -14,7 +14,7 @@ Provider integration is optional for the local gate. You only need it for the
 steps that happen after validation: opening or updating the PR, watching hosted
 CI, and fixing remote-only failures.
 
-Without any provider setup, `no-mistakes` still gives you the local gate:
+Without any provider setup, `alamino` still gives you the local gate:
 
 - rebase
 - review
@@ -29,26 +29,26 @@ What you do not get is PR automation and CI monitoring.
 
 | Step | GitHub | GitLab | Forgejo | Bitbucket Cloud | Azure DevOps | Gitea | Cursor Origin | [Provider Plugin](#custom-hosts-with-provider-plugins) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **PR** (create/update) | `gh` CLI, authenticated | `glab` CLI, authenticated | `forgejo-axi`, authenticated | `NO_MISTAKES_BITBUCKET_EMAIL` + `NO_MISTAKES_BITBUCKET_API_TOKEN` | `az` CLI + `azure-devops` extension, authenticated | `tea` CLI, authenticated | `origin` CLI, authenticated | configured plugin CLI (`status`, `pr create`/`update`) |
+| **PR** (create/update) | `gh` CLI, authenticated | `glab` CLI, authenticated | `forgejo-axi`, authenticated | `ALAMINO_BITBUCKET_EMAIL` + `ALAMINO_BITBUCKET_API_TOKEN` | `az` CLI + `azure-devops` extension, authenticated | `tea` CLI, authenticated | `origin` CLI, authenticated | configured plugin CLI (`status`, `pr create`/`update`) |
 | **CI** (polling, auto-fix) | `gh` CLI | `glab` CLI | `forgejo-axi` | same env vars | `az` CLI | `tea` CLI | `origin` CLI | configured plugin CLI (`status`, `pr checks`) |
 | **Merge conflict auto-fix** | `gh` CLI | `glab` CLI | `forgejo-axi` | not supported | `az` CLI | not supported | `origin` CLI | supported when plugin declares `mergeable_state` |
 | **Mergeability polling** | `gh` CLI | `glab` CLI | `forgejo-axi` | not supported | `az` CLI | not supported | `origin` CLI | supported when plugin declares `mergeable_state` |
 | **Failed check log fetching** | `gh` CLI | `glab` CLI | `forgejo-axi` when runtime routes are available | supported | not yet | supported | not yet | supported when plugin declares `failed_check_logs` |
 | **Review-bot findings and comments at the CI gate** | GitHub via `gh` CLI (check identity by app slug, comments from review threads) | GitLab via `glab` CLI (comments from unresolved discussion notes, matched by the bot's login; no check identity) | not supported | not supported | not supported | not supported | not supported | not supported |
-| **[Explicit issue closure](/no-mistakes/reference/cli/#closing-issues)** (`axi run --closes`) | `gh` CLI | `glab` CLI | not supported | not supported | not supported | not supported | not supported | not supported |
-| **[Transient-check rerun](/no-mistakes/reference/repo-config/#cirerun_transient)** (cancellations and pre-run infra failures) | `gh` CLI | not supported | not supported | not supported | not supported | not supported | not supported | not supported |
+| **[Explicit issue closure](/alamino/reference/cli/#closing-issues)** (`axi run --closes`) | `gh` CLI | `glab` CLI | not supported | not supported | not supported | not supported | not supported | not supported |
+| **[Transient-check rerun](/alamino/reference/repo-config/#cirerun_transient)** (cancellations and pre-run infra failures) | `gh` CLI | not supported | not supported | not supported | not supported | not supported | not supported | not supported |
 
 ## What changes when provider wiring is present
 
-Once the host is wired up, `no-mistakes` can keep owning the branch after it
+Once the host is wired up, `alamino` can keep owning the branch after it
 pushes to the configured target:
 
 - create or update the PR automatically
-- poll hosted CI according to the [CI step lifecycle](/no-mistakes/reference/pipeline-steps/#ci)
+- poll hosted CI according to the [CI step lifecycle](/alamino/reference/pipeline-steps/#ci)
 - fetch failing job logs for the CI auto-fix loop when the provider exposes them
 - on GitHub, GitLab, Forgejo, Azure DevOps, Cursor Origin, and provider plugins that declare `mergeable_state`, watch mergeability and fix merge conflicts when possible
 
-Draft PR and MR creation is configurable for supported providers. The [global](/no-mistakes/reference/global-config/#providersgithubdraft_pull_requests) and [per-repo](/no-mistakes/reference/repo-config/#providersgithubdraft_pull_requests) config references own provider support and behavior.
+Draft PR and MR creation is configurable for supported providers. The [global](/alamino/reference/global-config/#providersgithubdraft_pull_requests) and [per-repo](/alamino/reference/repo-config/#providersgithubdraft_pull_requests) config references own provider support and behavior.
 
 ## GitHub
 
@@ -70,20 +70,20 @@ Verify:
 gh auth status
 ```
 
-`no-mistakes doctor` also checks for `gh` availability.
-For PR and workflow-run commands, no-mistakes passes the repository slug from the recorded upstream remote or PR URL to `gh`, so daemon-run commands do not depend on the daemon's current working directory.
+`alamino doctor` also checks for `gh` availability.
+For PR and workflow-run commands, alamino passes the repository slug from the recorded upstream remote or PR URL to `gh`, so daemon-run commands do not depend on the daemon's current working directory.
 Rewriting an existing PR's title or body (the attestation rebind before a push, the PR step's update) uses a REST `PATCH` through `gh api` rather than `gh pr edit`, so a token limited to the `repo` and `workflow` scopes is enough. `gh pr edit` looks the PR up over GraphQL with team fields that need `read:org`.
 
 ### Multiple GitHub or GitLab identities
 
-If one daemon serves repositories that require non-overlapping accounts, give each account an isolated CLI config directory and use account-specific host aliases in repository remotes, for example `git@github-personal:you/project.git`. Then map those raw host tokens with global [`forge_profiles`](/no-mistakes/reference/global-config/#forge_profiles). When the accounts are already signed in to one gh configuration, a GitHub profile keyed by `host/owner` with `gh_user` selects the login per repository owner instead, with no extra config directory or alias. The reference owns the configuration, validation, compatibility, and fail-closed routing contract.
+If one daemon serves repositories that require non-overlapping accounts, give each account an isolated CLI config directory and use account-specific host aliases in repository remotes, for example `git@github-personal:you/project.git`. Then map those raw host tokens with global [`forge_profiles`](/alamino/reference/global-config/#forge_profiles). When the accounts are already signed in to one gh configuration, a GitHub profile keyed by `host/owner` with `gh_user` selects the login per repository owner instead, with no extra config directory or alias. The reference owns the configuration, validation, compatibility, and fail-closed routing contract.
 
 **What you get:**
 
 - PR creation and update on pushes
-- CI polling follows the [CI step lifecycle](/no-mistakes/reference/pipeline-steps/#ci)
+- CI polling follows the [CI step lifecycle](/alamino/reference/pipeline-steps/#ci)
 - Failed job log fetching (`gh run view --log-failed`) for the CI auto-fix step
-- A red Greptile check, or a CodeRabbit check opted in through [`ci.required_reviews`](/no-mistakes/reference/repo-config/#cirequired_reviews), parked as `ask-user` CI findings carrying its unresolved review-thread comments, which are also supplied to CI repair prompts (a green or not-yet-registered one too under [`ci.review_bot_comments: always`](/no-mistakes/reference/repo-config/#cireview_bot_comments)); see the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) for filtering and prompt-safety details
+- A red Greptile check, or a CodeRabbit check opted in through [`ci.required_reviews`](/alamino/reference/repo-config/#cirequired_reviews), parked as `ask-user` CI findings carrying its unresolved review-thread comments, which are also supplied to CI repair prompts (a green or not-yet-registered one too under [`ci.review_bot_comments: always`](/alamino/reference/repo-config/#cireview_bot_comments)); see the [CI step reference](/alamino/reference/pipeline-steps/#ci) for filtering and prompt-safety details
 - PR mergeability polling, and agent-driven resolution when the provider reports an actual merge conflict
 
 ### GitHub fork contributions
@@ -93,11 +93,11 @@ Keep `origin` pointed at the parent repository, then initialize with your fork U
 
 ```sh
 git remote set-url origin git@github.com:parent-owner/repo.git
-no-mistakes init --fork-url git@github.com:your-user/repo.git
+alamino init --fork-url git@github.com:your-user/repo.git
 ```
 
-The [Push](/no-mistakes/reference/pipeline-steps/#push) and [PR](/no-mistakes/reference/pipeline-steps/#pr) references own fork routing, including CI repairs under [`ci.revalidate_repairs`](/no-mistakes/reference/repo-config/#cirevalidate_repairs). For a different integration project, see [`--base-remote`](/no-mistakes/reference/cli/#other-run-options).
-Re-running `no-mistakes init` later preserves the stored fork URL unless you pass a new `--fork-url`.
+The [Push](/alamino/reference/pipeline-steps/#push) and [PR](/alamino/reference/pipeline-steps/#pr) references own fork routing, including CI repairs under [`ci.revalidate_repairs`](/alamino/reference/repo-config/#cirevalidate_repairs). For a different integration project, see [`--base-remote`](/alamino/reference/cli/#other-run-options).
+Re-running `alamino init` later preserves the stored fork URL unless you pass a new `--fork-url`.
 
 Fork routing currently requires both `origin` and `--fork-url` to be GitHub remotes with owner/repo paths.
 GitLab, Forgejo, Bitbucket, Azure DevOps, Gitea, Cursor Origin, and provider plugins do not implement fork MR/PR routing yet; if a legacy or manually edited repo record has `fork_url` set for those providers, PR creation skips instead of opening an unsafe self PR.
@@ -105,7 +105,7 @@ GitLab, Forgejo, Bitbucket, Azure DevOps, Gitea, Cursor Origin, and provider plu
 #### Workflow-file changes require the `workflow` scope
 
 If your branch touches a `.github/workflows/*.yml` or `*.yaml` file, the push to your fork requires a GitHub credential with the `workflow` scope; GitHub rejects it with `refusing to allow an OAuth App to create or update workflow ... without workflow scope` when the stored token lacks it.
-See [Troubleshooting](/no-mistakes/guides/troubleshooting/#push-fails-with-refusing-to-allow-an-oauth-app-to-create-or-update-workflow--without-workflow-scope) for the recovery steps.
+See [Troubleshooting](/alamino/guides/troubleshooting/#push-fails-with-refusing-to-allow-an-oauth-app-to-create-or-update-workflow--without-workflow-scope) for the recovery steps.
 
 ## GitLab
 
@@ -124,19 +124,19 @@ glab auth login
 **What you get:**
 
 - PR (merge request) creation and update
-- CI polling follows the [CI step lifecycle](/no-mistakes/reference/pipeline-steps/#ci)
+- CI polling follows the [CI step lifecycle](/alamino/reference/pipeline-steps/#ci)
 - Failed job trace fetching (`glab ci trace`) for the CI auto-fix step
 - Merge-conflict polling and auto-fix, same as GitHub
-- A supported review bot's unresolved merge request discussion notes as `ask-user` CI findings under [`ci.review_bot_comments: always`](/no-mistakes/reference/repo-config/#cireview_bot_comments) (see the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) for the identity and filtering rules)
+- A supported review bot's unresolved merge request discussion notes as `ask-user` CI findings under [`ci.review_bot_comments: always`](/alamino/reference/repo-config/#cireview_bot_comments) (see the [CI step reference](/alamino/reference/pipeline-steps/#ci) for the identity and filtering rules)
 - Explicit issue closure through `axi run --closes`; the reference is rendered as a `Closes` line in the merge request description and verified on the live merge request. A cross-project reference may nest under subgroups (`group/subgroup/project#95`), and the same nested form is refused on a provider that would read it as a different repository's reference
 
-When no-mistakes updates an existing merge request, it reads the live title and preserves any GitLab draft marker. If `glab mr view` fails or returns an empty title, the update stops instead of risking a change from draft to ready.
+When alamino updates an existing merge request, it reads the live title and preserves any GitLab draft marker. If `glab mr view` fails or returns an empty title, the update stops instead of risking a change from draft to ready.
 
 ## Forgejo
 
-Install [`forgejo-axi`](https://github.com/escidmore/forgejo-axi) and make it available on `PATH`. It currently installs from source with Node.js 20 or newer; set [`forgejo_axi_path`](/no-mistakes/reference/global-config/#forgejo_axi_path) when the executable lives elsewhere.
+Install [`forgejo-axi`](https://github.com/escidmore/forgejo-axi) and make it available on `PATH`. It currently installs from source with Node.js 20 or newer; set [`forgejo_axi_path`](/alamino/reference/global-config/#forgejo_axi_path) when the executable lives elsewhere.
 
-Give the daemon a Forgejo token through either the generic `FORGEJO_TOKEN` variable or forgejo-axi's host-scoped token variable. Configure the integration remote's instance URL with [`FORGEJO_BASE_URL`](/no-mistakes/reference/environment/#forgejo_base_url) and any separate SSH hostname with [`FORGEJO_SSH_DOMAIN`](/no-mistakes/reference/environment/#forgejo_ssh_domain), following the detection rules in those references.
+Give the daemon a Forgejo token through either the generic `FORGEJO_TOKEN` variable or forgejo-axi's host-scoped token variable. Configure the integration remote's instance URL with [`FORGEJO_BASE_URL`](/alamino/reference/environment/#forgejo_base_url) and any separate SSH hostname with [`FORGEJO_SSH_DOMAIN`](/alamino/reference/environment/#forgejo_ssh_domain), following the detection rules in those references.
 
 Verify without mutating a deployed Forgejo instance:
 
@@ -144,9 +144,9 @@ Verify without mutating a deployed Forgejo instance:
 FORGEJO_BASE_URL=https://forgejo.example forgejo-axi status --json
 ```
 
-`no-mistakes` delegates PR identity, lifecycle, commit-status and required-context evaluation, mergeability, and merged proof to forgejo-axi's stable JSON commands. Capabilities are runtime-probed from the server instead of guessed from a major version.
+`alamino` delegates PR identity, lifecycle, commit-status and required-context evaluation, mergeability, and merged proof to forgejo-axi's stable JSON commands. Capabilities are runtime-probed from the server instead of guessed from a major version.
 
-Failed-log retrieval uses forgejo-axi's stable `run view --log-failed --json` command only when the runtime probe advertises commit statuses, Actions runs, run jobs, and job logs. `no-mistakes` accepts only a failing status's canonical native Actions target, verifies the exact run and freshly polled PR head, validates every returned job's run identity, and returns non-empty failed-job logs in deterministic order under the aggregate 1 MiB ceiling. Live testing against Forgejo 16.0.1 proves identity-matched retrieval through those routes. On Forgejo 15.0.5, commit-status gating, mergeability checks, and merged-state proof remain available when job and log routes are unavailable.
+Failed-log retrieval uses forgejo-axi's stable `run view --log-failed --json` command only when the runtime probe advertises commit statuses, Actions runs, run jobs, and job logs. `alamino` accepts only a failing status's canonical native Actions target, verifies the exact run and freshly polled PR head, validates every returned job's run identity, and returns non-empty failed-job logs in deterministic order under the aggregate 1 MiB ceiling. Live testing against Forgejo 16.0.1 proves identity-matched retrieval through those routes. On Forgejo 15.0.5, commit-status gating, mergeability checks, and merged-state proof remain available when job and log routes are unavailable.
 
 Fork PR routing is not implemented for Forgejo; a configured `fork_url` makes the PR step skip rather than opening a self PR.
 
@@ -155,11 +155,11 @@ Fork PR routing is not implemented for Forgejo; a configured `fork_url` makes th
 Bitbucket Cloud uses the REST API directly rather than a provider CLI. Set two environment variables (and optionally a third):
 
 ```sh
-export NO_MISTAKES_BITBUCKET_EMAIL=you@example.com
-export NO_MISTAKES_BITBUCKET_API_TOKEN=your-api-token
+export ALAMINO_BITBUCKET_EMAIL=you@example.com
+export ALAMINO_BITBUCKET_API_TOKEN=your-api-token
 
 # Optional: override the API base URL
-export NO_MISTAKES_BITBUCKET_API_BASE_URL=https://api.bitbucket.org/2.0
+export ALAMINO_BITBUCKET_API_BASE_URL=https://api.bitbucket.org/2.0
 ```
 
 Get an API token from [Bitbucket account settings](https://bitbucket.org/account/settings/app-passwords/).
@@ -167,7 +167,7 @@ Get an API token from [Bitbucket account settings](https://bitbucket.org/account
 **What you get:**
 
 - PR creation and update
-- CI polling follows the [CI step lifecycle](/no-mistakes/reference/pipeline-steps/#ci)
+- CI polling follows the [CI step lifecycle](/alamino/reference/pipeline-steps/#ci)
 - Failed pipeline step log fetching for the CI auto-fix step
 
 **What you don't get (yet):**
@@ -208,13 +208,13 @@ well as their SSH forms (`git@ssh.dev.azure.com:v3/...`).
 **What you get:**
 
 - PR creation and update (`az repos pr create` / `update`).
-  See the [PR step reference](/no-mistakes/reference/pipeline-steps/#pr) for
+  See the [PR step reference](/alamino/reference/pipeline-steps/#pr) for
   ordinary description composition and truncation, and
-  [`pr.template`](/no-mistakes/reference/repo-config/#prtemplate) for
+  [`pr.template`](/alamino/reference/repo-config/#prtemplate) for
   author-preserving publication and its provider limits.
 - CI status polling - Azure branch policy evaluations (build validation and
   status checks) are read via `az repos pr policy list` while the CI monitor is
-  active; see the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci)
+  active; see the [CI step reference](/alamino/reference/pipeline-steps/#ci)
   for its lifecycle and handoff controls
 - Merge-conflict polling and auto-fix from the PR's `mergeStatus`
 
@@ -226,7 +226,7 @@ well as their SSH forms (`git@ssh.dev.azure.com:v3/...`).
 
 ## Gitea
 
-Gitea uses `tea`, its official CLI. Both the released tea 0.x line and the tea 1.0 rewrite ([gitea/tea#1126](https://gitea.com/gitea/tea/pulls/1126)) work; no-mistakes detects which one is installed. Install it and log in with a token:
+Gitea uses `tea`, its official CLI. Both the released tea 0.x line and the tea 1.0 rewrite ([gitea/tea#1126](https://gitea.com/gitea/tea/pulls/1126)) work; alamino detects which one is installed. Install it and log in with a token:
 
 ```sh
 # see https://gitea.com/gitea/tea for install options (Homebrew, packages, or a release binary)
@@ -245,24 +245,24 @@ Verify with `tea logins list` (tea 0.x) or `tea auth status` (tea 1.0).
 **What you get:**
 
 - PR creation and update (`tea pulls create`/`edit` on tea 0.x, `tea pr create`/`edit` on tea 1.0)
-- CI status polling through Gitea Actions follows the [CI step lifecycle](/no-mistakes/reference/pipeline-steps/#ci). Job-level pass/fail comes from Gitea's Actions REST API (`GET .../actions/runs/{run}/jobs`), reached through `tea api` (which reuses the same stored login/token, so no separate HTTP client or credential is needed) - `tea`'s own `--output json` on `actions runs view --jobs` reports each job's run/queued/completed status but not its pass/fail conclusion.
+- CI status polling through Gitea Actions follows the [CI step lifecycle](/alamino/reference/pipeline-steps/#ci). Job-level pass/fail comes from Gitea's Actions REST API (`GET .../actions/runs/{run}/jobs`), reached through `tea api` (which reuses the same stored login/token, so no separate HTTP client or credential is needed) - `tea`'s own `--output json` on `actions runs view --jobs` reports each job's run/queued/completed status but not its pass/fail conclusion.
 - Failed job log fetching (`tea actions runs logs`, or `tea run logs` on tea 1.0) for the CI auto-fix step
 
 **What you don't get (yet):**
 
-- PR mergeability polling and merge-conflict auto-fix. Gitea's PR `mergeable` field has a documented upstream reliability bug ([go-gitea/gitea#25849](https://github.com/go-gitea/gitea/issues/25849)) that can stick `false` after a conflict is actually resolved, so no-mistakes declines the capability rather than trust it - the same posture as Bitbucket Cloud.
+- PR mergeability polling and merge-conflict auto-fix. Gitea's PR `mergeable` field has a documented upstream reliability bug ([go-gitea/gitea#25849](https://github.com/go-gitea/gitea/issues/25849)) that can stick `false` after a conflict is actually resolved, so alamino declines the capability rather than trust it - the same posture as Bitbucket Cloud.
 - Fork PR routing (same as all non-GitHub providers)
-- [Transient-check rerun](/no-mistakes/reference/repo-config/#cirerun_transient)
+- [Transient-check rerun](/alamino/reference/repo-config/#cirerun_transient)
 
-Gitea Actions shipped in Gitea 1.19 (2023); older instances have no Actions API to poll. As with any repository with no CI, declare `no_ci: true` on the trusted default branch so the CI step does not wait for checks that will never appear - see the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci).
+Gitea Actions shipped in Gitea 1.19 (2023); older instances have no Actions API to poll. As with any repository with no CI, declare `no_ci: true` on the trusted default branch so the CI step does not wait for checks that will never appear - see the [CI step reference](/alamino/reference/pipeline-steps/#ci).
 
 ### Self-hosted Gitea
 
-Nearly every real Gitea instance is self-hosted at an arbitrary hostname with no `gitea` marker in it at all, so detection cannot use a substring match the way `gitlab.com`/`github.com` do. Instead, `no-mistakes` consults `tea`'s own config and treats the upstream as Gitea if its host matches a tea 0.x login's `url` or `ssh_host` in `config.yml` (under `$XDG_CONFIG_HOME/tea` or `~/.config/tea`), or a tea 1.0 instance's URL or `ssh_host` in `hosts.yml` (under `$TEA_CONFIG_DIR`, else the same directory).
+Nearly every real Gitea instance is self-hosted at an arbitrary hostname with no `gitea` marker in it at all, so detection cannot use a substring match the way `gitlab.com`/`github.com` do. Instead, `alamino` consults `tea`'s own config and treats the upstream as Gitea if its host matches a tea 0.x login's `url` or `ssh_host` in `config.yml` (under `$XDG_CONFIG_HOME/tea` or `~/.config/tea`), or a tea 1.0 instance's URL or `ssh_host` in `hosts.yml` (under `$TEA_CONFIG_DIR`, else the same directory).
 
 Logging in as shown above is enough to make detection succeed; if `tea` has no login for the host, detection fails closed and the upstream is treated as unsupported. Two tea 1.0 instances on one hostname (different ports or base paths) are ambiguous and also fail closed.
 
-Because `tea` infers "which instance" from the current directory's git remote - context the daemon's detached worktree does not have - every `tea` invocation `no-mistakes` makes selects the account explicitly: `--login <name>` on tea 0.x, `--host <instance url>` on tea 1.0, resolved from the matched config entry. The tea generation is detected once, with a side-effect-free `--help` probe; a `tea` binary that matches neither generation is never guessed at: the step is skipped with an `unrecognized tea CLI` reason, the same way a logged-out CLI is, and so is a tea 1.0 binary with no tea 1.0 login for the host.
+Because `tea` infers "which instance" from the current directory's git remote - context the daemon's detached worktree does not have - every `tea` invocation `alamino` makes selects the account explicitly: `--login <name>` on tea 0.x, `--host <instance url>` on tea 1.0, resolved from the matched config entry. The tea generation is detected once, with a side-effect-free `--help` probe; a `tea` binary that matches neither generation is never guessed at: the step is skipped with an `unrecognized tea CLI` reason, the same way a logged-out CLI is, and so is a tea 1.0 binary with no tea 1.0 login for the host.
 
 ## Cursor Origin
 
@@ -282,9 +282,9 @@ origin auth status
 **What you get:**
 
 - PR creation and update (`origin pr create` / `origin pr edit`). The Origin CLI
-  defaults new changes to draft; no-mistakes always passes `--status` explicitly
+  defaults new changes to draft; alamino always passes `--status` explicitly
   (`open` unless `providers.origin.draft_pull_requests` is true).
-- CI check polling through `origin pr checks` while the monitor is active; see the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) for its lifecycle.
+- CI check polling through `origin pr checks` while the monitor is active; see the [CI step reference](/alamino/reference/pipeline-steps/#ci) for its lifecycle.
 - Mergeability polling from `origin pr view --json mergeability`, and
   merge-conflict auto-fix when Origin reports `hasMergeConflicts`, conflicted
   paths, or a conflict verdict under the nested `mergeability.mergeability`.
@@ -293,7 +293,7 @@ origin auth status
 
 - Failed check log fetching (the Origin CLI has no log-body command)
 - Fork PR routing
-- [Transient-check rerun](/no-mistakes/reference/repo-config/#cirerun_transient)
+- [Transient-check rerun](/alamino/reference/repo-config/#cirerun_transient)
 - Review-bot findings at the CI gate
 
 Every `origin` invocation carries `--repo owner/repo` so the daemon's detached
@@ -301,51 +301,51 @@ worktree does not have to infer the repository from its working directory.
 
 ## Self-hosted GitHub/GitLab
 
-Self-hosted GitHub Enterprise and self-hosted GitLab instances work through the same `gh` and `glab` CLIs. Authenticate the CLI against your instance (`gh auth login --hostname your-ghe.example.com`, `glab auth login --hostname gitlab.example.com`) and `no-mistakes` will route through the CLI as usual.
+Self-hosted GitHub Enterprise and self-hosted GitLab instances work through the same `gh` and `glab` CLIs. Authenticate the CLI against your instance (`gh auth login --hostname your-ghe.example.com`, `glab auth login --hostname gitlab.example.com`) and `alamino` will route through the CLI as usual.
 
 ### Self-hosted GitHub Enterprise
 
 GitHub Enterprise Server is detected the same way `github.com` is, as long as the host is one `gh` is authenticated against.
-When the upstream hostname is not `github.com`, `no-mistakes` consults gh's configured hosts (`hosts.yml`, honoring `GH_CONFIG_DIR` then `XDG_CONFIG_HOME/gh`, then `~/.config/gh`) and treats the upstream as GitHub if its host appears there.
+When the upstream hostname is not `github.com`, `alamino` consults gh's configured hosts (`hosts.yml`, honoring `GH_CONFIG_DIR` then `XDG_CONFIG_HOME/gh`, then `~/.config/gh`) and treats the upstream as GitHub if its host appears there.
 Running `gh auth login --hostname your-ghe.example.com` is enough to make detection succeed; if `gh` is not configured for the host, detection fails closed and the upstream is treated as unsupported.
 
 On GHE, `gh --repo` expects a host-prefixed slug in the form `host/owner/name`.
-`no-mistakes` builds that automatically from the recorded upstream remote or PR URL, so daemon-run `gh` commands resolve the right repository regardless of the daemon's working directory.
+`alamino` builds that automatically from the recorded upstream remote or PR URL, so daemon-run `gh` commands resolve the right repository regardless of the daemon's working directory.
 The fork owner extracted from the fork URL keeps the plain `owner/name` form because that side only feeds `--head owner:branch`.
 
 ### Self-hosted GitLab
 
 Self-hosted GitLab is detected out of the box even when the hostname carries no `gitlab` marker (for example `git.example.com`).
-When the hostname is not obviously GitLab, `no-mistakes` consults glab's configured hosts (`config.yml`, honoring `GLAB_CONFIG_DIR` then `XDG_CONFIG_HOME/glab-cli`, then `~/.config/glab-cli`) and treats the upstream as GitLab if its host appears there as a configured host or `api_host`.
+When the hostname is not obviously GitLab, `alamino` consults glab's configured hosts (`config.yml`, honoring `GLAB_CONFIG_DIR` then `XDG_CONFIG_HOME/glab-cli`, then `~/.config/glab-cli`) and treats the upstream as GitLab if its host appears there as a configured host or `api_host`.
 Running `glab auth login --hostname your-gitlab.example.com` is enough to make detection succeed; if glab is not configured for the host, detection fails closed and the upstream is treated as unsupported.
 
-If GitLab serves SSH and web/API traffic on different hosts, configure glab's global `api_host` for the Git remote's host. See the [MR URL validation contract](/no-mistakes/reference/pipeline-steps/#pr) for how existing-MR discovery and review-comment reads authorize the alternate web host.
+If GitLab serves SSH and web/API traffic on different hosts, configure glab's global `api_host` for the Git remote's host. See the [MR URL validation contract](/alamino/reference/pipeline-steps/#pr) for how existing-MR discovery and review-comment reads authorize the alternate web host.
 
 The GitLab backend is pinned against `glab v1.5x`. Self-hosted detection and the merge-request and CI steps rely on its current flag and API surface, so keep `glab` reasonably up to date.
 
 ## SSH host aliases
 
-SSH remotes that use a host alias from your SSH configuration (for example `git@github-personal:owner/repo` or `git@gitlab-work:group/repo`, where `github-personal`/`gitlab-work` map to a real `HostName` via `~/.ssh/config`) are supported. `no-mistakes` resolves the alias through `ssh -G` to its real host name and uses that host only for provider detection and identity checks, including scoping `gh` or `glab` to the right instance and matching an SSH Forgejo remote to `FORGEJO_BASE_URL`. `ssh.github.com` and `altssh.gitlab.com` are rewritten to `github.com` and `gitlab.com` before provider detection and `gh`/`glab` host scoping. The original Git remote URL is left untouched, so the URL used for push stays the user's alias and authentication continues to use it exactly as the SSH configuration expects.
+SSH remotes that use a host alias from your SSH configuration (for example `git@github-personal:owner/repo` or `git@gitlab-work:group/repo`, where `github-personal`/`gitlab-work` map to a real `HostName` via `~/.ssh/config`) are supported. `alamino` resolves the alias through `ssh -G` to its real host name and uses that host only for provider detection and identity checks, including scoping `gh` or `glab` to the right instance and matching an SSH Forgejo remote to `FORGEJO_BASE_URL`. `ssh.github.com` and `altssh.gitlab.com` are rewritten to `github.com` and `gitlab.com` before provider detection and `gh`/`glab` host scoping. The original Git remote URL is left untouched, so the URL used for push stays the user's alias and authentication continues to use it exactly as the SSH configuration expects.
 
 If `ssh -G` is unavailable or the alias does not resolve, detection falls back to the literal host in the remote URL rather than failing the run.
 
 ## Custom hosts with provider plugins
 
-For a host no-mistakes does not ship a provider for - a company-internal forge,
+For a host alamino does not ship a provider for - a company-internal forge,
 Google Cloud Secure Source Manager, or anything else with an API - write a small
-AXI-shaped CLI that implements the [provider plugin protocol](/no-mistakes/reference/provider-plugin-protocol/)
+AXI-shaped CLI that implements the [provider plugin protocol](/alamino/reference/provider-plugin-protocol/)
 and register it in your global config. Nothing about the host needs to live in
-no-mistakes or in the repository:
+alamino or in the repository:
 
 ```yaml
-# ~/.no-mistakes/config.yaml
+# ~/.alamino/config.yaml
 provider_plugins:
   ssm:
-    command: ~/bin/nm-ssm-plugin
+    command: ~/bin/alamino-ssm-plugin
     hosts: ["*.sourcemanager.dev"]
 ```
 
-no-mistakes drives the plugin the way it drives `forgejo-axi`: one process per
+alamino drives the plugin the way it drives `forgejo-axi`: one process per
 operation, a subcommand plus `--flag=value` arguments and `--json`, and one
 JSON document on stdout (PR bodies arrive in a private `--body-file`). Six
 subcommands are required (`status`, `pr find`, `pr create`, `pr update`,
@@ -354,22 +354,22 @@ PR retargeting are optional capabilities the plugin declares in `status`.
 
 **What you get:**
 
-- PR creation and update, including [`pr.template`](/no-mistakes/reference/repo-config/#prtemplate) and pre-push attestation
-- CI polling follows the [CI step lifecycle](/no-mistakes/reference/pipeline-steps/#ci)
+- PR creation and update, including [`pr.template`](/alamino/reference/repo-config/#prtemplate) and pre-push attestation
+- CI polling follows the [CI step lifecycle](/alamino/reference/pipeline-steps/#ci)
 - Failed-check log fetching, mergeability polling, merge-conflict auto-fix, and merged-at-head proof, when the plugin declares them
 
 **What you don't get:**
 
 - Fork PR routing, review-bot findings, transient-check reruns, and `--closes` (a plugin declares neither the review-comment nor the closing-reference capability)
 
-no-mistakes validates every plugin answer - PR identity, URL shape, check
+alamino validates every plugin answer - PR identity, URL shape, check
 buckets, and merged-proof head - and fails closed on anything malformed, on a
 protocol version mismatch, and on a timeout, so a buggy plugin cannot open a
 duplicate PR, certify the wrong commit, or turn a broken integration into a
 skipped step. A plugin that reports it cannot serve the repository (for
 example, not authenticated) skips the PR and CI steps with its message, like
 a built-in provider whose CLI is logged out. The
-[global config reference](/no-mistakes/reference/global-config/#provider_plugins)
+[global config reference](/alamino/reference/global-config/#provider_plugins)
 owns host matching, precedence, and the trust boundary: plugins are global-only
 and a repository can never configure one.
 
@@ -377,7 +377,7 @@ and a repository can never configure one.
 
 If your upstream isn't GitHub, GitLab, Forgejo, Bitbucket Cloud, Azure DevOps, Gitea, or Cursor Origin, and no provider plugin claims its host:
 
-- The **push** step still runs - `no-mistakes` pushes through git to the configured target like any other remote.
+- The **push** step still runs - `alamino` pushes through git to the configured target like any other remote.
 - The **PR** step marks itself as `skipped`.
 - The **CI** step marks itself as `skipped`.
 
@@ -386,11 +386,11 @@ Everything before push (rebase, review, test, document, lint) still works regard
 ## Checking what's wired up
 
 ```sh
-no-mistakes doctor
+alamino doctor
 ```
 
 `doctor` checks `gh`, `az`, and `origin` availability. It also validates every configured forge profile, including its provider config, target host, and online authentication, and checks that every configured provider plugin's command resolves. Without profiles, confirm `glab` is installed and authenticated for GitLab. For Forgejo, run `FORGEJO_BASE_URL=<host> forgejo-axi status --json` from the daemon's environment. For Bitbucket Cloud, confirm the two env vars are set in that environment. For Azure DevOps, confirm the `azure-devops` extension is installed (`az extension show --name azure-devops`) and a PAT is available. For Gitea, confirm `tea` is installed and has a login configured for your instance (`tea logins list` on tea 0.x, `tea auth status` on tea 1.0). For Cursor Origin, confirm `origin auth status` succeeds.
 
 :::note
-Provider CLIs and credentials inherit the daemon's startup environment. If credentials or PATH-derived tools are missing, check `~/.no-mistakes/logs/daemon.log` for a login-shell environment resolution warning, then see [Environment the daemon sees](/no-mistakes/reference/environment/#environment-the-daemon-sees) for the platform-specific resolution and restart behavior.
+Provider CLIs and credentials inherit the daemon's startup environment. If credentials or PATH-derived tools are missing, check `~/.alamino/logs/daemon.log` for a login-shell environment resolution warning, then see [Environment the daemon sees](/alamino/reference/environment/#environment-the-daemon-sees) for the platform-specific resolution and restart behavior.
 :::

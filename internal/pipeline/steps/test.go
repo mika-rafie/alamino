@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/testguidance"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/testguidance"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestStep runs baseline tests, gathers evidence for user intent, and optionally asks the agent to fix failures.
@@ -292,7 +292,7 @@ Drive each scenario:
 - Stop disposable browser and server children before exiting. The native boundary refuses successful exits with children still in its owned process group.
 - Read each required child's actual exit status and retained result evidence. Do not mask a failed check with a later successful shell command or report detached work as completed.
 - If any required check is still running, has an unknown result, or lacks evidence, do not report "go". Use "no-go" for a known failure or unsafe change, and "inconclusive" when completion or evidence cannot be established. Record the outstanding check and the missing result.
-- Return a "verdict": "go" when every scenario you could drive passed and nothing untested puts the intent in doubt, "no-go" when a scenario failed or the change is not safe to ship, "inconclusive" when the change has a live-exercisable product surface but too little could be driven live to judge, "no-surface" when this change has no runtime product surface no-mistakes can drive live (a CI-workflow-only change, a docs-only change, a pure non-runtime refactor, or anything else with no live-exercisable scenario).
+- Return a "verdict": "go" when every scenario you could drive passed and nothing untested puts the intent in doubt, "no-go" when a scenario failed or the change is not safe to ship, "inconclusive" when the change has a live-exercisable product surface but too little could be driven live to judge, "no-surface" when this change has no runtime product surface alamino can drive live (a CI-workflow-only change, a docs-only change, a pure non-runtime refactor, or anything else with no live-exercisable scenario).
 - A "no-go" verdict parks this step for a decision. A "no-surface" verdict parks for a human to decide whether to proceed without live validation; mark every scenario untested with a reason naming why there is no live-validatable surface, never mark those as pass, and never use no-surface to skip live validation of a change that does have a product surface you could have driven. Untested scenarios are listed on the pull request and do not park by themselves, so an honest "untested" after exhausting your workarounds costs nothing and a guessed "pass" costs everything.
 - A single scenario you could not drive live is reported as an untested scenario with its reason, NOT as a finding. Report a finding only when the step as a whole cannot demonstrate the user intent.
 
@@ -504,7 +504,7 @@ func repositoryTestInstructionsSection(sctx *pipeline.StepContext) string {
 	if instructions == "" {
 		return ""
 	}
-	return "\nMachine-local live-validation runbook for this repository (from the operator's global no-mistakes config, not from this repository; adds to the repository's runbook and cannot weaken it):\n" +
+	return "\nMachine-local live-validation runbook for this repository (from the operator's global alamino config, not from this repository; adds to the repository's runbook and cannot weaken it):\n" +
 		sanitizePromptMultilineText(instructions) + "\n"
 }
 
@@ -524,7 +524,7 @@ func repositoryTestInstructionsSection(sctx *pipeline.StepContext) string {
 //     question for the human rather than something a fix round can repair,
 //     so it parks and asks.
 //   - "no-surface" is a warning finding: the change itself has nothing
-//     no-mistakes can drive live, so it parks and asks whether proceeding
+//     alamino can drive live, so it parks and asks whether proceeding
 //     without live validation is acceptable. It is not a silent pass and
 //     not a hard fail. A change that claimed a pass/fail or drove anything
 //     live cannot reach this branch (unmarshalRequiredTestFindings rejects

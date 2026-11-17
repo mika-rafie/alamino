@@ -10,20 +10,20 @@ func TestRepoParent_ForkReturnsParentSlug(t *testing.T) {
 	t.Parallel()
 
 	cmd := githubTestCmdFactory(map[string]githubTestResponse{
-		"gh api repos/fork-owner/no-mistakes": {
-			stdout: `{"fork":true,"parent":{"full_name":"parent-owner/no-mistakes"}}`,
+		"gh api repos/fork-owner/alamino": {
+			stdout: `{"fork":true,"parent":{"full_name":"parent-owner/alamino"}}`,
 		},
 	})
 
-	parentSlug, isFork, err := RepoParent(context.Background(), cmd, "", "git@github.com:fork-owner/no-mistakes.git")
+	parentSlug, isFork, err := RepoParent(context.Background(), cmd, "", "git@github.com:fork-owner/alamino.git")
 	if err != nil {
 		t.Fatalf("RepoParent() error = %v", err)
 	}
 	if !isFork {
 		t.Fatal("RepoParent() isFork = false, want true")
 	}
-	if parentSlug != "parent-owner/no-mistakes" {
-		t.Fatalf("RepoParent() parentSlug = %q, want %q", parentSlug, "parent-owner/no-mistakes")
+	if parentSlug != "parent-owner/alamino" {
+		t.Fatalf("RepoParent() parentSlug = %q, want %q", parentSlug, "parent-owner/alamino")
 	}
 }
 
@@ -31,12 +31,12 @@ func TestRepoParent_NonForkReturnsNoParent(t *testing.T) {
 	t.Parallel()
 
 	cmd := githubTestCmdFactory(map[string]githubTestResponse{
-		"gh api repos/owner/no-mistakes": {
+		"gh api repos/owner/alamino": {
 			stdout: `{"fork":false,"parent":null}`,
 		},
 	})
 
-	parentSlug, isFork, err := RepoParent(context.Background(), cmd, "", "https://github.com/owner/no-mistakes")
+	parentSlug, isFork, err := RepoParent(context.Background(), cmd, "", "https://github.com/owner/alamino")
 	if err != nil {
 		t.Fatalf("RepoParent() error = %v", err)
 	}

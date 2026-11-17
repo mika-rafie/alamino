@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 func TestMirrorSettlementFailureRestoresArchivedBranch(t *testing.T) {
@@ -33,7 +33,7 @@ func TestMirrorSettlementFailureRestoresArchivedBranch(t *testing.T) {
 			gitCmd(t, dir, "push", upstream, reviewed+":refs/heads/feature")
 			hook := filepath.Join(gateDir, "hooks", "reference-transaction")
 			wantError := "fetch pushed head"
-			condition := "case \"$ref\" in refs/no-mistakes/fetch/*) exit 1;; esac"
+			condition := "case \"$ref\" in refs/alamino/fetch/*) exit 1;; esac"
 			if failure == "recreate" {
 				wantError = "update gate mirror ref refs/heads/feature to"
 				condition = "if [ \"$ref\" = refs/heads/feature ] && [ \"$new\" = " + reviewed + " ]; then exit 1; fi"

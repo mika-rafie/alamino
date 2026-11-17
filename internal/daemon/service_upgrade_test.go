@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func TestStopThenStartRefreshesManagedExecutable(t *testing.T) {
@@ -20,15 +20,15 @@ func TestStopThenStartRefreshesManagedExecutable(t *testing.T) {
 			cleanup := stubServiceRuntime(t)
 			defer cleanup()
 			runtimeGOOS = platform
-			p := paths.WithRoot(filepath.Join(t.TempDir(), "nm-home"))
+			p := paths.WithRoot(filepath.Join(t.TempDir(), "alamino-home"))
 			if err := p.EnsureDirs(); err != nil {
 				t.Fatal(err)
 			}
 			home := t.TempDir()
 			serviceUserHomeDir = func() (string, error) { return home, nil }
 			serviceCurrentUser = func() (*user.User, error) { return &user.User{Uid: "501"}, nil }
-			const current = "/opt/new/no-mistakes"
-			const previous = "/opt/old/no-mistakes"
+			const current = "/opt/new/alamino"
+			const previous = "/opt/old/alamino"
 			serviceExecutablePath = func() (string, error) { return current, nil }
 			file, content := systemdUserServicePath(p), renderSystemdUnit(previous, p, home)
 			if platform == "darwin" {

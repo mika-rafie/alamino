@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 func TestServerAuthenticatesLocalPeerPID(t *testing.T) {

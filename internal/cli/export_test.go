@@ -12,19 +12,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // Exercise the shipped process, including command registration and flags, with
 // private storage and no daemon, forge, provider, or live repository.
 func TestExportCLI(t *testing.T) {
 	_, source, _, _ := runtime.Caller(0)
-	binary := filepath.Join(t.TempDir(), "no-mistakes")
+	binary := filepath.Join(t.TempDir(), "alamino")
 	if runtime.GOOS == "windows" {
 		binary += ".exe"
 	}
-	build := exec.Command("go", "build", "-ldflags", "-X github.com/kunchenguid/no-mistakes/internal/buildinfo.Version=v1.0.0", "-o", binary, "./cmd/no-mistakes")
+	build := exec.Command("go", "build", "-ldflags", "-X github.com/mika-rafie/alamino/internal/buildinfo.Version=v1.0.0", "-o", binary, "./cmd/alamino")
 	build.Dir = filepath.Clean(filepath.Join(filepath.Dir(source), "../.."))
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build export CLI: %v\n%s", err, out)
@@ -34,11 +34,11 @@ func TestExportCLI(t *testing.T) {
 		cmd := exec.Command(binary, args...)
 		// A release build with update checks enabled must still stay local.
 		for _, entry := range os.Environ() {
-			if !strings.HasPrefix(entry, "NM_HOME=") && !strings.HasPrefix(entry, "NO_MISTAKES_NO_UPDATE_CHECK=") {
+			if !strings.HasPrefix(entry, "ALAMINO_HOME=") && !strings.HasPrefix(entry, "ALAMINO_NO_UPDATE_CHECK=") {
 				cmd.Env = append(cmd.Env, entry)
 			}
 		}
-		cmd.Env = append(cmd.Env, "NM_HOME="+home, "NO_MISTAKES_NO_UPDATE_CHECK=0")
+		cmd.Env = append(cmd.Env, "ALAMINO_HOME="+home, "ALAMINO_NO_UPDATE_CHECK=0")
 		cmd.Dir = t.TempDir()
 		var out, stderr bytes.Buffer
 		cmd.Stdout, cmd.Stderr = &out, &stderr
@@ -288,7 +288,7 @@ UPDATE agent_invocations SET failure_category = 'cancelled' WHERE id = 'inv-canc
 			}
 			if kind == "missing database" {
 				if _, err := os.Stat(home); !os.IsNotExist(err) {
-					t.Fatalf("export created NM_HOME: %v", err)
+					t.Fatalf("export created ALAMINO_HOME: %v", err)
 				}
 			}
 		})

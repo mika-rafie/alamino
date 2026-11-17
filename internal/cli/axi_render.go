@@ -9,14 +9,14 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
 	"github.com/spf13/cobra"
 )
 
@@ -669,7 +669,7 @@ func gateFields(gate stepView) []toon.Field {
 // gateFieldsForRun renders the gate with every follow-up command that accepts
 // --run carrying runID, so a caller that selected the run by id keeps naming it.
 func gateFieldsForRun(gate stepView, runID string) []toon.Field {
-	respond := "no-mistakes axi respond" + runFlag(runID)
+	respond := "alamino axi respond" + runFlag(runID)
 	coverageHelp := "Run `" + respond + " --action complete-coverage` to review only the remaining paths using stored coverage for this source"
 	help := []string{
 		"Run `" + respond + " --action approve` to accept this step and continue",
@@ -697,14 +697,14 @@ func gateFieldsForRun(gate stepView, runID string) []toon.Field {
 			answerScope = fmt.Sprintf(" (`axi answer` has no --run form: run it in the clone of run %s)", runID)
 		}
 		help = append([]string{
-			"This review is waiting on answers to the question(s) its reviewer asked; each is a `question-<id>` finding below. Answer each with `no-mistakes axi answer --question <id> --answer \"<one of its options>\"`" + answerScope + " and the same reviewer resumes and finishes its pass; the answer that closes the last one blocks like `axi respond` and returns the next gate or outcome",
+			"This review is waiting on answers to the question(s) its reviewer asked; each is a `question-<id>` finding below. Answer each with `alamino axi answer --question <id> --answer \"<one of its options>\"`" + answerScope + " and the same reviewer resumes and finishes its pass; the answer that closes the last one blocks like `axi respond` and returns the next gate or outcome",
 			"Do not approve or fix to get past a review question: that throws away the paused review pass instead of answering it",
 		}, help...)
 	}
 	if pipeline.HasProtectedPathRefusal(gate.FindingsJSON) {
 		next := "Have the operator inspect and resolve the reported protected-path edit through the repository's authorized workflow, then run `" + respond + " --action fix` to retry the refused step, including its commit and publication."
 		if pipeline.HasReviewFixRoundLimit(gate.FindingsJSON) {
-			next = "The total Review fix-round budget is exhausted, so a fix request is refused and cannot retry the refused step. Skip this step or run `no-mistakes axi abort" + runFlag(runID) + "` to stop the run. A new run gets a new budget; changing config does not extend this run."
+			next = "The total Review fix-round budget is exhausted, so a fix request is refused and cannot retry the refused step. Skip this step or run `alamino axi abort" + runFlag(runID) + "` to stop the run. A new run gets a new budget; changing config does not extend this run."
 		}
 		help = []string{"Protected-path refusals require an explicit operator response; Approve is rejected.", next}
 	}
@@ -712,7 +712,7 @@ func gateFieldsForRun(gate stepView, runID string) []toon.Field {
 	if pipeline.HasUnvalidatedWorkRefusal(gate.FindingsJSON) {
 		help = []string{
 			"Approve is rejected: the run worktree holds work a timed-out Test agent left that no Test turn validated, and approval would publish it. The findings name that work and how to inspect it.",
-			"Run `" + respond + " --action fix --findings <ids>` to validate that work (do not edit files yourself), or `no-mistakes axi abort" + runFlag(runID) + "` to stop the run",
+			"Run `" + respond + " --action fix --findings <ids>` to validate that work (do not edit files yourself), or `alamino axi abort" + runFlag(runID) + "` to stop the run",
 		}
 		skip = "Do not skip this step: the steps after Test would commit and publish the unvalidated work, so skipping needs the operator's explicit decision"
 	}
@@ -726,7 +726,7 @@ func gateFieldsForRun(gate stepView, runID string) []toon.Field {
 
 func inspectionOnlyGateFields(gate stepView, runID string) []toon.Field {
 	return gateFieldsWithHelp(gate, []string{
-		fmt.Sprintf("The explicitly selected gate for run %s is inspection-only here; respond with `no-mistakes axi respond --run %s --action approve|fix|skip`", runID, runID),
+		fmt.Sprintf("The explicitly selected gate for run %s is inspection-only here; respond with `alamino axi respond --run %s --action approve|fix|skip`", runID, runID),
 		fmt.Sprintf("Run `%s` to read the complete step summary and log", axiLogsFullCommand(gate.Name, runID)),
 	})
 }
@@ -809,9 +809,9 @@ func runFlag(runID string) string {
 
 func axiLogsFullCommand(step, runID string) string {
 	if runID != "" {
-		return fmt.Sprintf("no-mistakes axi logs --run %s --step %s --full", runID, step)
+		return fmt.Sprintf("alamino axi logs --run %s --step %s --full", runID, step)
 	}
-	return fmt.Sprintf("no-mistakes axi logs --step %s --full", step)
+	return fmt.Sprintf("alamino axi logs --step %s --full", step)
 }
 
 // truncate shortens s to limit runes, appending a disclosure of the full size

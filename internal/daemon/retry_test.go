@@ -14,18 +14,18 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
 )
 
 // correctingReviewStep commits one correction on its first execution, the way
@@ -503,7 +503,7 @@ func TestRetryRefusesUnlessEveryProofHolds(t *testing.T) {
 		}},
 		{name: "changed gates", proof: "compatible configuration", breakProof: func(t *testing.T, f *retryFixture) string {
 			config := "auto_fix:\n  lint: 0\n  test: 0\n  review: 0\ngates:\n  - name: budget\n    after: test\n    command: \"true\"\n"
-			if err := os.WriteFile(filepath.Join(f.repo.WorkingPath, ".no-mistakes.yaml"), []byte(config), 0o644); err != nil {
+			if err := os.WriteFile(filepath.Join(f.repo.WorkingPath, ".alamino.yaml"), []byte(config), 0o644); err != nil {
 				t.Fatal(err)
 			}
 			gitCmd(t, f.repo.WorkingPath, "commit", "-am", "add a gate")
@@ -532,14 +532,14 @@ func TestRetryRefusesUnlessEveryProofHolds(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gateRefs := gitOutput(t, f.p.RepoDir(f.repo.ID), "for-each-ref", "refs/heads", "refs/no-mistakes")
+			gateRefs := gitOutput(t, f.p.RepoDir(f.repo.ID), "for-each-ref", "refs/heads", "refs/alamino")
 			callerHead := gitOutput(t, f.repo.WorkingPath, "rev-parse", "HEAD")
 
 			result, err := f.retry(t, runID)
 			if err == nil {
 				t.Fatalf("retry started %s, want a refusal on the %s proof", result.RunID, tc.proof)
 			}
-			for _, want := range []string{"refusing retry of run " + runID, tc.proof + " proof failed", tc.reason, "no-mistakes rerun"} {
+			for _, want := range []string{"refusing retry of run " + runID, tc.proof + " proof failed", tc.reason, "alamino rerun"} {
 				if !strings.Contains(err.Error(), want) {
 					t.Errorf("refusal %q does not contain %q", err, want)
 				}
@@ -551,7 +551,7 @@ func TestRetryRefusesUnlessEveryProofHolds(t *testing.T) {
 			if got := f.executions.Load(); got != 0 {
 				t.Fatalf("refusal executed %d steps", got)
 			}
-			if got := gitOutput(t, f.p.RepoDir(f.repo.ID), "for-each-ref", "refs/heads", "refs/no-mistakes"); got != gateRefs {
+			if got := gitOutput(t, f.p.RepoDir(f.repo.ID), "for-each-ref", "refs/heads", "refs/alamino"); got != gateRefs {
 				t.Fatalf("refusal changed the gate refs:\nbefore %s\nafter  %s", gateRefs, got)
 			}
 			if got := gitOutput(t, f.repo.WorkingPath, "rev-parse", "HEAD"); got != callerHead {
@@ -573,10 +573,10 @@ func TestRetryRefusesACarriedReviewFromAnotherConfiguration(t *testing.T) {
 	}{
 		{name: "trusted review settings changed", reason: []string{"repository configuration changed", "review"}, change: func(t *testing.T, f *retryFixture) {
 			config := "review:\n  conversation: true\n"
-			if err := os.WriteFile(filepath.Join(f.repo.WorkingPath, ".no-mistakes.yaml"), []byte(config), 0o644); err != nil {
+			if err := os.WriteFile(filepath.Join(f.repo.WorkingPath, ".alamino.yaml"), []byte(config), 0o644); err != nil {
 				t.Fatal(err)
 			}
-			gitCmd(t, f.repo.WorkingPath, "add", ".no-mistakes.yaml")
+			gitCmd(t, f.repo.WorkingPath, "add", ".alamino.yaml")
 			gitCmd(t, f.repo.WorkingPath, "commit", "-m", "tighten review")
 			gitCmd(t, f.repo.WorkingPath, "push", "gate", "HEAD:refs/heads/main")
 			gitCmd(t, f.repo.WorkingPath, "reset", "--hard", f.submitted)
@@ -612,7 +612,7 @@ func TestRetryRefusesACarriedReviewFromAnotherConfiguration(t *testing.T) {
 			if err == nil {
 				t.Fatalf("retry started %s, want a configuration refusal", result.RunID)
 			}
-			for _, want := range append([]string{"compatible configuration proof failed", "no-mistakes rerun"}, tc.reason...) {
+			for _, want := range append([]string{"compatible configuration proof failed", "alamino rerun"}, tc.reason...) {
 				if !strings.Contains(err.Error(), want) {
 					t.Errorf("refusal %q does not contain %q", err, want)
 				}
@@ -816,7 +816,7 @@ func TestRetryRefusesACarriedReviewWhoseQuestionsCannotBeRead(t *testing.T) {
 	if err == nil {
 		t.Fatal("retry started, want a refusal: the carried review asked a question and its conversation is gone")
 	}
-	for _, want := range []string{"review conversation proof failed", "no-mistakes rerun"} {
+	for _, want := range []string{"review conversation proof failed", "alamino rerun"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("refusal %q does not contain %q", err, want)
 		}
@@ -857,10 +857,10 @@ func TestRetryRefusesWhenTheConfigurationChangesBetweenTheProofAndTheLaunch(t *t
 	}})
 	m := f.manager(t, &conversationProbeStep{})
 	m.afterRetryProof = func() {
-		if err := os.WriteFile(filepath.Join(f.repo.WorkingPath, ".no-mistakes.yaml"), []byte("review:\n  conversation: true\n"), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(f.repo.WorkingPath, ".alamino.yaml"), []byte("review:\n  conversation: true\n"), 0o644); err != nil {
 			t.Error(err)
 		}
-		gitCmd(t, f.repo.WorkingPath, "add", ".no-mistakes.yaml")
+		gitCmd(t, f.repo.WorkingPath, "add", ".alamino.yaml")
 		gitCmd(t, f.repo.WorkingPath, "commit", "-m", "tighten review")
 		gitCmd(t, f.repo.WorkingPath, "push", "gate", "HEAD:refs/heads/main")
 		gitCmd(t, f.repo.WorkingPath, "reset", "--hard", f.submitted)
@@ -869,7 +869,7 @@ func TestRetryRefusesWhenTheConfigurationChangesBetweenTheProofAndTheLaunch(t *t
 	if err == nil {
 		t.Fatal("retry started, want a refusal: the trusted settings changed after the proof")
 	}
-	for _, want := range []string{"compatible configuration proof failed", "repository configuration changed", "review", "no-mistakes rerun"} {
+	for _, want := range []string{"compatible configuration proof failed", "repository configuration changed", "review", "alamino rerun"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("refusal %q does not contain %q", err, want)
 		}

@@ -19,7 +19,7 @@ func (timeoutDialError) Temporary() bool { return true }
 
 func TestDialConnectTimeoutFailsFastAndNamesSocket(t *testing.T) {
 	const timeout = 25 * time.Millisecond
-	t.Setenv("NM_DAEMON_CONNECT_TIMEOUT", timeout.String())
+	t.Setenv("ALAMINO_DAEMON_CONNECT_TIMEOUT", timeout.String())
 
 	originalDial := dialNetworkWithTimeout
 	dialNetworkWithTimeout = func(network, address string, gotTimeout time.Duration) (net.Conn, error) {
@@ -62,7 +62,7 @@ func TestDialConnectTimeoutFailsFastAndNamesSocket(t *testing.T) {
 
 // TestDialUsesTheConnectTimeoutOfTheRootItDials pins the timeout to the root
 // that owns the socket. A receive hook resolves its root from the gate it was
-// handed and runs with no NM_HOME, so reading the ambient root's config would
+// handed and runs with no ALAMINO_HOME, so reading the ambient root's config would
 // dial one daemon under another root's timeout.
 func TestDialUsesTheConnectTimeoutOfTheRootItDials(t *testing.T) {
 	writeRoot := func(root, timeout string) string {
@@ -80,7 +80,7 @@ func TestDialUsesTheConnectTimeoutOfTheRootItDials(t *testing.T) {
 	base := shortTempDir(t)
 	ambient := filepath.Join(base, "ambient")
 	writeRoot(ambient, "1s")
-	t.Setenv("NM_HOME", ambient)
+	t.Setenv("ALAMINO_HOME", ambient)
 
 	const want = 7 * time.Second
 	socketPath := writeRoot(filepath.Join(base, "owning"), want.String())

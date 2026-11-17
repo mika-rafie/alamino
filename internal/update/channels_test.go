@@ -11,11 +11,11 @@ import (
 )
 
 func TestDefaultManifestURLUsesReleaseAssetCDN(t *testing.T) {
-	got := defaultManifestURL("kunchenguid/no-mistakes")
+	got := defaultManifestURL("mika-rafie/alamino")
 	if strings.Contains(got, "api.github.com") {
 		t.Fatalf("manifest URL %q must not use the GitHub REST API host", got)
 	}
-	want := "https://github.com/kunchenguid/no-mistakes/releases/download/channels/channels.json"
+	want := "https://github.com/mika-rafie/alamino/releases/download/channels/channels.json"
 	if got != want {
 		t.Fatalf("defaultManifestURL = %q, want %q", got, want)
 	}
@@ -227,8 +227,8 @@ func TestCheckLatest_ManifestStableAndBetaSelectDifferentHeads(t *testing.T) {
 	allowInsecureDownloads = true
 	t.Cleanup(func() { allowInsecureDownloads = false })
 
-	stableArchive := "no-mistakes-v1.2.3-darwin-arm64.tar.gz"
-	betaArchive := "no-mistakes-v1.3.0-beta.2-darwin-arm64.tar.gz"
+	stableArchive := "alamino-v1.2.3-darwin-arm64.tar.gz"
+	betaArchive := "alamino-v1.3.0-beta.2-darwin-arm64.tar.gz"
 	manifest := channelsManifest{
 		SchemaVersion: 1,
 		Stable: &releaseResponse{
@@ -267,7 +267,7 @@ func TestCheckLatest_ManifestStableAndBetaSelectDifferentHeads(t *testing.T) {
 	defer server.Close()
 
 	base := &updater{
-		appName:        "no-mistakes",
+		appName:        "alamino",
 		currentVersion: "v1.2.2",
 		platform:       platformSpec{GOOS: "darwin", GOARCH: "arm64"},
 		manifestURL:    server.URL + "/channels.json",

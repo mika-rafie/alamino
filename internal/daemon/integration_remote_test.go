@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Exercise the wire field through admission and real Git. On older daemons an
@@ -222,7 +222,7 @@ func (*integrationRecoveryStep) Execute(sctx *pipeline.StepContext) (*pipeline.S
 	if err != nil {
 		return nil, err
 	}
-	if err := os.WriteFile(os.Getenv("NM_INTEGRATION_RECOVERY_PROOF"), data, 0o600); err != nil {
+	if err := os.WriteFile(os.Getenv("ALAMINO_INTEGRATION_RECOVERY_PROOF"), data, 0o600); err != nil {
 		return nil, err
 	}
 	return &pipeline.StepOutcome{}, nil
@@ -272,9 +272,9 @@ func TestIntegrationRemoteSurvivesPrivateDaemonRestart(t *testing.T) {
 	start := func() {
 		t.Helper()
 		process = exec.Command(executable, "-test.run=^$")
-		process.Env = upsertEnv(os.Environ(), "NM_DAEMON_HELPER_PROCESS", "integration-remote")
-		process.Env = upsertEnv(process.Env, "NM_HOME", p.Root())
-		process.Env = upsertEnv(process.Env, "NM_INTEGRATION_RECOVERY_PROOF", proof)
+		process.Env = upsertEnv(os.Environ(), "ALAMINO_DAEMON_HELPER_PROCESS", "integration-remote")
+		process.Env = upsertEnv(process.Env, "ALAMINO_HOME", p.Root())
+		process.Env = upsertEnv(process.Env, "ALAMINO_INTEGRATION_RECOVERY_PROOF", proof)
 		process.Stdout, process.Stderr = os.Stdout, os.Stderr
 		if err := process.Start(); err != nil {
 			t.Fatal(err)
@@ -747,7 +747,7 @@ func TestIntegrationRemoteStartupCleansInterruptedRefsWithoutAWorktree(t *testin
 			for _, branch := range []string{"main", "release/customer", "topic"} {
 				gitCmd(t, gateDir, "update-ref", pin.Ref(branch), head)
 			}
-			foreignRef := "refs/no-mistakes/integration/anotherabcdefghijklmnop/main"
+			foreignRef := "refs/alamino/integration/anotherabcdefghijklmnop/main"
 			gitCmd(t, gateDir, "update-ref", foreignRef, head)
 			// Boot the real private daemon over the persisted crash state.
 			// Startup must retire refs independently of worktree reaping.

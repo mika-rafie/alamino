@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestFailedInvocationUsageJourney drives issue #1054 through the stock
 // operator surfaces: a push that triggers a real pipeline, then
-// `no-mistakes stats --run` / `stats --agents` reading the rows the daemon
+// `alamino stats --run` / `stats --agents` reading the rows the daemon
 // persisted.
 //
 // Rounds that all end in failure must read differently:
@@ -101,7 +101,7 @@ func TestFailedInvocationUsageJourney(t *testing.T) {
 		}, "\n"),
 	})
 	// A review fix round only happens when the repository budgets one.
-	h.CommitChange("main", ".no-mistakes.yaml", "auto_fix:\n  review: 1\n", "budget one review fix round")
+	h.CommitChange("main", ".alamino.yaml", "auto_fix:\n  review: 1\n", "budget one review fix round")
 	if out, err := h.runGit(context.Background(), h.WorkDir, "push", "origin", "main"); err != nil {
 		t.Fatalf("push trusted repo config: %v\n%s", err, out)
 	}
@@ -121,7 +121,7 @@ func TestFailedInvocationUsageJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stats --run %s: %v\n%s", rejected.ID, err, rejectedStats)
 	}
-	t.Logf("stock `no-mistakes stats --run` surface after a rejected review round:\n%s", rejectedStats)
+	t.Logf("stock `alamino stats --run` surface after a rejected review round:\n%s", rejectedStats)
 
 	rows := tokenRows(t, rejectedStats, "review")
 	if len(rows) == 0 {
@@ -140,7 +140,7 @@ func TestFailedInvocationUsageJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stats --agents: %v\n%s", err, agentsAfterRejected)
 	}
-	t.Logf("stock `no-mistakes stats --agents` surface while every review row carries usage:\n%s", agentsAfterRejected)
+	t.Logf("stock `alamino stats --agents` surface while every review row carries usage:\n%s", agentsAfterRejected)
 	if in := aggregateInputTokens(t, agentsAfterRejected, "review"); in == "-" || in == "0" {
 		t.Fatalf("review aggregate lost the failed rounds' tokens (IN TOK = %s):\n%s", in, agentsAfterRejected)
 	}
@@ -157,7 +157,7 @@ func TestFailedInvocationUsageJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stats --run %s: %v\n%s", killed.ID, err, killedStats)
 	}
-	t.Logf("stock `no-mistakes stats --run` surface after a killed review round:\n%s", killedStats)
+	t.Logf("stock `alamino stats --run` surface after a killed review round:\n%s", killedStats)
 
 	killedRows := tokenRows(t, killedStats, "review")
 	if len(killedRows) == 0 {
@@ -176,7 +176,7 @@ func TestFailedInvocationUsageJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stats --agents: %v\n%s", err, agentsAfterKilled)
 	}
-	t.Logf("stock `no-mistakes stats --agents` surface once one review row lacks usage:\n%s", agentsAfterKilled)
+	t.Logf("stock `alamino stats --agents` surface once one review row lacks usage:\n%s", agentsAfterKilled)
 	if in := aggregateInputTokens(t, agentsAfterKilled, "review"); in != "-" {
 		t.Fatalf("review aggregate summed a partially-known set as if it were complete (IN TOK = %s):\n%s", in, agentsAfterKilled)
 	}
@@ -196,7 +196,7 @@ func TestFailedInvocationUsageJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stats --run %s: %v\n%s", fixRun.ID, err, fixStats)
 	}
-	t.Logf("stock `no-mistakes stats --run` surface after a failed review fix round:\n%s", fixStats)
+	t.Logf("stock `alamino stats --run` surface after a failed review fix round:\n%s", fixStats)
 
 	fixRows := tokenRows(t, fixStats, "review")
 	var sawFixRound bool
@@ -226,7 +226,7 @@ type tokenRow struct {
 	rawOut  string
 }
 
-// tokenRows reads the per-invocation token table `no-mistakes stats --run`
+// tokenRows reads the per-invocation token table `alamino stats --run`
 // prints. The table is the operator-facing report this change alters, so the
 // assertions read the rendered columns rather than the database behind them.
 func tokenRows(t *testing.T, out, step string) []tokenRow {
@@ -254,7 +254,7 @@ func tokenRows(t *testing.T, out, step string) []tokenRow {
 }
 
 // aggregateInputTokens reads the IN TOK cell of one purpose's row in the
-// `no-mistakes stats --agents` aggregate table.
+// `alamino stats --agents` aggregate table.
 func aggregateInputTokens(t *testing.T, out, purpose string) string {
 	t.Helper()
 	const (

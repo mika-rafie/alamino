@@ -12,7 +12,7 @@ coverage; regular tests only verify that the unified diffs remain applicable.
 Present each diff to the existing Review pass in a temporary repository,
 together with the intent below as `--intent`, and compare the returned findings
 with the expectation. To evaluate the fixer, select the finding at the gate
-with `no-mistakes axi respond --action fix` and compare the fix round's diff
+with `alamino axi respond --action fix` and compare the fix round's diff
 with the expected fix.
 
 The set is modeled on a measured review-fix spiral (SSHHIP PR #462, 17 review

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // TestTestEvidenceDir_ReadsTheExecutorResolvedDirectory pins the step side of
@@ -26,10 +26,10 @@ func TestTestEvidenceDir_ReadsTheExecutorResolvedDirectory(t *testing.T) {
 
 // TestTestEvidenceDir_DefaultResolutionStaysUnderTheAppRoot walks the exact
 // production path - app root to evidence directory - and asserts it lands under
-// NM_HOME and not in the shared system temp directory the old code used.
+// ALAMINO_HOME and not in the shared system temp directory the old code used.
 func TestTestEvidenceDir_DefaultResolutionStaysUnderTheAppRoot(t *testing.T) {
 	root := t.TempDir()
-	t.Setenv("NM_HOME", root)
+	t.Setenv("ALAMINO_HOME", root)
 	p, err := paths.New()
 	if err != nil {
 		t.Fatal(err)
@@ -41,7 +41,7 @@ func TestTestEvidenceDir_DefaultResolutionStaysUnderTheAppRoot(t *testing.T) {
 	if got != want {
 		t.Errorf("evidence dir = %q, want %q", got, want)
 	}
-	legacy := filepath.Join(os.TempDir(), "no-mistakes-evidence")
+	legacy := filepath.Join(os.TempDir(), "alamino-evidence")
 	if strings.HasPrefix(got, legacy) {
 		t.Errorf("evidence dir %q is still under the legacy shared temp root %q", got, legacy)
 	}

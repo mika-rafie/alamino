@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestGateStepCannotStartRecursivePipeline reproduces the public-command
@@ -56,9 +56,9 @@ func runRecursiveIncident(t *testing.T, agentName, executable, expectedPhase str
 		t.Fatalf("clone independent descendant cwd: %v\n%s", err, out)
 	}
 	attemptLog := filepath.Join(t.TempDir(), "incident-attempts.log")
-	t.Setenv("NM_INCIDENT_LOG", attemptLog)
-	t.Setenv("NM_DESCENDANT_REPO", descendantRepo)
-	t.Setenv("NM_OUTER_GATE", filepath.Join(h.NMHome, "repos", h.repoID()+".git"))
+	t.Setenv("ALAMINO_INCIDENT_LOG", attemptLog)
+	t.Setenv("ALAMINO_DESCENDANT_REPO", descendantRepo)
+	t.Setenv("ALAMINO_OUTER_GATE", filepath.Join(h.NMHome, "repos", h.repoID()+".git"))
 
 	// Set all incident fixture variables before init starts the isolated daemon;
 	// validation agents inherit the daemon's startup environment.
@@ -119,7 +119,7 @@ func runRecursiveIncident(t *testing.T, agentName, executable, expectedPhase str
 		outer.ID,
 		"phase: " + expectedPhase,
 		"Return control to the outer executor",
-		"no-mistakes axi status",
+		"alamino axi status",
 	} {
 		if !strings.Contains(output, want) {
 			t.Errorf("incident refusal missing %q:\n%s", want, output)
@@ -128,7 +128,7 @@ func runRecursiveIncident(t *testing.T, agentName, executable, expectedPhase str
 
 	// The coarse marker is diagnostic only. An independent ordinary process
 	// with a forged/inherited marker must retain normal mutation compatibility.
-	forgedOut, err := h.RunInDirWithEnv(h.WorkDir, map[string]string{"NO_MISTAKES_GATE": "1"}, "init")
+	forgedOut, err := h.RunInDirWithEnv(h.WorkDir, map[string]string{"ALAMINO_GATE": "1"}, "init")
 	if err != nil {
 		t.Fatalf("ordinary forged-marker init was rejected: %v\n%s", err, forgedOut)
 	}
@@ -187,8 +187,8 @@ func incidentAttemptSection(output, label string) string {
 
 func installRecursiveIncidentAgent(t *testing.T, h *Harness, agentName, executable string, completes bool) {
 	t.Helper()
-	if err := os.Symlink(h.NMBin, filepath.Join(h.BinDir, "no-mistakes")); err != nil {
-		t.Fatalf("symlink no-mistakes: %v", err)
+	if err := os.Symlink(h.NMBin, filepath.Join(h.BinDir, "alamino")); err != nil {
+		t.Fatalf("symlink alamino: %v", err)
 	}
 	realDir := filepath.Join(h.BinDir, "incident-real")
 	if err := os.MkdirAll(realDir, 0o755); err != nil {
@@ -228,7 +228,7 @@ esac`
 %s
 case "$prompt" in
   *"combined documentation and lint housekeeping pass"*)
-    if mkdir "$NM_HOME/recursive-incident-claimed" 2>/dev/null; then
+    if mkdir "$ALAMINO_HOME/recursive-incident-claimed" 2>/dev/null; then
       git switch -c incident-recursive-child >/dev/null 2>&1
       run_attempt() {
         label="$1"
@@ -237,32 +237,32 @@ case "$prompt" in
           echo "=== $label"
           "$@"
           echo "exit: $?"
-        } >>"$NM_INCIDENT_LOG" 2>&1
+        } >>"$ALAMINO_INCIDENT_LOG" 2>&1
       }
       run_id=$(basename "$PWD")
-      run_attempt readonly-status no-mistakes axi status --run "$run_id"
-      run_attempt readonly-logs no-mistakes axi logs --run "$run_id" --step document
-      run_attempt readonly-help no-mistakes axi run --help
-      run_attempt exact-init-marker-present no-mistakes init
-      run_attempt exact-axi-run-yes-marker-present no-mistakes axi run --yes --intent "Validate the complete committed branch diff, push it, open a PR, and continue until CI is green."
-      run_attempt rerun no-mistakes rerun
-      run_attempt respond no-mistakes axi respond --action approve
-      run_attempt sync no-mistakes axi sync
-      run_attempt recover no-mistakes axi sync --recover
-      run_attempt abort no-mistakes axi abort
-      run_attempt eject no-mistakes eject
-      run_attempt force-daemon-stop no-mistakes daemon stop --force
-      run_attempt init-marker-removed env -u NO_MISTAKES_GATE no-mistakes init
+      run_attempt readonly-status alamino axi status --run "$run_id"
+      run_attempt readonly-logs alamino axi logs --run "$run_id" --step document
+      run_attempt readonly-help alamino axi run --help
+      run_attempt exact-init-marker-present alamino init
+      run_attempt exact-axi-run-yes-marker-present alamino axi run --yes --intent "Validate the complete committed branch diff, push it, open a PR, and continue until CI is green."
+      run_attempt rerun alamino rerun
+      run_attempt respond alamino axi respond --action approve
+      run_attempt sync alamino axi sync
+      run_attempt recover alamino axi sync --recover
+      run_attempt abort alamino axi abort
+      run_attempt eject alamino eject
+      run_attempt force-daemon-stop alamino daemon stop --force
+      run_attempt init-marker-removed env -u ALAMINO_GATE alamino init
       (
-        cd "$NM_DESCENDANT_REPO" || exit 1
-        run_attempt changed-cwd-marker-removed env -u NO_MISTAKES_GATE no-mistakes init
+        cd "$ALAMINO_DESCENDANT_REPO" || exit 1
+        run_attempt changed-cwd-marker-removed env -u ALAMINO_GATE alamino init
       )
-      run_attempt concurrent-init-1 env -u NO_MISTAKES_GATE no-mistakes init &
+      run_attempt concurrent-init-1 env -u ALAMINO_GATE alamino init &
       p1=$!
-      run_attempt concurrent-init-2 env -u NO_MISTAKES_GATE no-mistakes init &
+      run_attempt concurrent-init-2 env -u ALAMINO_GATE alamino init &
       p2=$!
       wait "$p1" "$p2"
-      run_attempt direct-gate-push git push "$NM_OUTER_GATE" HEAD:refs/heads/incident-direct-bypass
+      run_attempt direct-gate-push git push "$ALAMINO_OUTER_GATE" HEAD:refs/heads/incident-direct-bypass
     fi
     ;;
 esac

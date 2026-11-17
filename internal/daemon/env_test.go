@@ -52,7 +52,7 @@ func TestPrepareDaemonEnvironment_RemovesClaudeSessionVarsAndAppliesShellEnv(t *
 }
 
 func TestPrepareDaemonEnvironment_PreservesExistingNMHome(t *testing.T) {
-	t.Setenv("NM_HOME", "/service/root")
+	t.Setenv("ALAMINO_HOME", "/service/root")
 	t.Setenv("PATH", os.Getenv("PATH"))
 
 	oldApply := applyShellEnvToProcess
@@ -61,10 +61,10 @@ func TestPrepareDaemonEnvironment_PreservesExistingNMHome(t *testing.T) {
 	applyShellEnvToProcess = func(excluded ...string) error {
 		protectNMHome := false
 		for _, key := range excluded {
-			protectNMHome = protectNMHome || key == "NM_HOME"
+			protectNMHome = protectNMHome || key == "ALAMINO_HOME"
 		}
 		if !protectNMHome {
-			if err := os.Setenv("NM_HOME", "/login/shell/root"); err != nil {
+			if err := os.Setenv("ALAMINO_HOME", "/login/shell/root"); err != nil {
 				return err
 			}
 		}
@@ -74,8 +74,8 @@ func TestPrepareDaemonEnvironment_PreservesExistingNMHome(t *testing.T) {
 	if err := prepareDaemonEnvironment(); err != nil {
 		t.Fatal(err)
 	}
-	if got := os.Getenv("NM_HOME"); got != "/service/root" {
-		t.Fatalf("NM_HOME = %q, want %q", got, "/service/root")
+	if got := os.Getenv("ALAMINO_HOME"); got != "/service/root" {
+		t.Fatalf("ALAMINO_HOME = %q, want %q", got, "/service/root")
 	}
 	if got := os.Getenv("PATH"); got != "/resolved/bin" {
 		t.Fatalf("PATH = %q, want %q", got, "/resolved/bin")

@@ -78,7 +78,7 @@ func (h *Host) postProjectUpload(ctx context.Context, path string) ([]byte, erro
 	if h.glabSupportsUploadForm(ctx) {
 		args = append(args, gitlabUploadFormFlag, "file=@"+path)
 	} else {
-		body, err := os.CreateTemp("", "nm-gitlab-upload-*")
+		body, err := os.CreateTemp("", "alamino-gitlab-upload-*")
 		if err != nil {
 			return nil, err
 		}

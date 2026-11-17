@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 	"github.com/spf13/cobra"
 )
 
@@ -138,7 +138,7 @@ func TestReviewerSelectionBadFlagsRefuseWithoutLeakingInput(t *testing.T) {
 }
 
 func TestReviewerSelectionRejectedBeforeGateSubmission(t *testing.T) {
-	bin := buildNoMistakesBinary(t)
+	bin := buildAlaminoBinary(t)
 	for _, mode := range []string{"ordinary", "proof"} {
 		t.Run(mode, func(t *testing.T) {
 			calls := make(chan *agentcfg.ReviewerProfile, 4)
@@ -210,7 +210,7 @@ func TestReviewerSelectionRejectedBeforeGateSubmission(t *testing.T) {
 }
 
 func TestReviewerAdmissionRefusesAnOlderDaemon(t *testing.T) {
-	bin := buildNoMistakesBinary(t)
+	bin := buildAlaminoBinary(t)
 	calls := make(chan *agentcfg.ReviewerProfile, 1)
 	olderDaemonFixture(t, nil, func(srv *ipc.Server) {
 		srv.Handle(ipc.MethodAdmitPush, func(_ context.Context, raw json.RawMessage) (interface{}, error) {

@@ -26,7 +26,7 @@ func captureRestartImage() (restartImage, error) {
 }
 
 // RunRestartable runs the daemon like Run and, when it stopped for a restart
-// scheduled by `no-mistakes update` or `daemon restart --when-idle`, replaces
+// scheduled by `alamino update` or `daemon restart --when-idle`, replaces
 // this process with its executable file, keeping the process ID, so a managed
 // service and anything watching the PID see one continuous daemon. Run has
 // released the singleton lock, socket and database by the time it returns.

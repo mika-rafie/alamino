@@ -20,17 +20,17 @@ const consoleAllocationPolicyBuild = 26100
 // Issue #1653: Task Scheduler starts the managed daemon without a console to
 // inherit, so Windows used to allocate a visible console window for the
 // console-subsystem binary. The manifest's detached policy must leave the real
-// no-mistakes.exe console-less when a console-less parent starts it without
+// alamino.exe console-less when a console-less parent starts it without
 // creation flags. The probe observes that from outside, so the product needs
 // no test hook.
-func TestNoMistakesGetsNoConsoleFromAConsolelessParent(t *testing.T) {
+func TestAlaminoGetsNoConsoleFromAConsolelessParent(t *testing.T) {
 	if testing.Short() {
-		t.Skip("builds no-mistakes.exe and a GUI-subsystem probe")
+		t.Skip("builds alamino.exe and a GUI-subsystem probe")
 	}
 	if _, _, build := windows.RtlGetNtVersionNumbers(); build < consoleAllocationPolicyBuild {
 		t.Skipf("Windows build %d ignores consoleAllocationPolicy (needs %d, Windows 11 24H2 / Server 2025)", build, consoleAllocationPolicyBuild)
 	}
-	exe := buildNoMistakes(t, runtime.GOARCH)
+	exe := buildAlamino(t, runtime.GOARCH)
 	probe := buildConsoleProbe(t)
 
 	// Control: a console-subsystem binary without the manifest (this test
@@ -40,14 +40,14 @@ func TestNoMistakesGetsNoConsoleFromAConsolelessParent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := runConsoleProbe(t, probe, []string{"NM_WINRES_TEST_HELPER=ready"}, "-hide", self); got != "console" {
+	if got := runConsoleProbe(t, probe, []string{"ALAMINO_WINRES_TEST_HELPER=ready"}, "-hide", self); got != "console" {
 		t.Fatalf("control without the manifest: probe = %q, want console", got)
 	}
 
-	// `daemon log-sink` is a no-mistakes entrypoint that reports readiness
+	// `daemon log-sink` is an alamino entrypoint that reports readiness
 	// and blocks on stdin, without daemon run's own console release.
 	if got := runConsoleProbe(t, probe, nil, exe, "daemon", "log-sink", "--root", t.TempDir()); got != "no-console" {
-		t.Fatalf("no-mistakes.exe from a console-less parent: probe = %q, want no-console", got)
+		t.Fatalf("alamino.exe from a console-less parent: probe = %q, want no-console", got)
 	}
 }
 

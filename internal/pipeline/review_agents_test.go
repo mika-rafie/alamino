@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agent"
 )
 
 func TestReviewRoleRoutingPersistsAndRecoversOnlyFixerSession(t *testing.T) {

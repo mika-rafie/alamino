@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // Issue #1691, and the captain's ruling on #1697 that restart when idle must
@@ -33,11 +33,11 @@ func TestRunRestartableServesAgainAfterAScheduledRestart(t *testing.T) {
 		}
 		t.Setenv("SHELL", shellShim)
 	}
-	t.Setenv("NM_HOME", root)
-	t.Setenv("NM_TEST_START_DAEMON", "1")
-	t.Setenv("NM_DAEMON_HELPER_PROCESS", "restartable")
-	t.Setenv("NM_TEST_DAEMON_START_TIMEOUT", "20s")
-	t.Setenv("NM_TEST_DAEMON_START_POLL_INTERVAL", "10ms")
+	t.Setenv("ALAMINO_HOME", root)
+	t.Setenv("ALAMINO_TEST_START_DAEMON", "1")
+	t.Setenv("ALAMINO_DAEMON_HELPER_PROCESS", "restartable")
+	t.Setenv("ALAMINO_TEST_DAEMON_START_TIMEOUT", "20s")
+	t.Setenv("ALAMINO_TEST_DAEMON_START_POLL_INTERVAL", "10ms")
 
 	if err := startDetachedDaemon(p); err != nil {
 		t.Fatalf("start isolated daemon: %v", err)

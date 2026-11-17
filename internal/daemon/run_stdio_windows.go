@@ -5,7 +5,7 @@ import (
 	"os"
 	"unsafe"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 	"golang.org/x/sys/windows"
 )
 

@@ -13,8 +13,8 @@ import (
 
 var runGit = RunBare
 
-const gateConfigStampFile = "no-mistakes-gate-config"
-const preservedPreReceiveHook = "pre-receive.no-mistakes-user"
+const gateConfigStampFile = "alamino-gate-config"
+const preservedPreReceiveHook = "pre-receive.alamino-user"
 
 // PreReceiveHookScript returns the fail-closed admission hook that runs before
 // Git mutates any managed gate ref. The daemon authenticates the hook process's
@@ -23,18 +23,18 @@ const preservedPreReceiveHook = "pre-receive.no-mistakes-user"
 func PreReceiveHookScript() string {
 	exe, err := os.Executable()
 	if err != nil {
-		exe = "no-mistakes"
+		exe = "alamino"
 	}
 	return preReceiveHookScript(exe)
 }
 
 func preReceiveHookScript(command string) string {
 	return `#!/bin/sh
-# no-mistakes pre-receive hook
+# alamino pre-receive hook
 # Authorize the pushing process before any managed gate ref changes.
-NM_BIN=` + shellSingleQuote(command) + `
-if [ ! -f "$NM_BIN" ]; then
-  NM_BIN="$(command -v no-mistakes 2>/dev/null || echo no-mistakes)"
+ALAMINO_BIN=` + shellSingleQuote(command) + `
+if [ ! -f "$ALAMINO_BIN" ]; then
+  ALAMINO_BIN="$(command -v alamino 2>/dev/null || echo alamino)"
 fi
 GATE_DIR=$(git rev-parse --absolute-git-dir 2>/dev/null || :)
 case "$GATE_DIR" in
@@ -48,10 +48,10 @@ case "$GATE_DIR" in
     GATE_DIR=$(cd "$HOOK_DIR/.." 2>/dev/null && (/bin/pwd -P 2>/dev/null || pwd -P) || :)
     ;;
 esac
-out=$(NM_HOOK_HELPER=1 "$NM_BIN" daemon admit-push --gate "$GATE_DIR" 2>&1)
+out=$(ALAMINO_HOOK_HELPER=1 "$ALAMINO_BIN" daemon admit-push --gate "$GATE_DIR" 2>&1)
 status=$?
 if [ $status -ne 0 ]; then
-  printf 'no-mistakes: gate push refused before ref mutation:\n%s\n' "$out" >&2
+  printf 'alamino: gate push refused before ref mutation:\n%s\n' "$out" >&2
   exit $status
 fi
 USER_HOOK="$GATE_DIR/hooks/` + preservedPreReceiveHook + `"
@@ -64,7 +64,7 @@ exit 0
 
 func isManagedPreReceiveHook(content []byte) bool {
 	text := string(content)
-	return strings.Contains(text, "# no-mistakes pre-receive hook") && strings.Contains(text, "daemon admit-push")
+	return strings.Contains(text, "# alamino pre-receive hook") && strings.Contains(text, "daemon admit-push")
 }
 
 // RefreshManagedPreReceiveHook installs or refreshes admission while preserving
@@ -125,21 +125,21 @@ func RefreshManagedGateHooks(bareDir string) error {
 func PostReceiveHookScript() string {
 	exe, err := os.Executable()
 	if err != nil {
-		exe = "no-mistakes"
+		exe = "alamino"
 	}
 	return postReceiveHookScript(exe)
 }
 
 func postReceiveHookScript(command string) string {
 	return `#!/bin/sh
-# no-mistakes post-receive hook
+# alamino post-receive hook
 # Notifies the daemon of the push. Non-blocking: post-receive exit code is
 # ignored by git, so we never reject the push here. Instead, failures are
 # surfaced on stderr (so the pushing client sees them) and appended to
 # notify-push.log inside the bare repo for later inspection.
-NM_BIN=` + shellSingleQuote(command) + `
-if [ ! -f "$NM_BIN" ]; then
-  NM_BIN="$(command -v no-mistakes 2>/dev/null || echo no-mistakes)"
+ALAMINO_BIN=` + shellSingleQuote(command) + `
+if [ ! -f "$ALAMINO_BIN" ]; then
+  ALAMINO_BIN="$(command -v alamino 2>/dev/null || echo alamino)"
 fi
 # Resolve the bare repo dir explicitly. Git can invoke this hook from a cwd
 # whose pwd collapses to "." (issue #269), which would pass "--gate ." and be
@@ -163,7 +163,7 @@ case "$GATE_DIR" in
   *) GATE_DIR=$(/bin/pwd -P 2>/dev/null || pwd -P 2>/dev/null || pwd) ;;
 esac
 LOG="$GATE_DIR/notify-push.log"
-nm_ts() { date '+%Y-%m-%dT%H:%M:%S' 2>/dev/null || echo unknown; }
+alamino_ts() { date '+%Y-%m-%dT%H:%M:%S' 2>/dev/null || echo unknown; }
 notify_failed=0
 while read oldrev newrev refname; do
 	  set -- --gate "$GATE_DIR" \
@@ -176,16 +176,16 @@ while read oldrev newrev refname; do
 	    set -- "$@" --push-option "$opt"
 	    i=$((i + 1))
 	  done
-	  out=$(NM_HOOK_HELPER=1 "$NM_BIN" daemon notify-push "$@" 2>&1)
+	  out=$(ALAMINO_HOOK_HELPER=1 "$ALAMINO_BIN" daemon notify-push "$@" 2>&1)
   status=$?
   if [ $status -ne 0 ]; then
     notify_failed=1
     {
-      printf '[%s] notify-push failed for %s (exit %d)\n' "$(nm_ts)" "$refname" "$status"
+      printf '[%s] notify-push failed for %s (exit %d)\n' "$(alamino_ts)" "$refname" "$status"
       printf '%s\n\n' "$out"
     } >> "$LOG"
     {
-      printf 'no-mistakes: notify-push failed for %s (exit %d):\n' "$refname" "$status"
+      printf 'alamino: notify-push failed for %s (exit %d):\n' "$refname" "$status"
       printf '%s\n' "$out"
       printf 'See %s for full history.\n' "$LOG"
     } >&2
@@ -194,13 +194,13 @@ done
 
 if [ "$notify_failed" -eq 0 ]; then
   cat >&2 <<'BANNER'
-_  _ ____    _  _ _ ____ ___ ____ _  _ ____ ____
-|\ | |  |    |\/| | [__   |  |__| |_/  |___ [__
-| \| |__|    |  | | ___]  |  |  | | \_ |___ ___]
+____ _    ____ _  _ _ _  _ ____
+|__| |    |__| |\/| | |\ | |  |
+|  | |___ |  | |  | | | \| |__|
 
   * Pipeline started
 
-  Run no-mistakes to review.
+  Run alamino to review.
 
 BANNER
 fi
@@ -214,7 +214,7 @@ func shellSingleQuote(value string) string {
 
 func isManagedPostReceiveHook(content []byte) bool {
 	text := string(content)
-	return strings.Contains(text, "# no-mistakes post-receive hook") && strings.Contains(text, "daemon notify-push")
+	return strings.Contains(text, "# alamino post-receive hook") && strings.Contains(text, "daemon notify-push")
 }
 
 // InstallPostReceiveHook writes the post-receive hook script into
@@ -228,7 +228,7 @@ func InstallPostReceiveHook(bareDir string) error {
 	return writeHookFileAtomic(hookPath, []byte(PostReceiveHookScript()))
 }
 
-// RefreshManagedPostReceiveHook updates an existing no-mistakes-owned hook.
+// RefreshManagedPostReceiveHook updates an existing alamino-owned hook.
 // Custom hooks are left untouched; missing hooks are installed for gate repos.
 func RefreshManagedPostReceiveHook(bareDir string) (bool, error) {
 	hooksDir := filepath.Join(bareDir, "hooks")
@@ -303,7 +303,7 @@ func MarkGateConfigCurrent(bareDir string) error {
 		filepath.Join(bareDir, gateConfigStampFile),
 		[]byte(gateConfigStampContent()),
 		0o644,
-		".no-mistakes-gate-config-*",
+		".alamino-gate-config-*",
 	)
 }
 

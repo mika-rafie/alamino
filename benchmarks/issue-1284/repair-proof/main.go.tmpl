@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
 )
 
 func main() {
@@ -35,15 +35,15 @@ func main() {
 		panic(err)
 	}
 	opts := steps.Issue1284ProofOpts(kind, cwd, base, head, string(logs))
-	prefix := os.Getenv("NM_PROOF_PREFIX")
+	prefix := os.Getenv("ALAMINO_PROOF_PREFIX")
 	if err := os.WriteFile(prefix+".schema.json", opts.JSONSchema, 0600); err != nil {
 		panic(err)
 	}
 	if err := os.WriteFile(prefix+".prompt.txt", []byte(opts.Prompt), 0600); err != nil {
 		panic(err)
 	}
-	args := []string{"--provider", "openai-codex", "--model", "gpt-6.1-sol", "--thinking", "high", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-context-files", "--extension", os.Getenv("NM_PROOF_OBSERVER")}
-	ag, err := agent.New("pi", os.Getenv("NM_PROOF_PI_WRAPPER"), args)
+	args := []string{"--provider", "openai-codex", "--model", "gpt-6.1-sol", "--thinking", "high", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-context-files", "--extension", os.Getenv("ALAMINO_PROOF_OBSERVER")}
+	ag, err := agent.New("pi", os.Getenv("ALAMINO_PROOF_PI_WRAPPER"), args)
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +66,7 @@ func main() {
 		}
 	}
 	result, runErr := ag.Run(ctx, opts)
-	row := map[string]any{"implementation": os.Getenv("NM_PROOF_IMPLEMENTATION"), "schema": kind, "started": started.UTC().Format(time.RFC3339Nano), "seconds": time.Since(started).Seconds(), "adapter_success": runErr == nil, "paths": paths, "attempts": attempts, "args": args, "schema_valid": false}
+	row := map[string]any{"implementation": os.Getenv("ALAMINO_PROOF_IMPLEMENTATION"), "schema": kind, "started": started.UTC().Format(time.RFC3339Nano), "seconds": time.Since(started).Seconds(), "adapter_success": runErr == nil, "paths": paths, "attempts": attempts, "args": args, "schema_valid": false}
 	if runErr != nil {
 		row["error"] = runErr.Error()
 		row["schema_rejected"] = agent.IsStructuredOutputRejected(runErr)

@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 var dialNetworkWithTimeout = func(network, address string, timeout time.Duration) (net.Conn, error) {
@@ -51,7 +51,7 @@ type SocketPathTooLongError struct {
 }
 
 func (e *SocketPathTooLongError) Error() string {
-	return fmt.Sprintf("daemon socket path %s is %d bytes, over the %d-byte limit for Unix sockets on this platform; use a shorter NM_HOME (the resolved physical path counts, not a symbolic link to it)", e.Path, len(e.Path), e.Limit)
+	return fmt.Sprintf("daemon socket path %s is %d bytes, over the %d-byte limit for Unix sockets on this platform; use a shorter ALAMINO_HOME (the resolved physical path counts, not a symbolic link to it)", e.Path, len(e.Path), e.Limit)
 }
 
 // CallTimeoutError reports an IPC method whose response did not arrive before
@@ -90,12 +90,12 @@ func isReadTimeout(err error) bool {
 }
 
 // connectTimeout resolves the bounded connect timeout from the root that owns
-// socketPath, which always sits at <root>/socket. Reading the ambient NM_HOME
+// socketPath, which always sits at <root>/socket. Reading the ambient ALAMINO_HOME
 // instead would mis-scope it: a receive hook resolves its root from the gate it
-// was handed and git sets no NM_HOME for a hook, so it would dial one root's
+// was handed and git sets no ALAMINO_HOME for a hook, so it would dial one root's
 // daemon under another root's timeout.
 func connectTimeout(socketPath string) time.Duration {
-	value := os.Getenv("NM_DAEMON_CONNECT_TIMEOUT")
+	value := os.Getenv("ALAMINO_DAEMON_CONNECT_TIMEOUT")
 	if value == "" {
 		cfg, err := config.LoadGlobal(paths.WithRoot(filepath.Dir(socketPath)).ConfigFile())
 		if err != nil {
@@ -174,7 +174,7 @@ func (c *Client) RequireTranscriptHomes() error {
 		err = errors.New("daemon declined the transcript-home capability")
 	}
 	if err != nil {
-		return fmt.Errorf("cannot confirm that the running daemon honors transcript-home selection (%v); restart it with `no-mistakes daemon restart` so the current binary serves it", err)
+		return fmt.Errorf("cannot confirm that the running daemon honors transcript-home selection (%v); restart it with `alamino daemon restart` so the current binary serves it", err)
 	}
 	return nil
 }

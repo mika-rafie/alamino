@@ -348,7 +348,7 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 	gitHeavyFromArgs = append(gitHeavyFromArgs, gateFromArgs...)
 	slices.Sort(gitHeavyFromArgs)
 	if !slices.Equal(gitHeavyFromArgs, gitHeavyFromFilter) {
-		t.Fatalf("git+steps+daemon+gate shard packages %v do not match NM_CI_WINDOWS_GIT_EXCLUDE %q -> %v", gitHeavyFromArgs, exclude, gitHeavyFromFilter)
+		t.Fatalf("git+steps+daemon+gate shard packages %v do not match ALAMINO_CI_WINDOWS_GIT_EXCLUDE %q -> %v", gitHeavyFromArgs, exclude, gitHeavyFromFilter)
 	}
 
 	requiredOn := []struct {
@@ -357,18 +357,18 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 		have  []string
 	}{
 		{"steps", []string{
-			"github.com/kunchenguid/no-mistakes/internal/pipeline/steps",
-			"github.com/kunchenguid/no-mistakes/internal/pipeline/steps/citest",
+			"github.com/mika-rafie/alamino/internal/pipeline/steps",
+			"github.com/mika-rafie/alamino/internal/pipeline/steps/citest",
 		}, stepsFromArgs},
 		{"daemon", []string{
-			"github.com/kunchenguid/no-mistakes/internal/daemon",
+			"github.com/mika-rafie/alamino/internal/daemon",
 		}, daemonFromArgs},
 		{"gate", []string{
-			"github.com/kunchenguid/no-mistakes/internal/gate",
+			"github.com/mika-rafie/alamino/internal/gate",
 		}, gateFromArgs},
 		{"git-heavy remainder", []string{
-			"github.com/kunchenguid/no-mistakes/internal/git",
-			"github.com/kunchenguid/no-mistakes/internal/branchsync",
+			"github.com/mika-rafie/alamino/internal/git",
+			"github.com/mika-rafie/alamino/internal/branchsync",
 		}, gitFromArgs},
 	}
 	allOwned := map[string]string{}
@@ -417,13 +417,13 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 
 func windowsGitExcludePattern(t *testing.T, step wfStep) *regexp.Regexp {
 	t.Helper()
-	pattern := step.Env["NM_CI_WINDOWS_GIT_EXCLUDE"]
+	pattern := step.Env["ALAMINO_CI_WINDOWS_GIT_EXCLUDE"]
 	if pattern == "" {
-		t.Fatal("Windows core shard must set NM_CI_WINDOWS_GIT_EXCLUDE so the remainder filter is a typed contract")
+		t.Fatal("Windows core shard must set ALAMINO_CI_WINDOWS_GIT_EXCLUDE so the remainder filter is a typed contract")
 	}
 	compiled, err := regexp.Compile(pattern)
 	if err != nil {
-		t.Fatalf("NM_CI_WINDOWS_GIT_EXCLUDE %q: %v", pattern, err)
+		t.Fatalf("ALAMINO_CI_WINDOWS_GIT_EXCLUDE %q: %v", pattern, err)
 	}
 	return compiled
 }
@@ -520,8 +520,8 @@ func TestCIWorkflow_WindowsStepsShardsRunEveryTestExactlyOnce(t *testing.T) {
 		dir:     filepath.Join("internal", "pipeline", "steps"),
 		runKey:  "steps_run",
 		skipKey: "steps_skip",
-		runEnv:  "NM_CI_WINDOWS_STEPS_RUN",
-		skipEnv: "NM_CI_WINDOWS_STEPS_SKIP",
+		runEnv:  "ALAMINO_CI_WINDOWS_STEPS_RUN",
+		skipEnv: "ALAMINO_CI_WINDOWS_STEPS_SKIP",
 	})
 }
 
@@ -532,8 +532,8 @@ func TestCIWorkflow_WindowsDaemonShardsRunEveryTestExactlyOnce(t *testing.T) {
 		dir:     filepath.Join("internal", "daemon"),
 		runKey:  "daemon_run",
 		skipKey: "daemon_skip",
-		runEnv:  "NM_CI_WINDOWS_DAEMON_RUN",
-		skipEnv: "NM_CI_WINDOWS_DAEMON_SKIP",
+		runEnv:  "ALAMINO_CI_WINDOWS_DAEMON_RUN",
+		skipEnv: "ALAMINO_CI_WINDOWS_DAEMON_SKIP",
 	})
 }
 
@@ -544,8 +544,8 @@ func TestCIWorkflow_WindowsGateShardsRunEveryTestExactlyOnce(t *testing.T) {
 		dir:     filepath.Join("internal", "gate"),
 		runKey:  "gate_run",
 		skipKey: "gate_skip",
-		runEnv:  "NM_CI_WINDOWS_GATE_RUN",
-		skipEnv: "NM_CI_WINDOWS_GATE_SKIP",
+		runEnv:  "ALAMINO_CI_WINDOWS_GATE_RUN",
+		skipEnv: "ALAMINO_CI_WINDOWS_GATE_SKIP",
 	})
 }
 

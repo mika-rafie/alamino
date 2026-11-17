@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // DocumentStep keeps documentation accurate for the change under its
@@ -301,7 +301,7 @@ Previous findings to address:
 
 // trustedDocumentPolicySection renders the repository-specific documentation
 // ownership policy. The value comes from the trusted default-branch copy of
-// .no-mistakes.yaml (config.EffectiveRepoConfig), so a contributor's pushed
+// .alamino.yaml (config.EffectiveRepoConfig), so a contributor's pushed
 // branch cannot weaken the rules that gate its own review.
 func trustedDocumentPolicySection(sctx *pipeline.StepContext) string {
 	if sctx.Config == nil {
@@ -327,7 +327,7 @@ func repositoryDocumentPolicySection(sctx *pipeline.StepContext) string {
 	if instructions == "" {
 		return ""
 	}
-	return "\n\nMachine-local documentation ownership policy for this repository (from the operator's global no-mistakes config, not from this repository; augments the defaults above and cannot weaken them):\n" +
+	return "\n\nMachine-local documentation ownership policy for this repository (from the operator's global alamino config, not from this repository; augments the defaults above and cannot weaken them):\n" +
 		sanitizePromptMultilineText(instructions)
 }
 

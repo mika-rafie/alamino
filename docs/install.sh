@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
 
-REPO="kunchenguid/no-mistakes"
-INSTALL_DIR="${NO_MISTAKES_INSTALL_DIR:-$HOME/.no-mistakes/bin}"
-LINK_DIR="${NO_MISTAKES_LINK_DIR:-}"
+REPO="mika-rafie/alamino"
+INSTALL_DIR="${ALAMINO_INSTALL_DIR:-$HOME/.alamino/bin}"
+LINK_DIR="${ALAMINO_LINK_DIR:-}"
 
 if [ -z "$LINK_DIR" ]; then
   case ":$PATH:" in
@@ -12,8 +12,8 @@ if [ -z "$LINK_DIR" ]; then
   esac
 fi
 
-BIN_PATH="$INSTALL_DIR/no-mistakes"
-LINK_PATH="$LINK_DIR/no-mistakes"
+BIN_PATH="$INSTALL_DIR/alamino"
+LINK_PATH="$LINK_DIR/alamino"
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
@@ -46,13 +46,13 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-FILENAME="no-mistakes-${VERSION}-${OS}-${ARCH}.tar.gz"
+FILENAME="alamino-${VERSION}-${OS}-${ARCH}.tar.gz"
 URL="https://github.com/${REPO}/releases/download/${VERSION}/${FILENAME}"
 
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-echo "Downloading no-mistakes ${VERSION} for ${OS}/${ARCH}..."
+echo "Downloading alamino ${VERSION} for ${OS}/${ARCH}..."
 curl -fsSL "$URL" -o "${TMPDIR}/${FILENAME}"
 tar xzf "${TMPDIR}/${FILENAME}" -C "$TMPDIR"
 
@@ -61,7 +61,7 @@ if ! mkdir -p "$INSTALL_DIR"; then
   exit 1
 fi
 
-mv "${TMPDIR}/no-mistakes" "$BIN_PATH"
+mv "${TMPDIR}/alamino" "$BIN_PATH"
 chmod 755 "$BIN_PATH" 2>/dev/null || true
 
 resolve_path() {
@@ -85,7 +85,7 @@ else
   fi
 fi
 
-echo "no-mistakes ${VERSION} installed to ${BIN_PATH}"
+echo "alamino ${VERSION} installed to ${BIN_PATH}"
 echo "Command path: ${LINK_PATH} -> ${BIN_PATH}"
 
 "$BIN_PATH" daemon restart >/dev/null

@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/integration"
 )
 
 func integrationRepo(ctx context.Context, registered *db.Repo, destination *integration.Destination) (*db.Repo, error) {

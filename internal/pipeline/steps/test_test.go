@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestTestStep_HangingEvidenceAgentParksForADecision(t *testing.T) {
@@ -1006,7 +1006,7 @@ func TestTestStep_FixMode(t *testing.T) {
 	if status := gitStatusPorcelain(t, dir); status != "" {
 		t.Fatalf("expected clean worktree after fix commit, got %q", status)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(test): fix test failures" {
+	if got := lastCommitMessage(t, dir); got != "alamino(test): fix test failures" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }
@@ -1145,7 +1145,7 @@ func TestTestStep_FixMode_UsesFallbackSummaryWhenStructuredSummaryMalformed(t *t
 	if outcome.NeedsApproval {
 		t.Fatal("expected no approval after fallback summary commit and passing tests")
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(test): fix test failures" {
+	if got := lastCommitMessage(t, dir); got != "alamino(test): fix test failures" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }
@@ -1331,7 +1331,7 @@ func TestTestStep_EvidenceDirectoryIsAlwaysOutsideTheWorktree(t *testing.T) {
 	if !strings.Contains(prompt, "Write new evidence files into this evidence directory, never into the worktree: "+wantDir) {
 		t.Fatalf("expected evidence guidance to point outside the worktree, got:\n%s", prompt)
 	}
-	if _, err := os.Stat(filepath.Join(dir, ".no-mistakes")); err == nil {
+	if _, err := os.Stat(filepath.Join(dir, ".alamino")); err == nil {
 		t.Fatal("test step created an in-repo evidence directory")
 	}
 }
@@ -1348,7 +1348,7 @@ func TestTestStep_PublishedEvidenceGuidanceNamesTheEvidenceBranch(t *testing.T) 
 	}
 	sctx := newTestContextWithDBRecords(t, ag, dir, baseSHA, headSHA, config.Commands{})
 	sctx.UserIntent = "Show users a success screen after checkout"
-	sctx.Config.Test.Evidence = config.Evidence{StoreInRepo: true, Dir: ".no-mistakes/evidence", Branch: "team/ci/evidence"}
+	sctx.Config.Test.Evidence = config.Evidence{StoreInRepo: true, Dir: ".alamino/evidence", Branch: "team/ci/evidence"}
 
 	step := &TestStep{}
 	if _, err := step.Execute(sctx); err != nil {

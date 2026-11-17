@@ -12,7 +12,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // historyIndexes are the run-history lookup indexes and their key columns in

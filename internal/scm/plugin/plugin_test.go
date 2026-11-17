@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // fakeTransport replaces the plugin process: each call pops the next scripted
@@ -114,7 +114,7 @@ func newTestHost(t *testing.T, opts Options) (*Host, *fakeTransport) {
 		opts.Name = "ssm"
 	}
 	if opts.Executable == "" {
-		opts.Executable = "nm-ssm"
+		opts.Executable = "alamino-ssm"
 	}
 	if opts.CommandFactory == nil {
 		opts.CommandFactory = func(ctx context.Context, name string, args ...string) *exec.Cmd {
@@ -221,7 +221,7 @@ func TestStatus_FailsClosed(t *testing.T) {
 func TestStatus_MissingExecutableNeverSpawns(t *testing.T) {
 	host, _ := newTestHost(t, Options{ExecutableAvailable: func(string) bool { return false }})
 	err := host.Available(context.Background())
-	if err == nil || !strings.Contains(err.Error(), `command "nm-ssm" not found`) || errors.Is(err, ErrProtocol) {
+	if err == nil || !strings.Contains(err.Error(), `command "alamino-ssm" not found`) || errors.Is(err, ErrProtocol) {
 		t.Fatalf("Available error = %v", err)
 	}
 }

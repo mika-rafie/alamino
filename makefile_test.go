@@ -20,7 +20,7 @@ func TestMakeBuildPrioritizesDotEnvUmamiWebsiteID(t *testing.T) {
 	}
 
 	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("NO_MISTAKES_UMAMI_WEBSITE_ID=website-from-dotenv\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_WEBSITE_ID=website-from-dotenv\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -54,7 +54,7 @@ func TestMakeBuildUsesEnvUmamiWebsiteIDWhenDotEnvMissing(t *testing.T) {
 	}
 }
 
-func TestMakeBuildEmbedsDefaultSelfHostedTelemetryConfig(t *testing.T) {
+func TestMakeBuildEmbedsNoTelemetryConfigByDefault(t *testing.T) {
 	skipMakeBuildTestsOnWindows(t)
 
 	makePath, err := exec.LookPath("make")
@@ -65,11 +65,15 @@ func TestMakeBuildEmbedsDefaultSelfHostedTelemetryConfig(t *testing.T) {
 	workDir := writeTestMakeWorkspace(t)
 	output := runMakeDryBuild(t, makePath, workDir, nil)
 
-	if !strings.Contains(output, "TelemetryHost=https://a.kunchenguid.com") {
-		t.Fatalf("make build output should embed default telemetry host, got:\n%s", output)
-	}
-	if !strings.Contains(output, "TelemetryWebsiteID=f959e889-92f5-4121-8a1f-571b10861198") {
-		t.Fatalf("make build output should embed default telemetry website id, got:\n%s", output)
+	for _, flag := range []string{"TelemetryHost=", "TelemetryWebsiteID="} {
+		idx := strings.Index(output, flag)
+		if idx < 0 {
+			t.Fatalf("make build output should pass %s, got:\n%s", flag, output)
+		}
+		rest := output[idx+len(flag):]
+		if rest != "" && !strings.ContainsAny(rest[:1], " \"\n\\") {
+			t.Fatalf("make build output should embed an empty %s by default, got:\n%s", flag, output)
+		}
 	}
 }
 
@@ -82,7 +86,7 @@ func TestMakeBuildPrioritizesDotEnvUmamiHost(t *testing.T) {
 	}
 
 	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("NO_MISTAKES_UMAMI_HOST=https://dotenv.example\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_HOST=https://dotenv.example\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -107,7 +111,7 @@ func TestMakeBuildIgnoresUnrelatedDotEnvEntries(t *testing.T) {
 	}
 
 	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("VERSION=from-dotenv\nNO_MISTAKES_UMAMI_WEBSITE_ID=website-from-dotenv\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("VERSION=from-dotenv\nALAMINO_UMAMI_WEBSITE_ID=website-from-dotenv\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -130,7 +134,7 @@ func TestMakeBuildStripsInlineCommentsFromDotEnvUmamiWebsiteID(t *testing.T) {
 	}
 
 	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("NO_MISTAKES_UMAMI_WEBSITE_ID=website-from-dotenv # dev\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_WEBSITE_ID=website-from-dotenv # dev\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -153,7 +157,7 @@ func TestMakeBuildPreservesQuotedHashInDotEnvUmamiWebsiteID(t *testing.T) {
 	}
 
 	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("NO_MISTAKES_UMAMI_WEBSITE_ID=\"website # dev\"\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_WEBSITE_ID=\"website # dev\"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -196,7 +200,7 @@ func runMakeDryBuild(t *testing.T, makePath, workDir string, extraEnv map[string
 
 	cmd := exec.CommandContext(ctx, makePath, "-n", "build")
 	cmd.Dir = workDir
-	cmd.Env = filteredEnv(os.Environ(), "UMAMI_HOST", "UMAMI_WEBSITE_ID", "NO_MISTAKES_UMAMI_HOST", "NO_MISTAKES_UMAMI_WEBSITE_ID")
+	cmd.Env = filteredEnv(os.Environ(), "UMAMI_HOST", "UMAMI_WEBSITE_ID", "ALAMINO_UMAMI_HOST", "ALAMINO_UMAMI_WEBSITE_ID")
 	for key, value := range extraEnv {
 		cmd.Env = append(cmd.Env, key+"="+value)
 	}

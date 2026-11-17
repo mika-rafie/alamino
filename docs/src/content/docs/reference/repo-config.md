@@ -1,9 +1,9 @@
 ---
 title: Repo Config Reference
-description: All fields for .no-mistakes.yaml.
+description: All fields for .alamino.yaml.
 ---
 
-Per-repo configuration lives in `.no-mistakes.yaml` at the root of your repository.
+Per-repo configuration lives in `.alamino.yaml` at the root of your repository.
 
 ## `push.external_publisher`
 
@@ -21,15 +21,15 @@ push:
 
 A match fails publication before any push, PR attestation update, or mirror reconciliation. The refusal names the matching path, commit, reason, and remedy. Both ordinary Push and direct CI-repair publication enforce it. No workflow scanning, automatic bypass, or external publisher invocation occurs.
 
-After refusal, run `no-mistakes axi sync --recover` from the registered working clone to recover the validated head and pipeline corrections through the normal custody path. Follow the declared remedy to publish with the external gate. Recovery does not publish anything or disable the policy, and retrying a matching head still refuses.
+After refusal, run `alamino axi sync --recover` from the registered working clone to recover the validated head and pipeline corrections through the normal custody path. Follow the declared remedy to publish with the external gate. Recovery does not publish anything or disable the policy, and retrying a matching head still refuses.
 
 :::caution[Security: gate-control fields are read from the default branch]
 `commands.*` and `gates[].command` execute arbitrary shell on the daemon host via `sh -c` / `cmd.exe /c`, and `agent` selects which process launches there (including ordered fallback lists, ACP aliases such as `cursor` and `devin`, and `acp:` targets) with the maintainer's credentials.
-To prevent a supply-chain attack where a contributor lands a hostile value on a gated branch, the daemon always reads **`commands` and `agent` from your default branch**, never from the pushed SHA, and reads them at the exact commit a fresh fetch resolved. The trusted default branch belongs to the run's [integration remote](/no-mistakes/reference/cli/#other-run-options), which defaults to `origin`. A stale cached ref cannot serve a value the live default branch removed.
+To prevent a supply-chain attack where a contributor lands a hostile value on a gated branch, the daemon always reads **`commands` and `agent` from your default branch**, never from the pushed SHA, and reads them at the exact commit a fresh fetch resolved. The trusted default branch belongs to the run's [integration remote](/alamino/reference/cli/#other-run-options), which defaults to `origin`. A stale cached ref cannot serve a value the live default branch removed.
 The daemon also reads `document.instructions`, `review.conversation`, `review.path_instructions`, `review.agent_timeout`, `review.max_fix_rounds`, `gates`, `auto_fix.gates`, `protected_paths`, `disable_project_settings`, `no_ci`, `ci.rerun_transient`, `ci.revalidate_repairs`, `ci.required_reviews`, `ci.review_bot_comments`, `ci.rebase_behind`, `ci.carry_review_on_replay`, `ci.release_after_checks_pass`, `ci.instructions`, `rebase.strategy`, `test.prepare`, `test.base_attribution`, `test.instructions`, `test.instructions_file`, `test.path_instructions`, `test.allow_approve_over_failure`, `test.evidence.branch`, `intent.check`, `pr.template`, `pr.publish_intent`, `pr.intent`, and `pr.appendix` only from that trusted copy.
 `pr.base_branch` is trusted-default-branch-only as well, but unlike those fields it follows the same `allow_repo_commands: true` opt-in exception as `commands`/`agent` (see [`pr.base_branch`](#prbase_branch) below).
-If the default branch cannot be fetched and resolved to a readable commit, or its present `.no-mistakes.yaml` cannot be read and parsed, the run aborts before launching an agent. The pre-admission `intent.check` fetch is the exception: if that fetch fails, intent checks are unavailable/off for that launch, a warning is logged, and the same failed result is reused by trusted-config loading without retrying.
-A readable default-branch tree with no `.no-mistakes.yaml` is valid and uses defaults.
+If the default branch cannot be fetched and resolved to a readable commit, or its present `.alamino.yaml` cannot be read and parsed, the run aborts before launching an agent. The pre-admission `intent.check` fetch is the exception: if that fetch fails, intent checks are unavailable/off for that launch, a warning is logged, and the same failed result is reused by trusted-config loading without retrying.
+A readable default-branch tree with no `.alamino.yaml` is valid and uses defaults.
 [`push.external_publisher`](#pushexternal_publisher) is also trusted-only, regardless of `allow_repo_commands`.
 Commit the gate-control settings you want to your default branch.
 Non-executing fields (`ignore_patterns`, core-step `auto_fix`, `commit`, intent extraction settings, `test`, `pr.title_format`, and `providers`) are still read from the pushed branch, except `intent.check`, `pr.intent`, `test.prepare`, `test.base_attribution`, `test.instructions`, `test.instructions_file`, `test.path_instructions`, `test.allow_approve_over_failure`, and `test.evidence.branch`.
@@ -38,7 +38,7 @@ If you genuinely want per-branch `commands` and `agent` (for example, a single-d
 :::
 
 ```yaml
-# .no-mistakes.yaml
+# .alamino.yaml
 
 agent: codex
 
@@ -128,12 +128,12 @@ rebase:
 #     remedy: Recover the validated head and publish through the external gate.
 
 commit:
-  fix_message: "chore(no-mistakes-{{.Step}}): {{.Summary}}"
+  fix_message: "chore(alamino-{{.Step}}): {{.Summary}}"
   # branch_pattern: '([A-Z]+-[0-9]+)'
   # To use the captured identifier in the subject:
   # fix_message: "{{.Branch}}: {{.Summary}}"
   # trailers:
-  #   - "Assisted-by: no-mistakes:{{.Agent}}:{{.Model}}"
+  #   - "Assisted-by: alamino:{{.Agent}}:{{.Model}}"
 
 intent:
   enabled: true
@@ -154,9 +154,9 @@ test:
     store_in_repo: true
     attach_media: true
     compact: true
-    dir: .no-mistakes/evidence
-    branch: no-mistakes/evidence
-    commit_message: "no-mistakes: evidence for {{.Branch}} (run {{.RunID}})"
+    dir: .alamino/evidence
+    branch: alamino/evidence
+    commit_message: "alamino: evidence for {{.Branch}} (run {{.RunID}})"
 
 providers:
   github:
@@ -180,10 +180,10 @@ Override the default agent for this repo and its setup-wizard suggestions.
 | | |
 | --- | --- |
 | Type | `string` or `string[]` |
-| Values | Same as [global `agent`](/no-mistakes/reference/global-config/#agent) |
+| Values | Same as [global `agent`](/alamino/reference/global-config/#agent) |
 | Default | Inherits from global config |
 
-The global [`agent` reference](/no-mistakes/reference/global-config/#agent) owns agent names, ACP alias defaults, `auto` resolution, availability, and fallback behavior.
+The global [`agent` reference](/alamino/reference/global-config/#agent) owns agent names, ACP alias defaults, `auto` resolution, availability, and fallback behavior.
 
 You can also set an ordered fallback list:
 
@@ -191,7 +191,7 @@ You can also set an ordered fallback list:
 agent: [codex, grok]
 ```
 
-This per-repo `agent` value, including every fallback entry, is still read from the trusted default-branch `.no-mistakes.yaml` unless `allow_repo_commands` is enabled there.
+This per-repo `agent` value, including every fallback entry, is still read from the trusted default-branch `.alamino.yaml` unless `allow_repo_commands` is enabled there.
 
 ### allow_repo_commands
 
@@ -202,7 +202,7 @@ Opt in to honoring the code-executing selection fields (`commands.{prepare,test,
 | Type | `bool` |
 | Default | `false` |
 
-This field is itself read **only from the trusted default-branch copy** of `.no-mistakes.yaml`, never from the pushed SHA, so a contributor cannot self-enable it by setting it on a feature branch. The security callout at the top of this page defines that trusted source, which prevents a pushed SHA from injecting shell or picking the launched agent on the daemon host. The PR-target exception is documented under [`pr.base_branch`](#prbase_branch); `pr.template`, `pr.publish_intent`, `pr.appendix`, and the other trusted-only fields listed above do not follow this opt-in. Leave this `false` for any repo that accepts contributions. Set it to `true` only for a single-developer environment where you trust every branch you push (for example, a personal repo gated by your own daemon).
+This field is itself read **only from the trusted default-branch copy** of `.alamino.yaml`, never from the pushed SHA, so a contributor cannot self-enable it by setting it on a feature branch. The security callout at the top of this page defines that trusted source, which prevents a pushed SHA from injecting shell or picking the launched agent on the daemon host. The PR-target exception is documented under [`pr.base_branch`](#prbase_branch); `pr.template`, `pr.publish_intent`, `pr.appendix`, and the other trusted-only fields listed above do not follow this opt-in. Leave this `false` for any repo that accepts contributions. Set it to `true` only for a single-developer environment where you trust every branch you push (for example, a personal repo gated by your own daemon).
 
 ### disable_project_settings
 
@@ -214,7 +214,7 @@ Suppress project-level agent settings and instructions for every gate-agent star
 | Default | `false` |
 
 This opt-in is intended for agent-orchestration repositories whose `AGENTS.md`, `CLAUDE.md`, or harness-specific project settings would give a validation agent an operator identity and authority that it must not adopt.
-When enabled, no-mistakes suppresses the target checkout's project settings for every agent-driven gate step while preserving user-level agent configuration.
+When enabled, alamino suppresses the target checkout's project settings for every agent-driven gate step while preserving user-level agent configuration.
 Codex, Claude, Pi, and the `acp:omp` target (Oh My Pi over ACP) are the currently verified agents: Codex receives `project_doc_max_bytes=0` and `--ignore-rules`, Claude loads only its user setting source, and Pi runs with `--no-context-files` (preserving a pinned `--no-context-files` or `-nc` spelling).
 `acp:omp` is launched as `omp acp` with a generated `--config` overlay that disables every omp context-file discovery provider (`native`, `claude`, `codex`, `gemini`, `opencode`, `github`, `agents`, `agents-md`, `claude-md`) and mnemopi memory, plus `--no-rules`, `--no-skills`, and `--no-extensions`. omp has no CLI flag to disable context files, and a CLI `--config` overlay is the highest settings layer, so the target repository's own `.omp/config.yml` cannot re-enable a provider the overlay disabled. Memory is disabled because a gate turn that reads the repo's `AGENTS.md` while reviewing could otherwise retain it and a later turn recall it around the provider suppression. Only the default `acp:omp` launch qualifies: an `acp_registry_overrides` entry for `omp` is an opaque custom command and fails closed. Other ACP targets (`acp:<target>`), including the `cursor` and `devin` aliases, remain unverified and are refused; Devin CLI loads the target repository's `AGENTS.md`, `CLAUDE.md`, and editor rule files with no verified off-switch.
 Grok 1.0.5 still discovers native project instructions and `.grok` project surfaces, so it is not a verified agent for this boundary. A configuration that resolves Grok while this option is enabled therefore fails closed before launch.
@@ -224,7 +224,7 @@ The gate fails before launching an agent if any resolved agent or fallback lacks
 It also fails if `agent_args_override` defeats suppression, such as a nonzero Codex `project_doc_max_bytes` or Claude setting sources that include `project` or `local`.
 When this option is `false`, missing, or `null`, all agents retain their existing project-setting behavior.
 
-This field is honored **only from the trusted default-branch copy** of `.no-mistakes.yaml`, regardless of `allow_repo_commands`.
+This field is honored **only from the trusted default-branch copy** of `.alamino.yaml`, regardless of `allow_repo_commands`.
 A pushed branch cannot enable it or disable a trusted opt-in.
 If the trusted commit or its present config file cannot be read and parsed, the run aborts rather than guessing that the option is disabled.
 
@@ -243,7 +243,7 @@ Absence of this field means CI is expected. A zero-length check result then stay
 
 If checks still appear on a declared no-CI repository, their actual states are processed normally. The declaration never waives a registered pending or failing check.
 
-This field is honored **only from the trusted default-branch copy** of `.no-mistakes.yaml`, regardless of `allow_repo_commands`.
+This field is honored **only from the trusted default-branch copy** of `.alamino.yaml`, regardless of `allow_repo_commands`.
 A feature branch cannot self-declare `no_ci: true` to bypass checks, and cannot clear a trusted declaration either.
 
 ### pr.base_branch
@@ -257,11 +257,11 @@ Select the branch that newly created pull requests target.
 | Trust | Trusted default branch, unless `allow_repo_commands: true` is explicitly enabled there |
 
 Use this when the repository's integration branch differs from its forge default branch, for example `develop` instead of `main`.
-The configured branch is used for PR creation and pipeline integration and change scoping; the [Pipeline Steps scope rules](/no-mistakes/reference/pipeline-steps/) describe which steps use it and how the recorded per-run override takes precedence.
-When unset and without a per-run override, no-mistakes targets the repository's forge default branch.
+The configured branch is used for PR creation and pipeline integration and change scoping; the [Pipeline Steps scope rules](/alamino/reference/pipeline-steps/) describe which steps use it and how the recorded per-run override takes precedence.
+When unset and without a per-run override, alamino targets the repository's forge default branch.
 
 PR lookup matches an existing PR by branch alone, never filtered by base, so a `pr.base_branch` change after a PR was opened updates that PR instead of opening a duplicate against the new base.
-A per-run `--base-branch` override is different: if the run's already-open PR targets another branch, the PR step retargets that PR (GitHub, GitLab, Gitea, Cursor Origin, and [provider plugins](/no-mistakes/reference/provider-plugin-protocol/) that advertise `set_pr_base_branch`) so title, body, and CI follow the requested integration branch. A discovered PR that is not the run's persisted identity, or a provider that cannot retarget, fails closed rather than moving another review object. See [PR](/no-mistakes/reference/pipeline-steps/#pr).
+A per-run `--base-branch` override is different: if the run's already-open PR targets another branch, the PR step retargets that PR (GitHub, GitLab, Gitea, Cursor Origin, and [provider plugins](/alamino/reference/provider-plugin-protocol/) that advertise `set_pr_base_branch`) so title, body, and CI follow the requested integration branch. A discovered PR that is not the run's persisted identity, or a provider that cannot retarget, fails closed rather than moving another review object. See [PR](/alamino/reference/pipeline-steps/#pr).
 Once a PR exists, its actual forge base branch is authoritative over `pr.base_branch` for the CI step's merge-conflict auto-fix and base-branch tip monitoring, protecting a resumed run from a configuration change made after the PR was created.
 
 Because this setting controls where a PR lands, a pushed branch cannot redirect its own PR target by changing `pr.base_branch`.
@@ -271,13 +271,13 @@ An empty value is valid and means "fall back to the forge default branch"; a non
 
 ### pr.template
 
-Use a repository Markdown template for the public narrative, followed by no-mistakes' protected evidence appendix. Supported on **GitHub, GitLab, Gitea, Forgejo, Azure DevOps, Bitbucket Cloud, Cursor Origin, and [provider plugins](/no-mistakes/reference/provider-plugin-protocol/)**, using each backend's authenticated raw-description transport (`origin pr view --json` for Cursor Origin; for a plugin, the raw body its `pr view` subcommand returns). Forgejo requires `forgejo-axi` with the raw `api` command (contract verified against 1.3.0); an older CLI without it fails rather than using a preview. Self-hosted instances use the existing provider routing.
+Use a repository Markdown template for the public narrative, followed by alamino's protected evidence appendix. Supported on **GitHub, GitLab, Gitea, Forgejo, Azure DevOps, Bitbucket Cloud, Cursor Origin, and [provider plugins](/alamino/reference/provider-plugin-protocol/)**, using each backend's authenticated raw-description transport (`origin pr view --json` for Cursor Origin; for a plugin, the raw body its `pr view` subcommand returns). Forgejo requires `forgejo-axi` with the raw `api` command (contract verified against 1.3.0); an older CLI without it fails rather than using a preview. Self-hosted instances use the existing provider routing.
 
 | | |
 | --- | --- |
 | Type | `string` (literal repository-relative path) |
 | Default | Empty (existing generated narrative) |
-| Trust | Path from this trusted setting or a matching machine-local [`repository_overrides`](/no-mistakes/reference/global-config/#machine-local-pr-publication-defaults) entry; bytes always from the pinned trusted default-branch commit, even under `allow_repo_commands: true` |
+| Trust | Path from this trusted setting or a matching machine-local [`repository_overrides`](/alamino/reference/global-config/#machine-local-pr-publication-defaults) entry; bytes always from the pinned trusted default-branch commit, even under `allow_repo_commands: true` |
 
 ```yaml
 pr:
@@ -300,15 +300,15 @@ For example, commit this template and the configuration to the default branch:
 - [ ] Maintainer approves rollout
 ```
 
-On a new or empty PR, the agent makes a best effort to follow template instructions and fill applicable sections from the final branch delta. Only top-level ATX `#` headings outside fenced examples are structurally required, with their trimmed text and order retained. Lower-level headings (`##`–`######`) and task lines are editable: the model may remove inapplicable sections/options, select supported choices, and fill checkbox rationale placeholders. It is instructed not to invent behavior/tests or falsely claim human signoff; human approval boxes must not be marked complete. Subordinate completion and factual correctness are best effort, not mechanically guaranteed. No fixed `What Changed` heading is imposed. This is ordinary Markdown, not a variable/loop/plugin language, and there is no implicit template discovery. Template headings such as `Testing` remain author narrative; the generated appendix follows that narrative. [`pr.appendix`](#prappendix) controls how the generated evidence is presented. Extra evidence headings are intentional in the default `full` mode: this does **not** satisfy a policy requiring only the template's headings or bytes. `collapsed` and `minimal` reduce the generated tail; GitLab image evidence remains visible as described in [Pull request](/no-mistakes/reference/pipeline-steps/#pull-request).
+On a new or empty PR, the agent makes a best effort to follow template instructions and fill applicable sections from the final branch delta. Only top-level ATX `#` headings outside fenced examples are structurally required, with their trimmed text and order retained. Lower-level headings (`##`–`######`) and task lines are editable: the model may remove inapplicable sections/options, select supported choices, and fill checkbox rationale placeholders. It is instructed not to invent behavior/tests or falsely claim human signoff; human approval boxes must not be marked complete. Subordinate completion and factual correctness are best effort, not mechanically guaranteed. No fixed `What Changed` heading is imposed. This is ordinary Markdown, not a variable/loop/plugin language, and there is no implicit template discovery. Template headings such as `Testing` remain author narrative; the generated appendix follows that narrative. [`pr.appendix`](#prappendix) controls how the generated evidence is presented. Extra evidence headings are intentional in the default `full` mode: this does **not** satisfy a policy requiring only the template's headings or bytes. `collapsed` and `minimal` reduce the generated tail; GitLab image evidence remains visible as described in [Pull request](/alamino/reference/pipeline-steps/#pull-request).
 
-The path is read as a literal Git tree entry, never through the pushed worktree filesystem. Absolute/Windows paths, traversal, ref expressions, symlinks, submodules, missing/unreadable files, empty/non-UTF-8/NUL-containing content, and files over 16 KiB fail rather than silently replacing the template with a generic summary. Raw no-mistakes ownership/attestation markers are reserved. Invalid agent output, missing/changed/reordered required H1 headings, and agent failure also fail template drafting rather than using the ordinary fallback. Templates without H1 headings have no structural heading requirements; they are not malformed for that reason. Matching retains the existing ordered-subsequence contract: extra headings are allowed. The structural guard is not a full Markdown parser, a visibility/uniqueness proof, or a template policy engine; it does not enforce subordinate sections, checkbox states, or placeholder completion.
+The path is read as a literal Git tree entry, never through the pushed worktree filesystem. Absolute/Windows paths, traversal, ref expressions, symlinks, submodules, missing/unreadable files, empty/non-UTF-8/NUL-containing content, and files over 16 KiB fail rather than silently replacing the template with a generic summary. Raw alamino ownership/attestation markers are reserved. Invalid agent output, missing/changed/reordered required H1 headings, and agent failure also fail template drafting rather than using the ordinary fallback. Templates without H1 headings have no structural heading requirements; they are not malformed for that reason. Matching retains the existing ordered-subsequence contract: extra headings are allowed. The structural guard is not a full Markdown parser, a visibility/uniqueness proof, or a template policy engine; it does not enforce subordinate sections, checkbox states, or placeholder completion.
 
 #### Author-preserving regeneration
 
 A templated PR contains one delimited, integrity-checked generated appendix. Later runs preserve live author text before and after it, including human checkbox choices and explicit issue-closing lines, and refresh only that appendix. They do not re-fill the narrative. An author's title is also preserved unless `pr.title_format` is configured; that explicit repository convention redrafts the bare title and applies the format on every managed update. Changing or removing `pr.template` does not regenerate an already owned narrative; edit it on the PR when it needs updating. The original intent remains review criteria, while the public section follows [`pr.intent`](#printent). Removing the generated Intent section is controlled separately below.
 
-Ownership is never inferred from a heading's name. An existing author-only body can be adopted without model rewriting. **Legacy descriptions containing an unowned attestation require explicit author reconciliation** before template mode can adopt them: separate/remove their obsolete generated evidence while retaining the desired author text and closing references, then retry. Do not manufacture ownership markers by hand. An edited appendix, missing/duplicate/malformed markers, or a competing attestation fails rather than risking discarded author content. Put author additions outside the generated appendix. The integrity guard detects accidental edits; it is not authentication or a cryptographic signature by no-mistakes.
+Ownership is never inferred from a heading's name. An existing author-only body can be adopted without model rewriting. **Legacy descriptions containing an unowned attestation require explicit author reconciliation** before template mode can adopt them: separate/remove their obsolete generated evidence while retaining the desired author text and closing references, then retry. Do not manufacture ownership markers by hand. An edited appendix, missing/duplicate/malformed markers, or a competing attestation fails rather than risking discarded author content. Put author additions outside the generated appendix. The integrity guard detects accidental edits; it is not authentication or a cryptographic signature by alamino.
 
 Updates read the live raw body before deciding which publication path applies. Missing/null/malformed content is not treated as an empty description. Without `pr.title_format`, body-only updates omit title and draft flags rather than reading and resending a possibly stale author title. Template updates re-read immediately before writing; observed pre-write edits are retried from the latest body up to three times. This is **not atomic compare-and-swap**: an edit in the provider's final read/write gap can still be lost.
 
@@ -318,7 +318,7 @@ If the complete author text, closing references, and evidence selected by [`pr.a
 
 Unconfigured, unowned descriptions retain ordinary narrative/fallback/size behavior; existing owned bodies retain author-safe updates even after the setting is removed. Providers without a raw content contract reject configured templates.
 
-A description supplied with [`axi run --pr-body-file`](/no-mistakes/reference/cli/#supplied-pr-title-and-description) replaces the agent's template fill when the run creates the PR or, when freshly supplied, updates an existing PR, and is held to the same structural rule: it must keep every top-level `#` heading of the template, with the same text and in the same order, or the PR step fails with an error naming the missing heading before anything is published. Nothing else about the template is enforced on it. A supplied title likewise replaces the agent's title.
+A description supplied with [`axi run --pr-body-file`](/alamino/reference/cli/#supplied-pr-title-and-description) replaces the agent's template fill when the run creates the PR or, when freshly supplied, updates an existing PR, and is held to the same structural rule: it must keep every top-level `#` heading of the template, with the same text and in the same order, or the PR step fails with an error naming the missing heading before anything is published. Nothing else about the template is enforced on it. A supplied title likewise replaces the agent's title.
 
 **Provider caveats:** Azure DevOps' 4,000-character budget (and any non-zero `max_pr_body_chars` declared by a provider plugin) is checked conservatively in UTF-16 units before every owned write, including pre-push/CI-repair restamping. Oversize fails; ordinary truncation must never cut an ownership marker or author evidence. The 16 KiB source-template allowance does not imply a filled description will fit. Bitbucket keeps Markdown evidence (no HTML folds) and carries the exact existing attestation in a visible text code fence; ownership comments may also be visible. Ordinary, unowned Bitbucket descriptions still omit attestation. These are presentation differences, not a new attestation protocol. The bundled enforcement action remains GitHub-specific; no native enforcement workflow for other providers is installed.
 
@@ -332,7 +332,7 @@ Control publication of the **generated `Intent` section**, independently of inte
 | --- | --- |
 | Type | `bool` |
 | Default | `true` (missing or `null` also preserves the default) |
-| Trust | Trusted default branch only, regardless of `allow_repo_commands`; the caller-side counterpart is the global [`intent.publish_intent`](/no-mistakes/reference/global-config/#intent) default and the per-run `axi run --no-publish-intent` flag |
+| Trust | Trusted default branch only, regardless of `allow_repo_commands`; the caller-side counterpart is the global [`intent.publish_intent`](/alamino/reference/global-config/#intent) default and the per-run `axi run --no-publish-intent` flag |
 
 `false` suppresses that section in ordinary drafting, fallback output, and template appendices. It works without `pr.template` and does not otherwise enable template mode. When intent publication is suppressed, no brief is generated. It never removes full intent from review or PR-drafting context, changes evidence/attestation policy, or erases author-written sections named `Intent`. Unconfigured defaults remain unchanged.
 
@@ -340,7 +340,7 @@ A contributor can keep the section off for their own runs without touching this 
 
 This is not a privacy filter: generated narrative and other evidence can still contain sensitive information, and LLM drafting is not a confidentiality guarantee. No caller-written public-body override is introduced by this setting.
 
-To keep the Intent section out of squash-merge commits that use the PR description, see [Readable squash-merge commits](/no-mistakes/guides/squash-merge-commits/).
+To keep the Intent section out of squash-merge commits that use the PR description, see [Readable squash-merge commits](/alamino/guides/squash-merge-commits/).
 
 ### pr.intent
 
@@ -372,29 +372,29 @@ Choose how much of the generated Risk, Testing, and Pipeline tail is visible aft
 | --- | --- |
 | Type | `string` |
 | Values | `full`, `collapsed`, `minimal` |
-| Default | Missing or empty inherits machine-local defaults; see [appendix precedence](/no-mistakes/reference/global-config/#prappendix) |
+| Default | Missing or empty inherits machine-local defaults; see [appendix precedence](/alamino/reference/global-config/#prappendix) |
 | Trust | Trusted default branch only, regardless of `allow_repo_commands`; the pushed branch cannot choose this mode |
 
 `full` is today's body: `## Risk Assessment`, `## Testing`, and `## Pipeline` follow the narrative, in that order.
 
 `collapsed` folds those three sections into one closed `Validation` details block. The narrative, and the Intent section when it is published, stay outside the block. Within the body limit, opening the block shows the same recorded evidence `full` would have published. If an ordinary body exceeds the limit, Testing is dropped before pipeline history is shortened; the attestation is retained. Bitbucket Cloud escapes raw HTML, so `collapsed` stays on the `full` appendix there instead of printing the details tags as text.
 
-`minimal` keeps a single risk line (the recorded level and rationale, on one line), the pipeline signature including any [head-proof-unavailable notice](/no-mistakes/reference/pipeline-steps/#pr), and the pipeline attestation. Testing logs, pipeline round history, and the Risk and Pipeline headings are omitted. The attestation marker stays in its host-specific form: an HTML comment on GitHub, GitLab, Gitea, Forgejo, Azure, Cursor Origin, and provider plugins, and a visible text fence on an owned Bitbucket description. Ordinary unowned Bitbucket descriptions still omit the comment.
+`minimal` keeps a single risk line (the recorded level and rationale, on one line), the pipeline signature including any [head-proof-unavailable notice](/alamino/reference/pipeline-steps/#pr), and the pipeline attestation. Testing logs, pipeline round history, and the Risk and Pipeline headings are omitted. The attestation marker stays in its host-specific form: an HTML comment on GitHub, GitLab, Gitea, Forgejo, Azure, Cursor Origin, and provider plugins, and a visible text fence on an owned Bitbucket description. Ordinary unowned Bitbucket descriptions still omit the comment.
 
-GitLab's separate image Evidence section is unaffected by this setting; see [Pull request](/no-mistakes/reference/pipeline-steps/#pull-request).
+GitLab's separate image Evidence section is unaffected by this setting; see [Pull request](/alamino/reference/pipeline-steps/#pull-request).
 
-An unrecognized value fails config parsing closed. Body size limits and truncation still apply in every mode. On providers without head proof, every mode retains the head-proof-unavailable notice and any attestation the body carries. If ordinary body truncation would lose either, the body is reduced to that notice and attestation, dropping the narrative and other sections. If these cannot fit, publication fails before the PR is created or updated. A templated body that cannot fit still fails instead of dropping author text. The marker remains the one `require-no-mistakes` binds to the PR head.
+An unrecognized value fails config parsing closed. Body size limits and truncation still apply in every mode. On providers without head proof, every mode retains the head-proof-unavailable notice and any attestation the body carries. If ordinary body truncation would lose either, the body is reduced to that notice and attestation, dropping the narrative and other sections. If these cannot fit, publication fails before the PR is created or updated. A templated body that cannot fit still fails instead of dropping author text. The marker remains the one `require-alamino` binds to the PR head.
 
 ```yaml
 pr:
   appendix: minimal
 ```
 
-`minimal` keeps a squash-merge commit that uses the PR description short; see [Readable squash-merge commits](/no-mistakes/guides/squash-merge-commits/).
+`minimal` keeps a squash-merge commit that uses the PR description short; see [Readable squash-merge commits](/alamino/guides/squash-merge-commits/).
 
 ### pr.title_format
 
-Configure the title shape no-mistakes applies to newly created and updated pull requests.
+Configure the title shape alamino applies to newly created and updated pull requests.
 
 | | |
 | --- | --- |
@@ -403,8 +403,8 @@ Configure the title shape no-mistakes applies to newly created and updated pull 
 | Trust | Pushed branch, like other non-executing repository conventions |
 
 The template supports literal text and `{{.Branch}}` and `{{.Title}}` placeholders.
-`{{.Branch}}` is the normalized branch identifier resolved by [`commit.branch_pattern`](#commitbranch_pattern) or a matching machine-local [`repository_overrides`](/no-mistakes/reference/global-config/#repository_overrides) entry; its capture can be transformed by `commit.branch_replacement` from global config or that entry.
-`{{.Title}}` is the bare concise title text returned by the PR agent, a title supplied with [`axi run --pr-title`](/no-mistakes/reference/cli/#supplied-pr-title-and-description), or `update pull request` when ordinary drafting uses its deterministic fallback.
+`{{.Branch}}` is the normalized branch identifier resolved by [`commit.branch_pattern`](#commitbranch_pattern) or a matching machine-local [`repository_overrides`](/alamino/reference/global-config/#repository_overrides) entry; its capture can be transformed by `commit.branch_replacement` from global config or that entry.
+`{{.Title}}` is the bare concise title text returned by the PR agent, a title supplied with [`axi run --pr-title`](/alamino/reference/cli/#supplied-pr-title-and-description), or `update pull request` when ordinary drafting uses its deterministic fallback.
 For example, `title_format: "{{.Branch}}: {{.Title}}"` can render `PROJ-123: add widget` from a matching branch.
 The format is applied deterministically after drafting; its literal text is not sent to the agent as an instruction.
 
@@ -415,8 +415,8 @@ Providers can impose lower publication limits. GitLab titles are checked at its 
 If a format requires `{{.Branch}}` but the branch pattern finds no identifier, PR publication fails safely instead of publishing a malformed title.
 Because the format redrafts the bare title on every managed update, a later run on a PR created with a supplied title replaces that title with a drafted one in this format.
 
-When this setting is omitted, no-mistakes keeps its default conventional commit title behavior, including release type guidance and title tightening.
-For a machine-local title convention that does not require repository configuration, see global [`repository_overrides`](/no-mistakes/reference/global-config/#repository_overrides).
+When this setting is omitted, alamino keeps its default conventional commit title behavior, including release type guidance and title tightening.
+For a machine-local title convention that does not require repository configuration, see global [`repository_overrides`](/alamino/reference/global-config/#repository_overrides).
 
 ### commands.prepare
 
@@ -427,16 +427,16 @@ Optional dependency-preparation command for isolated run worktrees. Run via the 
 | Type | `string` |
 | Default | Empty (no preparation command) |
 
-When set, no-mistakes runs this command before the first configured Test, Lint, or Format command that the pipeline reaches, including machine-local additional Test or Lint checks.
+When set, alamino runs this command before the first configured Test, Lint, or Format command that the pipeline reaches, including machine-local additional Test or Lint checks.
 By default, it is a lazy command hook rather than an additional pipeline step: when no configured command needs it and [`test.prepare`](#testprepare) is false, `commands.prepare` alone does nothing.
 Trusted `test.prepare: true` instead triggers it eagerly before agent-only Test while leaving `commands.test` unset.
 A successful result is shared by all later configured commands in that isolated worktree, including after daemon recovery.
 The dependent step log records the preparation command, output, and elapsed preparation time.
 A non-zero exit or launch failure fails that step before its command runs.
 
-Use this for deterministic dependency materialization such as `npm ci --prefer-offline`. The run worktree starts with tracked files only, so ignored dependency directories such as `node_modules` are otherwise absent. no-mistakes keeps ignored files produced by preparation, and keeps any submodule it checks out at the commit the superproject records, while removing its tracked, ordinary untracked, and nested-repository mutations before continuing; a submodule commit the command moved to is reset to the recorded commit. Earlier pending tracked and ordinary untracked pipeline changes are restored exactly, so preparation can run before a later configured command without admitting setup artifacts into a fix commit.
+Use this for deterministic dependency materialization such as `npm ci --prefer-offline`. The run worktree starts with tracked files only, so ignored dependency directories such as `node_modules` are otherwise absent. alamino keeps ignored files produced by preparation, and keeps any submodule it checks out at the commit the superproject records, while removing its tracked, ordinary untracked, and nested-repository mutations before continuing; a submodule commit the command moved to is reset to the recorded commit. Earlier pending tracked and ordinary untracked pipeline changes are restored exactly, so preparation can run before a later configured command without admitting setup artifacts into a fix commit.
 
-Like every `commands.*` value, `commands.prepare` comes from the trusted default-branch configuration unless that trusted copy explicitly enables `allow_repo_commands: true`. no-mistakes never auto-detects an install command from the pushed branch.
+Like every `commands.*` value, `commands.prepare` comes from the trusted default-branch configuration unless that trusted copy explicitly enables `allow_repo_commands: true`. alamino never auto-detects an install command from the pushed branch.
 
 ### commands.test
 
@@ -449,12 +449,12 @@ Explicit **targeted** local test command. Run via the platform shell - `sh -c` o
 
 `commands.test` is local **targeted validation** of the change and requested intent, not a CI-parity repository-wide regression command.
 Broad regression belongs in remote CI and remains mandatory before a PR is ready; do not put a complete-suite walk here just to mirror CI.
-no-mistakes does not guess whether an arbitrary shell string is "too broad" - the contract is documented and dogfooded, not enforced with language- or filename-specific heuristics.
+alamino does not guess whether an arbitrary shell string is "too broad" - the contract is documented and dogfooded, not enforced with language- or filename-specific heuristics.
 
 When set, the test step runs this exact command first as the baseline and checks the exit code.
-Machine-local [`repository_overrides.commands`](/no-mistakes/reference/global-config/#machine-local-commands) can add checks and lower its scheduling priority without replacing this command.
+Machine-local [`repository_overrides.commands`](/alamino/reference/global-config/#machine-local-commands) can add checks and lower its scheduling priority without replacing this command.
 Whether the baseline passes, fails, or is absent, the agent then derives targeted end-user scenarios and drives the product itself under the same targeted-validation contract.
-A non-zero exit parks the Test step. Approving that gate records an explicit override on the step and on the PR attestation; the [`require-no-mistakes`](/no-mistakes/reference/pipeline-steps/#pipeline-step-attestation) check treats that as non-compliant unless [`test.allow_approve_over_failure`](#testallow_approve_over_failure) is set.
+A non-zero exit parks the Test step. Approving that gate records an explicit override on the step and on the PR attestation; the [`require-alamino`](/alamino/reference/pipeline-steps/#pipeline-step-attestation) check treats that as non-compliant unless [`test.allow_approve_over_failure`](#testallow_approve_over_failure) is set.
 
 ### commands.lint
 
@@ -493,13 +493,13 @@ The document step always applies a built-in placement policy: every fact has exa
 `document.instructions` states this repository's ownership map or extra placement rules (for example, which file owns which class of facts).
 It augments or clarifies the built-in policy; it cannot disable documentation integrity, and it cannot turn the memory files into an automated documentation surface - instructions that encourage additions to `AGENTS.md` or `CLAUDE.md` do not take effect over the built-in correction-only rule.
 
-Like `commands.*` and `agent`, this field steers gate behavior, so it is honored **only from the trusted default-branch copy** of `.no-mistakes.yaml`: a contributor's pushed branch cannot weaken the documentation rules that gate its own review.
+Like `commands.*` and `agent`, this field steers gate behavior, so it is honored **only from the trusted default-branch copy** of `.alamino.yaml`: a contributor's pushed branch cannot weaken the documentation rules that gate its own review.
 
-An operator can add their own policy for this repository through a machine-local [`repository_overrides`](/no-mistakes/reference/global-config/#machine-local-review-documentation-and-test-guidance) entry; it is rendered as a separate, labeled section and never replaces this field.
+An operator can add their own policy for this repository through a machine-local [`repository_overrides`](/alamino/reference/global-config/#machine-local-review-documentation-and-test-guidance) entry; it is rendered as a separate, labeled section and never replaces this field.
 
 ### review.conversation
 
-Whether the reviewer may ask you questions while it reviews, instead of turning every undecidable point into a finding you answer with a verdict. The [Review conversation](/no-mistakes/concepts/review-conversation/) concept page owns the protocol, the state machine, and what is persisted.
+Whether the reviewer may ask you questions while it reviews, instead of turning every undecidable point into a finding you answer with a verdict. The [Review conversation](/alamino/concepts/review-conversation/) concept page owns the protocol, the state machine, and what is persisted.
 
 | | |
 |---|---|
@@ -514,9 +514,9 @@ review:
 
 **Opting in.** Commit that block to your **default branch** (the same copy the daemon reads `commands` and `agent` from). It takes effect on the next run of every branch in the repository; a branch cannot opt itself in or out, in either direction. A contributor must not be able to make their own review park for a human answer, and once you have asked for the conversation a pushed branch must not be able to decline it.
 
-**On**, the review step gains a question channel. The reviewer emits each larger question the moment it has one, keeps reviewing while it is open, and re-reads answers at its own checkpoints. A pass that ends with an unanswered question parks with one `ask-user` warning per question; you answer each with [`no-mistakes axi answer`](/no-mistakes/reference/cli/#no-mistakes-axi-answer), and once none are open the reviewer finishes its pass with your answers - resuming that same session when [`session_reuse`](/no-mistakes/reference/global-config/#session_reuse) is on, cold otherwise. Answers are recorded per branch, reach every later cold reviewer as settled, and are published in the PR body.
+**On**, the review step gains a question channel. The reviewer emits each larger question the moment it has one, keeps reviewing while it is open, and re-reads answers at its own checkpoints. A pass that ends with an unanswered question parks with one `ask-user` warning per question; you answer each with [`alamino axi answer`](/alamino/reference/cli/#alamino-axi-answer), and once none are open the reviewer finishes its pass with your answers - resuming that same session when [`session_reuse`](/alamino/reference/global-config/#session_reuse) is on, cold otherwise. Answers are recorded per branch, reach every later cold reviewer as settled, and are published in the PR body.
 
-**Off (the default)**, the review step is the monologue it has always been: the reviewer is told nothing about a channel, no conversation files are written, no question findings are produced, and the PR body grows no conversation group. A repository that never opted in cannot have a conversation on disk, so for it every review turn also runs session-free and `no-mistakes axi answer` refuses and names this setting. A question asked while the setting was on stays answerable if you turn it off mid-run - see [Turning the setting off does not strand a question already asked](/no-mistakes/concepts/review-conversation/). Upgrading no-mistakes never starts a conversation under a repository that did not ask for one.
+**Off (the default)**, the review step is the monologue it has always been: the reviewer is told nothing about a channel, no conversation files are written, no question findings are produced, and the PR body grows no conversation group. A repository that never opted in cannot have a conversation on disk, so for it every review turn also runs session-free and `alamino axi answer` refuses and names this setting. A question asked while the setting was on stays answerable if you turn it off mid-run - see [Turning the setting off does not strand a question already asked](/alamino/concepts/review-conversation/). Upgrading alamino never starts a conversation under a repository that did not ask for one.
 
 The trade-off is latency against precision. A question costs the run a park - tens of minutes to hours of wall clock, waiting on you - and buys a review that decided the point instead of handing you a finding to rule on. Repositories whose changes rarely turn on product intent will not get much for that wait; repositories where the reviewer regularly cannot tell deliberate from accidental will.
 
@@ -550,7 +550,7 @@ A shorter stall budget for each Review-step agent invocation in this repository,
 | | |
 |---|---|
 | Type | `string` (Go duration, positive) |
-| Default | unset (the global [`review_agent_timeout`](/no-mistakes/reference/global-config/#review_agent_timeout) applies) |
+| Default | unset (the global [`review_agent_timeout`](/alamino/reference/global-config/#review_agent_timeout) applies) |
 | Trust | Read only from the trusted default branch |
 
 ```yaml
@@ -562,7 +562,7 @@ review:
 
 **Trust boundary.** Commit it to your **default branch**, the same copy the daemon reads `review.conversation` and `review.path_instructions` from. A pushed branch cannot set, change, or remove it, because the timeout gates that branch's own review. A value that is not a positive duration fails the config closed, on the pushed copy too, so an invalid block is caught before it merges.
 
-**What it does not change.** It sets the same per-invocation budget as `review_agent_timeout`: the reviewer, the fixer, and each fresh rereviewer get it independently, and an expiry fails the Review step exactly as before. It never skips Review or counts a timeout as a pass. It does not change [`review_agent_working_timeout`](/no-mistakes/reference/global-config/#review_agent_working_timeout), which stays global and still bounds how long a still-working invocation may continue past the budget. Because a tightened budget is a configured timeout, a Review invocation cut by it is not retried by `agent_crash_retries`, as with a configured global value. Only Review is affected: Document, Lint, and Test keep the crash retry their own, unchanged budgets earn. It is not an aggregate limit on the whole Review step.
+**What it does not change.** It sets the same per-invocation budget as `review_agent_timeout`: the reviewer, the fixer, and each fresh rereviewer get it independently, and an expiry fails the Review step exactly as before. It never skips Review or counts a timeout as a pass. It does not change [`review_agent_working_timeout`](/alamino/reference/global-config/#review_agent_working_timeout), which stays global and still bounds how long a still-working invocation may continue past the budget. Because a tightened budget is a configured timeout, a Review invocation cut by it is not retried by `agent_crash_retries`, as with a configured global value. Only Review is affected: Document, Lint, and Test keep the crash retry their own, unchanged budgets earn. It is not an aggregate limit on the whole Review step.
 
 ### review.path_instructions
 
@@ -606,7 +606,7 @@ Paths matched by repository or machine-local rules remain required review covera
 
 Blocks augment the built-in review instructions; they cannot disable them, and a finding the reviewer raises from a block goes through the same severity and action model as any other finding.
 With nothing configured, or nothing matching the change, the review prompt is exactly what it would be without this setting.
-The step log names the rules it applied and the rules that matched nothing, so a rule that never fires is visible in `no-mistakes axi logs --step review`.
+The step log names the rules it applied and the rules that matched nothing, so a rule that never fires is visible in `alamino axi logs --step review`.
 
 #### Limits and validation
 
@@ -620,11 +620,11 @@ These checks run on whichever copy of the file is parsed, including the pushed b
 
 #### Trust
 
-Like `document.instructions`, this field steers gate behavior, so it is honored **only from the trusted default-branch copy** of `.no-mistakes.yaml`, regardless of [`allow_repo_commands`](#allow_repo_commands): a value present only on a pushed branch is ignored, so a contributor cannot inject instructions into the review that gates them.
+Like `document.instructions`, this field steers gate behavior, so it is honored **only from the trusted default-branch copy** of `.alamino.yaml`, regardless of [`allow_repo_commands`](#allow_repo_commands): a value present only on a pushed branch is ignored, so a contributor cannot inject instructions into the review that gates them.
 
 #### Machine-local rules
 
-The operator gating a repository can add rules from their own global config, globally with [`review.path_instructions`](/no-mistakes/reference/global-config/#reviewpath_instructions) or for this repository with a [`repository_overrides`](/no-mistakes/reference/global-config/#machine-local-review-documentation-and-test-guidance) entry.
+The operator gating a repository can add rules from their own global config, globally with [`review.path_instructions`](/alamino/reference/global-config/#reviewpath_instructions) or for this repository with a [`repository_overrides`](/alamino/reference/global-config/#machine-local-review-documentation-and-test-guidance) entry.
 Those rules render in their own labeled sections before this field's, never replace it, and count toward the limits above together with it.
 
 ### gates
@@ -645,11 +645,11 @@ gates:
     command: "make mutation"
 ```
 
-A gate runs its command in the run worktree through the platform shell, `sh -c` on POSIX or `cmd.exe /c` on Windows. A command that ignores `NO_MISTAKES_FINDINGS_FILE` passes on exit code 0 and reports one error finding on a non-zero exit, as before. Agent gates are not supported. An entry with `instructions` fails config parsing so it cannot be mistaken for a command gate.
+A gate runs its command in the run worktree through the platform shell, `sh -c` on POSIX or `cmd.exe /c` on Windows. A command that ignores `ALAMINO_FINDINGS_FILE` passes on exit code 0 and reports one error finding on a non-zero exit, as before. Agent gates are not supported. An entry with `instructions` fails config parsing so it cannot be mistaken for a command gate.
 
 #### Structured findings
 
-Before each command execution, including a re-check after a fix, no-mistakes creates an empty file in a private temporary directory outside the worktree and supplies its absolute path as `NO_MISTAKES_FINDINGS_FILE`. The command may write this JSON to that file:
+Before each command execution, including a re-check after a fix, alamino creates an empty file in a private temporary directory outside the worktree and supplies its absolute path as `ALAMINO_FINDINGS_FILE`. The command may write this JSON to that file:
 
 ```json
 {
@@ -688,7 +688,7 @@ The delivery tail (`push`, `pr`, `ci`) cannot be anchored: a gate that ran after
 
 Gates are inserted into the run's step sequence and never replace, reorder, or remove a core step. Two gates sharing an anchor run in the order they appear in the file. A gate shares its anchor's step order, so a restart that resets from the anchor resets the gate with it.
 
-A run resolves this list once when it starts. Adding or removing a gate on the default branch therefore applies to later runs and never retargets a run already in flight. [Daemon crash recovery](/no-mistakes/concepts/daemon/#crash-recovery) owns how the recorded list is restored after a restart.
+A run resolves this list once when it starts. Adding or removing a gate on the default branch therefore applies to later runs and never retargets a run already in flight. [Daemon crash recovery](/alamino/concepts/daemon/#crash-recovery) owns how the recorded list is restored after a restart.
 
 #### Failure
 
@@ -696,11 +696,11 @@ A failing gate parks by default. Trusted [`auto_fix.gates.<name>`](#auto_fix) ca
 
 Answering that decision with `fix` is that authorization: the gate then runs a fix turn against the reported findings and the command that must exit `0` without reporting error findings, then re-runs its check. The next verdict describes the repaired worktree. Answering `approve` accepts the change as it stands.
 
-Each gate keeps its own step log under the step name `gate.<anchor>.<name>`, so a gate declared as `name: mutation-budget` with `after: test` is read with `no-mistakes axi logs --step gate.test.mutation-budget`.
+Each gate keeps its own step log under the step name `gate.<anchor>.<name>`, so a gate declared as `name: mutation-budget` with `after: test` is read with `alamino axi logs --step gate.test.mutation-budget`.
 
-Because a gate can only add a verdict, a repository that configures gates makes a pass mean *more* than the core pipeline, never less. There is no way to switch a core step off here; to skip one for a single run, use the per-run [`--skip`](/no-mistakes/reference/cli/) instead.
+Because a gate can only add a verdict, a repository that configures gates makes a pass mean *more* than the core pipeline, never less. There is no way to switch a core step off here; to skip one for a single run, use the per-run [`--skip`](/alamino/reference/cli/) instead.
 
-A gate also cannot be pre-skipped: neither `--skip` nor the `no-mistakes.skip=` push option accepts a gate step name, so a pushed branch cannot switch off the maintainer's extra check before its own run starts. Answering a parked gate with `skip` stays available, like any other gate, as a decision made at the park.
+A gate also cannot be pre-skipped: neither `--skip` nor the `alamino.skip=` push option accepts a gate step name, so a pushed branch cannot switch off the maintainer's extra check before its own run starts. Answering a parked gate with `skip` stays available, like any other gate, as a decision made at the park.
 
 #### Limits and validation
 
@@ -712,7 +712,7 @@ A malformed entry fails when the config is parsed, so the run aborts before any 
 
 #### Trust
 
-A gate executes shell on the daemon host, so it is honored **only from the trusted default-branch copy** of `.no-mistakes.yaml`, regardless of [`allow_repo_commands`](#allow_repo_commands).
+A gate executes shell on the daemon host, so it is honored **only from the trusted default-branch copy** of `.alamino.yaml`, regardless of [`allow_repo_commands`](#allow_repo_commands).
 
 That opt-in deliberately does not extend here. It covers a pushed branch re-running its own suite through `commands.*`; a gate instead defines what validating the branch *means*, so a contributor must not be able to declare, retarget, or delete the check that clears them.
 
@@ -721,9 +721,9 @@ What that boundary protects is the gate's *declaration*, not the repository file
 ### Command process lifetime
 
 All configured `commands.*` entries and repository gate commands are scoped to their step.
-After no-mistakes starts one of these commands, it terminates any remaining child processes from that command when the command exits, fails, or the step is cancelled.
+After alamino starts one of these commands, it terminates any remaining child processes from that command when the command exits, fails, or the step is cancelled.
 On Windows, cancellation first sends `CTRL_BREAK` to the command's isolated process group and allows up to three seconds for cleanup before forcibly terminating the job. A command that owns external resources should handle its runtime's break signal and exit after cleanup; in Node.js, register a `process.on('SIGBREAK', handler)` listener. If the command does not exit before the window closes, expect forced termination.
-Do not rely on a configured command to leave a background server or watcher running after it returns; keep that service inside the command lifetime or start it outside no-mistakes.
+Do not rely on a configured command to leave a background server or watcher running after it returns; keep that service inside the command lifetime or start it outside alamino.
 
 ### ignore_patterns
 
@@ -764,9 +764,9 @@ protected_paths:
 
 Patterns use the same syntax as [`ignore_patterns`](#ignore_patterns). Empty or malformed rules fail config loading. Commit this setting to the default branch to enable it; a pushed branch cannot add, remove, or replace the trusted policy for its own run.
 
-Before staging an automatic Review, Test, Document, Lint, or CI repair, an operator-authorized repository gate repair, or a Push leftover commit, the pipeline checks the index and worktree for dirty protected paths. This includes staged and unstaged modifications, deletions, both ends of renames, and individual untracked files inside new directories. A match refuses the entire commit and parks the step at an operator approval gate naming the path and rule. The index and all working files stay as they were; nothing is restored, unstaged, discarded, or partially committed. The Push check also covers formatter changes and residue from earlier steps. [Daemon & Worktrees](/no-mistakes/concepts/daemon/#what-it-does) owns retention across terminal cleanup and crash recovery.
+Before staging an automatic Review, Test, Document, Lint, or CI repair, an operator-authorized repository gate repair, or a Push leftover commit, the pipeline checks the index and worktree for dirty protected paths. This includes staged and unstaged modifications, deletions, both ends of renames, and individual untracked files inside new directories. A match refuses the entire commit and parks the step at an operator approval gate naming the path and rule. The index and all working files stay as they were; nothing is restored, unstaged, discarded, or partially committed. The Push check also covers formatter changes and residue from earlier steps. [Daemon & Worktrees](/alamino/concepts/daemon/#what-it-does) owns retention across terminal cleanup and crash recovery.
 
-A protected-path refusal always requires an explicit response, including under AXI `--yes` and TUI yolo mode. CI does not retry its fixer, and automatic gate reconciliation cannot clear the refusal, even if the PR closes. Approval is rejected because it would skip unfinished work: inspect and resolve the reported edit, then use `no-mistakes axi respond --action fix` to retry the step, including its commit and publication. When the refused commit was Review's last allowed fix round under [`review.max_fix_rounds`](#reviewmax_fix_rounds), fix is refused too, so only skip or abort remain. Deliberate skip and abort behavior is unchanged.
+A protected-path refusal always requires an explicit response, including under AXI `--yes` and TUI yolo mode. CI does not retry its fixer, and automatic gate reconciliation cannot clear the refusal, even if the PR closes. Approval is rejected because it would skip unfinished work: inspect and resolve the reported edit, then use `alamino axi respond --action fix` to retry the step, including its commit and publication. When the refused commit was Review's last allowed fix round under [`review.max_fix_rounds`](#reviewmax_fix_rounds), fix is refused too, so only skip or abort remain. Deliberate skip and abort behavior is unchanged.
 
 For CI, that explicit fix finishes the retained repair before normal monitoring can report `checks-passed`, even if forge checks turned green while parked or the response selects only an added finding. It uses the existing [repair revalidation policy](#cirevalidate_repairs), including mandatory revalidation from Review for a rebased conflict repair, and the existing publication guards. If the retained repair cannot finish, the refusal remains available for another explicit fix response.
 
@@ -827,9 +827,9 @@ Every rerun this budget authorizes is another provider-side workflow run billed 
 A pushed branch cannot raise its own rerun budget.
 The default is `0` because a cancelled conclusion does not identify its cause: the same value covers the provider aborting its own infrastructure, a maintainer stopping a runaway or unsafe job, and repository concurrency with `cancel-in-progress`.
 Rerunning on that ambiguity can restart work someone deliberately stopped, so raise this only for a repository whose cancellations are known to be provider-side.
-At `0`, no-mistakes makes no extra provider call to classify a GitHub setup failure, so that failure keeps the earlier CI failure and auto-fix behavior.
+At `0`, alamino makes no extra provider call to classify a GitHub setup failure, so that failure keeps the earlier CI failure and auto-fix behavior.
 
-With no trusted copy of this file, the operator's own [`ci.rerun_transient`](/no-mistakes/reference/global-config/#cirerun_transient) applies, then the built-in default.
+With no trusted copy of this file, the operator's own [`ci.rerun_transient`](/alamino/reference/global-config/#cirerun_transient) applies, then the built-in default.
 A value set here always wins over the global one, so the maintainer of the repository has the last word on how many workflow runs their project is billed for.
 
 With a positive budget, a rerun is requested when the provider attributes the outcome to itself rather than to the job, which is true in two cases:
@@ -846,7 +846,7 @@ The remaining outcomes are the job's own verdict on the commit and are never re-
   Only a job list the provider actually returned, and returned empty, is evidence of the hold: a read that fails, and a response carrying no job list at all, are unreadable job data and fail closed to the same unchanged behavior.
 - `timed_out` means the job exceeded its own `timeout-minutes`, which is usually the branch's own code hanging. Re-running it burns another full timeout window reproducing the same failure, so it is treated as a genuine failure and is not opt-in.
 - `stale` is already treated as skipped rather than failed, so it never reaches this decision.
-- An outcome no-mistakes recognizes as none of the above never earns a rerun either.
+- An outcome alamino recognizes as none of the above never earns a rerun either.
 
 A single genuine job failure, or a merge conflict, suppresses the rerun for that poll: the fix agent is needed regardless, and no rerun can clear a merge conflict.
 
@@ -856,7 +856,7 @@ Check names are not unique on a pull request, so same-named checks share one bud
 A rerun request returns as soon as the provider accepts it, while the new attempt replaces the provider-attributed check in the status rollup a moment later.
 A poll that still reads the exact completion the rerun was requested for has observed nothing new, so the monitor waits for a bounded couple of polls rather than escalating a check it never actually re-ran.
 A provider that accepts a rerun and never publishes it cannot stall the run past that.
-Once the provider publishes a conclusive replacement, no-mistakes durably stops treating that rerun as outstanding while preserving the spent budget; if the exact watched head is then green, the monitor reports `checks-passed` normally.
+Once the provider publishes a conclusive replacement, alamino durably stops treating that rerun as outstanding while preserving the spent budget; if the exact watched head is then green, the monitor reports `checks-passed` normally.
 
 A provider-attributed check that no rerun is going to replace pauses the step for user approval when it is the only remaining issue, so the pull request never looks green.
 That includes a check that came back cancelled after its rerun and a detected GitHub setup failure that persisted after its budget.
@@ -868,13 +868,13 @@ Reruns are skipped when:
 
 - The provider has no rerun API (only GitHub implements one today; GitLab, Forgejo, Bitbucket Cloud, Azure DevOps, Gitea, Cursor Origin, and provider plugins reach the approval gate without a rerun).
 - The check's details link names nothing the provider can re-run, for example a third-party status pointing at an external dashboard, or a link under a workflow run that names no job the API accepts. A link naming one job re-runs that job; a cancelled check naming only the workflow run re-runs the whole workflow, while other run-only links re-run failed jobs; an unrecognized link is widened into neither.
-- The published branch head no longer equals the commit the run delivered. That case terminates with the expected and observed commits instead: re-running checks against a different head would certify a revision this run never produced. See [pipeline steps: CI](/no-mistakes/reference/pipeline-steps/#ci).
+- The published branch head no longer equals the commit the run delivered. That case terminates with the expected and observed commits instead: re-running checks against a different head would certify a revision this run never produced. See [pipeline steps: CI](/alamino/reference/pipeline-steps/#ci).
 
 ### ci.required_reviews
 
 An optional list of external reviewers that must finish before the CI monitor reports `checks-passed`.
 The default is `[]`; `coderabbit` is supported on GitHub.com, GitHub Enterprise Server (GHES) with its instance-local GitHub App ID pinned, and GitLab.
-Enable it in the trusted default branch's `.no-mistakes.yaml`:
+Enable it in the trusted default branch's `.alamino.yaml`:
 
 ```yaml
 ci:
@@ -885,7 +885,7 @@ ci:
   required_review_bot_id: "123456789"
 ```
 
-Omit `required_review_app_id` on GitHub.com; no-mistakes uses the documented app ID `347564` there. GHES requires this positive ID from that instance's CodeRabbit app; it does not infer identity from the mutable app slug. GitLab requires `required_review_bot_id` to match the CodeRabbit account's immutable ID. These settings are trusted-only, like the rest of `ci`.
+Omit `required_review_app_id` on GitHub.com; alamino uses the documented app ID `347564` there. GHES requires this positive ID from that instance's CodeRabbit app; it does not infer identity from the mutable app slug. GitLab requires `required_review_bot_id` to match the CodeRabbit account's immutable ID. These settings are trusted-only, like the rest of `ci`.
 
 The whole `ci` block is trusted-only, even with `allow_repo_commands: true`.
 A pushed branch cannot disable the requirement or enable it for itself.
@@ -893,15 +893,15 @@ A repository value overrides the operator's global list; an explicit `[]` disabl
 Unknown or duplicate reviewer names fail configuration loading.
 
 CodeRabbit must already be installed for the repository by its administrator.
-no-mistakes uses the provider CLI's existing authentication for read-only observation and adds no CodeRabbit credentials or installation flow.
+alamino uses the provider CLI's existing authentication for read-only observation and adds no CodeRabbit credentials or installation flow.
 When the list is empty, no additional completion checks are made.
-Existing CI and Greptile behavior stays unchanged. CodeRabbit is recognized as a review bot only when this list names `coderabbit`: otherwise an installed CodeRabbit's check is an ordinary CI check and its review-thread comments are never findings, exactly as if no-mistakes had no CodeRabbit support. Once opted in, failed CodeRabbit checks use the same review-bot findings path as Greptile.
+Existing CI and Greptile behavior stays unchanged. CodeRabbit is recognized as a review bot only when this list names `coderabbit`: otherwise an installed CodeRabbit's check is an ordinary CI check and its review-thread comments are never findings, exactly as if alamino had no CodeRabbit support. Once opted in, failed CodeRabbit checks use the same review-bot findings path as Greptile.
 
 On GitHub.com/GHES, completion requires the latest `CodeRabbit` check run from the trusted app ID (`347564` on GitHub.com, or the configured instance-local ID on GHES), a nonempty immutable check-run ID, `status: completed`, `conclusion: success`, and a `head_sha` matching the exact current PR head. GitLab requires a comment from the configured bot account newer than the current source revision, and no unresolved bot thread; this timestamp-based check is weaker than an exact-SHA status check. GitLab compares against the MR version's `created_at` for the matching `head_commit_sha` and rereads the live PR head after discovery.
 Names, slugs, formal approvals, and review/comment bodies alone cannot establish completion.
 Unresolved CodeRabbit review-thread comments from the verified GitHub bot account become bounded `ask-user` findings in the existing review model, even when the required completion check succeeded.
 Every page of review threads and of each unresolved thread's comments is read; a response that cannot prove it is complete (missing comment nodes, an invalid page cursor, or an unreadable later page) leaves the review unverified rather than clean.
-Their bodies are untrusted evidence and cannot instruct the fix agent; the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) owns that shared handling.
+Their bodies are untrusted evidence and cannot instruct the fix agent; the [CI step reference](/alamino/reference/pipeline-steps/#ci) owns that shared handling.
 GitHub's [check runs API](https://docs.github.com/en/rest/checks/runs#list-check-runs-for-a-git-reference) owns the check fields; CodeRabbit documents its [GitHub check](https://docs.coderabbit.ai/platforms/github-com).
 
 Missing and in-progress reviews keep readiness false and wait under the existing `ci_timeout` policy.
@@ -912,14 +912,14 @@ Approval is refused while any required review is incomplete, has unresolved find
 
 CodeRabbit [documents a passing check titled `Review rate limited`](https://docs.coderabbit.ai/management/rate-limits) when no review ran.
 That name or output title vetoes completion even alongside another successful check at the same head.
-A separately named rate-limit check remains blocking while GitHub still returns it among the latest checks at that head; no-mistakes does not guess from comment text that the limit has cleared.
+A separately named rate-limit check remains blocking while GitHub still returns it among the latest checks at that head; alamino does not guess from comment text that the limit has cleared.
 The monitor never posts review commands, requests a paid review, or retries a review on the provider's behalf.
 
 Bitbucket, Azure DevOps, Gitea, Forgejo, Cursor Origin, and arbitrary provider plugins remain unsupported and park with an explicit unsupported finding when enabled. GitLab comment bodies are never treated as instructions or proof. See [CodeRabbit GitLab docs](https://docs.coderabbit.ai/platforms/gitlab-com) and the [GitLab Discussions API](https://docs.gitlab.com/api/discussions/).
 
-This gates no-mistakes readiness, not direct forge merges or merge-queue synthetic commits.
+This gates alamino readiness, not direct forge merges or merge-queue synthetic commits.
 The merge caller must recheck readiness for the current head and bind its merge request to that SHA.
-Configure forge protection separately if merges outside no-mistakes must be prevented.
+Configure forge protection separately if merges outside alamino must be prevented.
 
 ### ci.revalidate_repairs
 
@@ -944,14 +944,14 @@ Continuity is proven when the repaired head is the run's durably review-approved
 
 `revalidate_repairs` sets the intent, identically on every path:
 
-- **`false` (default)** asks to publish when it is safe to. A repair that builds on the reviewed head - the ordinary case, where the fix agent adds a commit - is committed and published immediately through the same guarded path the [Push step](/no-mistakes/reference/pipeline-steps/#push) uses (review-approved-head continuity, that step's own remote-safety decision, remote verification, and the durable push binding all still apply), and the CI monitor keeps watching the same run for the new head. One repair costs one agent round.
+- **`false` (default)** asks to publish when it is safe to. A repair that builds on the reviewed head - the ordinary case, where the fix agent adds a commit - is committed and published immediately through the same guarded path the [Push step](/alamino/reference/pipeline-steps/#push) uses (review-approved-head continuity, that step's own remote-safety decision, remote verification, and the durable push binding all still apply), and the CI monitor keeps watching the same run for the new head. One repair costs one agent round.
 - **`true`** asks for revalidation outright: every repair is kept local, the run's review approval is revoked, and validation restarts at Review so the repaired head re-passes Review, Test, Document, and Lint before Push republishes it.
 
-CI repair publication uses the same settlement order as Push. The [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) owns the publication and retry behavior.
+CI repair publication uses the same settlement order as Push. The [CI step reference](/alamino/reference/pipeline-steps/#ci) owns the publication and retry behavior.
 
 **Merge-conflict repairs always revalidate, under either setting.** They are not carved out - they simply always land in the cannot-be-proven half. A conflict repair rebases, so the repaired head is never a descendant of the reviewed head; resolving a conflict changes the commit's patch-id; and no content-based guard can separate "rebased and resolved" from "dropped the work". Revalidating is what keeps that safe: the rewritten head is not published until Review has approved it, so the reviewed commits stay on the remote in the meantime. The opt-in [`ci.carry_review_on_replay`](#cicarry_review_on_replay) narrows only where that revalidation starts, and only for a rebase it can prove replayed the reviewed commits unchanged with no conflict: such a repair still revalidates, from Test.
 
-Provenance is deliberately not accepted as a substitute for that proof. In the reproduction this rule exists for, the repair that deleted a reviewed commit was authored by no-mistakes' own CI repair agent: it reset to the rebase base, left a clean tree, and the pipeline reported success while the remote lost the work. Who wrote a repair says nothing about what it did to the reviewed commits.
+Provenance is deliberately not accepted as a substitute for that proof. In the reproduction this rule exists for, the repair that deleted a reviewed commit was authored by alamino's own CI repair agent: it reset to the rebase base, left a clean tree, and the pipeline reported success while the remote lost the work. Who wrote a repair says nothing about what it did to the reviewed commits.
 
 The tradeoff `true` buys is cost against an unreviewed repair:
 
@@ -971,12 +971,12 @@ That is the safety this option buys, and the reason it is offered rather than re
 This value is read only from the trusted default-branch copy of this file, like `ci.rerun_transient` and `disable_project_settings`.
 A pushed branch cannot turn a maintainer's revalidation requirement off for its own repairs, and cannot turn it on either.
 
-A value set here always wins over the operator's own [`ci.revalidate_repairs`](/no-mistakes/reference/global-config/#cirevalidate_repairs), in both directions: `true` here enables revalidation even when the global value is `false`, and an explicit `false` here opts out even when the global value is `true`.
+A value set here always wins over the operator's own [`ci.revalidate_repairs`](/alamino/reference/global-config/#cirevalidate_repairs), in both directions: `true` here enables revalidation even when the global value is `false`, and an explicit `false` here opts out even when the global value is `true`.
 With no trusted copy of this file, the operator's global value applies, then the built-in default of `false`.
 
 ### ci.review_bot_comments
 
-When the CI step reads a supported review bot's unresolved review comments. See the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) for supported bots and identity verification.
+When the CI step reads a supported review bot's unresolved review comments. See the [CI step reference](/alamino/reference/pipeline-steps/#ci) for supported bots and identity verification.
 
 | | |
 |---|---|
@@ -994,7 +994,7 @@ ci:
 
 A review bot can conclude its check `success` while leaving an unresolved comment. The comment most likely to be missed that way is the one on the pipeline's own CI repair commit, which no human has reviewed yet.
 
-The [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) owns provider-specific comment sources, bot identity verification, and prompt-safety handling.
+The [CI step reference](/alamino/reference/pipeline-steps/#ci) owns provider-specific comment sources, bot identity verification, and prompt-safety handling.
 
 Under `always`:
 
@@ -1007,7 +1007,7 @@ Under `always`:
 Forges that cannot supply review comments are unaffected by either value. Because only GitHub can attribute a *check* to a review bot, `on_failure` reads nothing on GitLab: a GitLab run needs `always` for the bot's unresolved discussions to become findings.
 
 This value is read only from the trusted default-branch copy of this file, like the rest of the `ci` block: a pushed branch cannot silence a green bot's comments on itself, and cannot opt itself in either.
-A value set here wins over the operator's own [`ci.review_bot_comments`](/no-mistakes/reference/global-config/#cireview_bot_comments).
+A value set here wins over the operator's own [`ci.review_bot_comments`](/alamino/reference/global-config/#cireview_bot_comments).
 
 ### ci.rebase_behind
 
@@ -1035,7 +1035,7 @@ Each one also spends an [`auto_fix.ci`](#auto_fix) attempt.
 Other providers never report `BEHIND`, so the key only has an effect on GitHub.
 
 This value is read only from the trusted default-branch copy of this file, like the rest of the `ci` block: a pushed branch cannot opt itself into the extra passes, or out of them.
-A value set here wins over the operator's own [`ci.rebase_behind`](/no-mistakes/reference/global-config/#cirebase_behind) in both directions.
+A value set here wins over the operator's own [`ci.rebase_behind`](/alamino/reference/global-config/#cirebase_behind) in both directions.
 
 ### ci.carry_review_on_replay
 
@@ -1078,7 +1078,7 @@ The approval is moved only from the approval the check was made against: an appr
 The restart at Test is recorded with the carried approval, in the same write, and stays pending until the Push step publishes after Test onward has run. So it survives the CI step parking on findings that need your decision: approving them, even after a daemon restart, restarts at Test; a fix round that changes nothing or fails restarts at Test too; and a fix round that commits on top of the carried head revalidates from Review, even when its fixer then fails. None of these publishes the carried head directly.
 
 This value is read only from the trusted default-branch copy of this file, like the rest of the `ci` block: a pushed branch cannot let its own rebases skip Review.
-A value set here wins over the operator's own [`ci.carry_review_on_replay`](/no-mistakes/reference/global-config/#cicarry_review_on_replay) in both directions.
+A value set here wins over the operator's own [`ci.carry_review_on_replay`](/alamino/reference/global-config/#cicarry_review_on_replay) in both directions.
 
 ### ci.release_after_checks_pass
 
@@ -1099,7 +1099,7 @@ ci:
 - **`true`** finishes the step at that point. The run completes with the `checks_passed` status, releases its worktree, and reports `outcome: checks-passed`; whether and when the PR is merged is then the user's decision, and nothing observes the merge afterwards, so the recorded CI duration stops at the checks verdict instead of including the wait for a merge.
 
 This value is read only from the trusted default-branch copy of this file, like the rest of the `ci` block: a pushed branch cannot opt itself into the shorter run, or out of it.
-A value set here wins over the operator's own [`ci.release_after_checks_pass`](/no-mistakes/reference/global-config/#cirelease_after_checks_pass) in both directions.
+A value set here wins over the operator's own [`ci.release_after_checks_pass`](/alamino/reference/global-config/#cirelease_after_checks_pass) in both directions.
 
 ### ci.instructions
 
@@ -1117,12 +1117,12 @@ ci:
     Regenerate golden files with `make fixtures`; never hand-edit them.
 ```
 
-When set, the [CI step](/no-mistakes/reference/pipeline-steps/#ci) adds the text to every CI repair prompt, in a labeled section after the built-in rules. It adds to those rules and never relaxes them: the fixer must still fix a failing check the change caused.
+When set, the [CI step](/alamino/reference/pipeline-steps/#ci) adds the text to every CI repair prompt, in a labeled section after the built-in rules. It adds to those rules and never relaxes them: the fixer must still fix a failing check the change caused.
 Like the rest of the `ci` block, it is read only from the trusted default-branch copy of this file, so a pushed branch cannot steer the agent that repairs it. It is not accepted in the global config, since the guidance describes one repository.
 
 ### rebase.strategy
 
-How the [Rebase step](/no-mistakes/reference/pipeline-steps/#rebase) integrates a base branch that moved under the gated branch.
+How the [Rebase step](/alamino/reference/pipeline-steps/#rebase) integrates a base branch that moved under the gated branch.
 
 | | |
 |---|---|
@@ -1135,7 +1135,7 @@ rebase:
   strategy: merge
 ```
 
-**Opting in.** Commit that block to your **default branch** (the same copy the daemon reads `commands` and `agent` from). It takes effect on the next run of every branch in the repository; a branch cannot opt itself in or out. The default stays `rebase` for every repository that does not ask, so upgrading no-mistakes never changes the shape of history under you.
+**Opting in.** Commit that block to your **default branch** (the same copy the daemon reads `commands` and `agent` from). It takes effect on the next run of every branch in the repository; a branch cannot opt itself in or out. The default stays `rebase` for every repository that does not ask, so upgrading alamino never changes the shape of history under you.
 
 - **`rebase` (default)** replays the branch's commits on top of the new base. This is the historical behavior and is unchanged.
 - **`merge`** integrates the base with a `git merge --no-ff` commit whose **first parent** is the head the pipeline reviewed.
@@ -1155,11 +1155,11 @@ Integration publishes as a fast-forward under `merge`. A CI merge-conflict repai
 
 **Attestation.** A review attestation that binds to an exact commit SHA survives a merge, because the attested commit stays in the branch's history. A rebase rewrites every branch SHA, so the attested commit no longer exists on the branch.
 
-**Audit.** Whether a conflict resolution deleted content one side introduced is decidable from a merge commit alone - its two parents and their merge base are all the inputs - by anything, afterwards, from outside no-mistakes. A rebase leaves no such record, so the same question is unanswerable once the run ends. To match, the conflict resolver's prompt under `merge` requires an **additive** resolution: keep both sides' introduced content, and never delete what one side introduced merely to make the merge apply. Only genuinely mutually exclusive changes may supersede one another, and the agent must say which and why.
+**Audit.** Whether a conflict resolution deleted content one side introduced is decidable from a merge commit alone - its two parents and their merge base are all the inputs - by anything, afterwards, from outside alamino. A rebase leaves no such record, so the same question is unanswerable once the run ends. To match, the conflict resolver's prompt under `merge` requires an **additive** resolution: keep both sides' introduced content, and never delete what one side introduced merely to make the merge apply. Only genuinely mutually exclusive changes may supersede one another, and the agent must say which and why.
 
 **The cost is a merge commit per integration.** On a squash-merged default branch (one commit per PR) those commits collapse at landing and never reach it. On a merge-committed one they do, so the history is a graph rather than a line.
 
-This value is read only from the trusted default-branch copy of this file, regardless of [`allow_repo_commands`](#allow_repo_commands). It decides whether integrating a moved base leaves auditable evidence behind, so a pushed branch must not be able to change it in either direction. A value set here wins over the operator's own [`rebase.strategy`](/no-mistakes/reference/global-config/#rebasestrategy).
+This value is read only from the trusted default-branch copy of this file, regardless of [`allow_repo_commands`](#allow_repo_commands). It decides whether integrating a moved base leaves auditable evidence behind, so a pushed branch must not be able to change it in either direction. A value set here wins over the operator's own [`rebase.strategy`](/alamino/reference/global-config/#rebasestrategy).
 
 ### commit.fix_message
 
@@ -1168,13 +1168,13 @@ Override the auto-fix commit subject template for this repository.
 | | |
 | --- | --- |
 | Type | `string` |
-| Default | Inherits from global config, whose default is `no-mistakes({{.Step}}): {{.Summary}}` |
+| Default | Inherits from global config, whose default is `alamino({{.Step}}): {{.Summary}}` |
 
-The value follows the [global `commit.fix_message` template syntax and validation rules](/no-mistakes/reference/global-config/#commitfix_message).
+The value follows the [global `commit.fix_message` template syntax and validation rules](/alamino/reference/global-config/#commitfix_message).
 The setting applies to the Review, Test, Document, Lint, and CI repair paths, plus operator-authorized repository gate repairs. When set to anything other than the default, it also renders the Push step's catch-all commit (`{{.Step}}` is `push`, `{{.Summary}}` is `apply agent fixes`). It does not apply to commits created by the Rebase step or to evidence-branch commits.
 
 This non-executing field is read from the pushed branch, so a branch can adopt its own commit-subject convention without enabling `allow_repo_commands`.
-To apply a machine-local convention without adding it to the repository, see global [`repository_overrides`](/no-mistakes/reference/global-config/#repository_overrides).
+To apply a machine-local convention without adding it to the repository, see global [`repository_overrides`](/alamino/reference/global-config/#repository_overrides).
 
 ### commit.branch_pattern
 
@@ -1185,7 +1185,7 @@ Override the branch-identifier extraction pattern for this repository.
 | Type | `string` regular expression |
 | Default | Inherits from global config; when unset there, `{{.Branch}}` is the normalized full branch name |
 
-The value follows the [global `commit.branch_pattern` syntax and validation rules](/no-mistakes/reference/global-config/#commitbranch_pattern).
+The value follows the [global `commit.branch_pattern` syntax and validation rules](/alamino/reference/global-config/#commitbranch_pattern).
 Its only capture group becomes `{{.Branch}}` in both `commit.fix_message` and `pr.title_format`.
 For example, `branch_pattern: '([A-Z]+-[0-9]+)'` extracts `PROJ-123` from `feature/PROJ-123-add-widget`.
 When either template uses `{{.Branch}}` and the pattern does not find a non-empty identifier, rendering fails safely instead of producing an empty prefix.
@@ -1201,10 +1201,10 @@ Override the trailers appended to agent-produced commits for this repository.
 | Type | `list` of `string` templates |
 | Default | Inherits from global config, where it is unset |
 
-The entries follow the [global `commit.trailers` placeholders and validation rules](/no-mistakes/reference/global-config/#committrailers).
+The entries follow the [global `commit.trailers` placeholders and validation rules](/alamino/reference/global-config/#committrailers).
 A list here replaces the inherited one rather than extending it, and `trailers: []` turns inherited trailers off for this repository.
 
-This non-executing field is read from the pushed branch without enabling `allow_repo_commands`, like `commit.fix_message`: it shapes the messages of fix commits on that branch, whether the pipeline makes them or rewrites them onto a fix agent's own `git commit` (see [fix commits](/no-mistakes/concepts/auto-fix/#fix-commits)).
+This non-executing field is read from the pushed branch without enabling `allow_repo_commands`, like `commit.fix_message`: it shapes the messages of fix commits on that branch, whether the pipeline makes them or rewrites them onto a fix agent's own `git commit` (see [fix commits](/alamino/concepts/auto-fix/#fix-commits)).
 
 ### intent
 
@@ -1270,7 +1270,7 @@ test:
   base_attribution: true
 ```
 
-When a configured [`commands.test`](#commandstest) exits non-zero, re-runs the same command on the run's base commit (the merge base with the effective PR base branch) and diffs the two results, so failures that already exist on the base are not blamed on the change. The base run uses a disposable clone of that commit outside the run worktree, runs [`commands.prepare`](#commandsprepare) there first when one is configured (its output is logged as `Prepare (base)`, and its tracked and ordinary untracked changes are reset before the base suite runs, exactly as on the head, so only ignored materialization survives), and logs its output to the Test step log as `Test (base)`. Base preparation and the base command share one deadline, the Test budget [`test_agent_timeout`](/no-mistakes/reference/global-config/#test_agent_timeout) (default 30 minutes); a base run that outlives it is stopped and reported as unavailable while the head's failure still parks. Both base commands keep the machine-local [`nice`](/no-mistakes/reference/global-config/#machine-local-commands) settings for `prepare` and `test`. Only the repository command's own output is attributed: machine-local `additional` test checks are never re-run on the base, and a failure in one of them alone triggers no base run.
+When a configured [`commands.test`](#commandstest) exits non-zero, re-runs the same command on the run's base commit (the merge base with the effective PR base branch) and diffs the two results, so failures that already exist on the base are not blamed on the change. The base run uses a disposable clone of that commit outside the run worktree, runs [`commands.prepare`](#commandsprepare) there first when one is configured (its output is logged as `Prepare (base)`, and its tracked and ordinary untracked changes are reset before the base suite runs, exactly as on the head, so only ignored materialization survives), and logs its output to the Test step log as `Test (base)`. Base preparation and the base command share one deadline, the Test budget [`test_agent_timeout`](/alamino/reference/global-config/#test_agent_timeout) (default 30 minutes); a base run that outlives it is stopped and reported as unavailable while the head's failure still parks. Both base commands keep the machine-local [`nice`](/alamino/reference/global-config/#machine-local-commands) settings for `prepare` and `test`. Only the repository command's own output is attributed: machine-local `additional` test checks are never re-run on the base, and a failure in one of them alone triggers no base run.
 
 The attribution leads the Test findings summary (the failure output the PR and repair turns see) and is passed to the evidence agent:
 
@@ -1290,12 +1290,12 @@ Repository-specific runbook for standing the product up during live validation.
 | Default | Empty |
 
 The Test step injects these instructions into its repair and evidence prompts so each agent can start and drive the real product the way an end user would.
-Like `document.instructions`, this field steers its own gate, so it is honored **only from the trusted default-branch copy** of `.no-mistakes.yaml`, regardless of `allow_repo_commands`. A contributor's pushed branch cannot rewrite the runbook that validates that branch.
+Like `document.instructions`, this field steers its own gate, so it is honored **only from the trusted default-branch copy** of `.alamino.yaml`, regardless of `allow_repo_commands`. A contributor's pushed branch cannot rewrite the runbook that validates that branch.
 
 The runbook is prompt text, so it is flattened before injection exactly like [`document.instructions`](#documentinstructions): merge-conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) are removed, and each line's runs of whitespace, including leading indentation, collapse to a single space.
 Line breaks survive, but nested lists, indented code blocks, and YAML or Markdown structure that depends on indentation do not. Write the runbook as flat prose or a one-level list.
 
-An operator can add their own runbook for this repository through a machine-local [`repository_overrides`](/no-mistakes/reference/global-config/#machine-local-review-documentation-and-test-guidance) entry; it is rendered as a separate, labeled section before this field's and never replaces it.
+An operator can add their own runbook for this repository through a machine-local [`repository_overrides`](/alamino/reference/global-config/#machine-local-review-documentation-and-test-guidance) entry; it is rendered as a separate, labeled section before this field's and never replaces it.
 
 ### test.instructions_file
 
@@ -1352,22 +1352,22 @@ Like `test.instructions`, this field is honored **only from the trusted default-
 
 ### Unknown `test` keys
 
-A key under `test:` that no-mistakes does not recognize, such as a misspelled `path_instruction`, is not an error, because failing the trusted copy's parse would stop every run of the repository.
-Instead the Test step log warns about each unknown key, including nested keys under `test.evidence` and `test.path_instructions` entries, and names the copy of `.no-mistakes.yaml` that carries it. The key has no effect.
+A key under `test:` that alamino does not recognize, such as a misspelled `path_instruction`, is not an error, because failing the trusted copy's parse would stop every run of the repository.
+Instead the Test step log warns about each unknown key, including nested keys under `test.evidence` and `test.path_instructions` entries, and names the copy of `.alamino.yaml` that carries it. The key has no effect.
 Keys merged in through a YAML merge key (`<<: *anchor`) are checked too, with the same precedence the YAML decoder uses: a key written in the mapping overrides a merged one, and the first of several merge sources wins.
 
 ### test.allow_approve_over_failure
 
-Recorded reason that opts this repository into letting the `PR must be raised via no-mistakes` check accept a Test step that was approved over a failing configured [`commands.test`](#commandstest).
+Recorded reason that opts this repository into letting the `PR must be raised via alamino` check accept a Test step that was approved over a failing configured [`commands.test`](#commandstest).
 
 | | |
 | --- | --- |
 | Type | `string` |
 | Default | Empty (off) |
 
-Off by default. When a Test step is approved while `commands.test` exited non-zero, no-mistakes records that as an override on the step and copies it onto the PR attestation as `steps[].override_reason`. The required check then refuses that attestation unless this field is a non-empty reason, which is copied into the attestation as `allow_test_command_override`.
+Off by default. When a Test step is approved while `commands.test` exited non-zero, alamino records that as an override on the step and copies it onto the PR attestation as `steps[].override_reason`. The required check then refuses that attestation unless this field is a non-empty reason, which is copied into the attestation as `allow_test_command_override`.
 
-Like `no_ci`, this field weakens a merge gate, so it is honored **only from the trusted default-branch copy** of `.no-mistakes.yaml`, regardless of `allow_repo_commands`. A contributor's pushed branch cannot waive the configured-test check that certifies it. The string is the recorded reason; whitespace-only is treated as unset.
+Like `no_ci`, this field weakens a merge gate, so it is honored **only from the trusted default-branch copy** of `.alamino.yaml`, regardless of `allow_repo_commands`. A contributor's pushed branch cannot waive the configured-test check that certifies it. The string is the recorded reason; whitespace-only is treated as unset.
 
 ### test.evidence
 
@@ -1377,25 +1377,25 @@ Fields not set here inherit from global config and then the built-in defaults.
 | Field | Type | Default |
 | --- | --- | --- |
 | `test.evidence.store_in_repo` | `bool` | Inherits from global (default `false`) |
-| `test.evidence.attach_media` | `bool` | Inherits from global; see [provider defaults](/no-mistakes/reference/global-config/#testevidence) |
+| `test.evidence.attach_media` | `bool` | Inherits from global; see [provider defaults](/alamino/reference/global-config/#testevidence) |
 | `test.evidence.compact` | `bool` | Inherits from global (default `true`) |
-| `test.evidence.dir` | `string` | Inherits from global (default `.no-mistakes/evidence`) |
-| `test.evidence.branch` | `string` | Inherits from global (default `no-mistakes/evidence`) |
-| `test.evidence.commit_message` | `string` | Inherits from global (default `no-mistakes: evidence for {{.Branch}} (run {{.RunID}})`) |
+| `test.evidence.dir` | `string` | Inherits from global (default `.alamino/evidence`) |
+| `test.evidence.branch` | `string` | Inherits from global (default `alamino/evidence`) |
+| `test.evidence.commit_message` | `string` | Inherits from global (default `alamino: evidence for {{.Branch}} (run {{.RunID}})`) |
 
-By default, test evidence is written to `<NM_HOME>/evidence/<run-id>`. Where it is stored locally and how long it is kept are global-only settings; see [`test.evidence`](/no-mistakes/reference/global-config/#testevidence). [`evidence_dir`](/no-mistakes/reference/global-config/#evidence_dir) is also global-only. A repository file that sets it fails to load. [`test.evidence.link_base_url`](/no-mistakes/reference/global-config/#evidence-links) is global-only too, like `local_root`: a repository value is ignored.
+By default, test evidence is written to `<ALAMINO_HOME>/evidence/<run-id>`. Where it is stored locally and how long it is kept are global-only settings; see [`test.evidence`](/alamino/reference/global-config/#testevidence). [`evidence_dir`](/alamino/reference/global-config/#evidence_dir) is also global-only. A repository file that sets it fails to load. [`test.evidence.link_base_url`](/alamino/reference/global-config/#evidence-links) is global-only too, like `local_root`: a repository value is ignored.
 For GitHub repositories, set `store_in_repo: true` to also publish it to an orphan evidence branch in the code branch's push-target repository and link the artifacts from the PR body; evidence is never committed to the pushed branch, so it never reaches the default branch.
-`compact: false` opts into expanded PR Testing presentation with inline previews while retaining published artifact links. See [global config](/no-mistakes/reference/global-config/#testevidence) for rendering details and publication requirements.
+`compact: false` opts into expanded PR Testing presentation with inline previews while retaining published artifact links. See [global config](/alamino/reference/global-config/#testevidence) for rendering details and publication requirements.
 
 Non-compact Testing sections are taller and can approach GitHub's PR body size limit sooner. Repository weight is unchanged: `store_in_repo` publishes the same artifacts to the evidence branch either way.
 
 `test.evidence.branch` is read ONLY from the trusted default-branch copy of this file, because it names a git ref the daemon pushes to; a pushed branch cannot redirect evidence commits.
 The other publication fields, including `test.evidence.commit_message`, are read from the pushed branch. The commit-message template shapes only the evidence commit subject and cannot select its target branch.
-See [global config](/no-mistakes/reference/global-config/#testevidence) for attachment behavior, credential-vault opt-out guidance, provider support, limits, validation, and fail-closed behavior.
+See [global config](/alamino/reference/global-config/#testevidence) for attachment behavior, credential-vault opt-out guidance, provider support, limits, validation, and fail-closed behavior.
 
 ### providers.github.draft_pull_requests
 
-Override the [global GitHub draft setting](/no-mistakes/reference/global-config/#providersgithubdraft_pull_requests) for this repo.
+Override the [global GitHub draft setting](/alamino/reference/global-config/#providersgithubdraft_pull_requests) for this repo.
 
 | | |
 |---|---|
@@ -1404,7 +1404,7 @@ Override the [global GitHub draft setting](/no-mistakes/reference/global-config/
 
 ### providers.gitlab.draft_pull_requests
 
-Override the [global GitLab draft setting](/no-mistakes/reference/global-config/#providersgitlabdraft_pull_requests) for this repo.
+Override the [global GitLab draft setting](/alamino/reference/global-config/#providersgitlabdraft_pull_requests) for this repo.
 
 | | |
 |---|---|
@@ -1413,7 +1413,7 @@ Override the [global GitLab draft setting](/no-mistakes/reference/global-config/
 
 ### providers.bitbucket.draft_pull_requests
 
-Override the [global Bitbucket draft setting](/no-mistakes/reference/global-config/#providersbitbucketdraft_pull_requests) for this repo.
+Override the [global Bitbucket draft setting](/alamino/reference/global-config/#providersbitbucketdraft_pull_requests) for this repo.
 
 | | |
 |---|---|
@@ -1422,7 +1422,7 @@ Override the [global Bitbucket draft setting](/no-mistakes/reference/global-conf
 
 ### providers.azuredevops.draft_pull_requests
 
-Override the [global Azure DevOps draft setting](/no-mistakes/reference/global-config/#providersazuredevopsdraft_pull_requests) for this repo.
+Override the [global Azure DevOps draft setting](/alamino/reference/global-config/#providersazuredevopsdraft_pull_requests) for this repo.
 
 | | |
 |---|---|
@@ -1431,7 +1431,7 @@ Override the [global Azure DevOps draft setting](/no-mistakes/reference/global-c
 
 ### providers.origin.draft_pull_requests
 
-Override the [global Cursor Origin draft setting](/no-mistakes/reference/global-config/#providersorigindraft_pull_requests) for this repo.
+Override the [global Cursor Origin draft setting](/alamino/reference/global-config/#providersorigindraft_pull_requests) for this repo.
 
 | | |
 |---|---|

@@ -13,13 +13,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -52,17 +52,17 @@ func portableRound(round *db.StepRound, stepName types.StepName) sourceRound {
 }
 
 type sourceRun struct {
-	ID                 string `json:"id"`
-	Branch             string `json:"branch"`
-	HeadSHA            string `json:"head_sha"`
-	BaseSHA            string `json:"base_sha"`
-	Status             string `json:"status"`
-	Intent             string `json:"intent,omitempty"`
-	IntentSource       string `json:"intent_source,omitempty"`
-	NoMistakesVersion  string `json:"no_mistakes_version,omitempty"`
-	NoMistakesBuildSHA string `json:"no_mistakes_build_sha,omitempty"`
-	CreatedAt          int64  `json:"created_at"`
-	UpdatedAt          int64  `json:"updated_at"`
+	ID              string `json:"id"`
+	Branch          string `json:"branch"`
+	HeadSHA         string `json:"head_sha"`
+	BaseSHA         string `json:"base_sha"`
+	Status          string `json:"status"`
+	Intent          string `json:"intent,omitempty"`
+	IntentSource    string `json:"intent_source,omitempty"`
+	AlaminoVersion  string `json:"alamino_version,omitempty"`
+	AlaminoBuildSHA string `json:"alamino_build_sha,omitempty"`
+	CreatedAt       int64  `json:"created_at"`
+	UpdatedAt       int64  `json:"updated_at"`
 }
 
 type sourceStep struct {
@@ -261,11 +261,11 @@ func Capture(ctx context.Context, store *Store, p *paths.Paths, database *db.DB,
 		if run.IntentSource != nil {
 			manifest.IntentSource = *run.IntentSource
 		}
-		if run.NoMistakesVersion != nil {
-			manifest.VersionAtCapture = *run.NoMistakesVersion
+		if run.AlaminoVersion != nil {
+			manifest.VersionAtCapture = *run.AlaminoVersion
 		}
-		if run.NoMistakesBuildSHA != nil {
-			manifest.BuildSHA = *run.NoMistakesBuildSHA
+		if run.AlaminoBuildSHA != nil {
+			manifest.BuildSHA = *run.AlaminoBuildSHA
 		}
 		baseline := baselineForRound(invocations, round.Round)
 		c := Case{Manifest: manifest, Labels: labels, Decision: decision, Baseline: baseline, Dir: caseDir}
@@ -308,14 +308,14 @@ func repoConfigAt(ctx context.Context, gateDir, sha string) (*config.RepoConfig,
 	if _, err := git.ResolveRef(ctx, gateDir, sha); err != nil {
 		return nil, err
 	}
-	entry, err := git.Run(ctx, gateDir, "ls-tree", sha, "--", ".no-mistakes.yaml")
+	entry, err := git.Run(ctx, gateDir, "ls-tree", sha, "--", ".alamino.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("inspect repository config: %w", err)
 	}
 	if strings.TrimSpace(entry) == "" {
 		return &config.RepoConfig{}, nil
 	}
-	content, err := git.ShowFile(ctx, gateDir, sha, ".no-mistakes.yaml")
+	content, err := git.ShowFile(ctx, gateDir, sha, ".alamino.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("read repository config: %w", err)
 	}
@@ -413,11 +413,11 @@ func sourceRunFor(run *db.Run) sourceRun {
 	if run.IntentSource != nil {
 		out.IntentSource = *run.IntentSource
 	}
-	if run.NoMistakesVersion != nil {
-		out.NoMistakesVersion = *run.NoMistakesVersion
+	if run.AlaminoVersion != nil {
+		out.AlaminoVersion = *run.AlaminoVersion
 	}
-	if run.NoMistakesBuildSHA != nil {
-		out.NoMistakesBuildSHA = *run.NoMistakesBuildSHA
+	if run.AlaminoBuildSHA != nil {
+		out.AlaminoBuildSHA = *run.AlaminoBuildSHA
 	}
 	return out
 }

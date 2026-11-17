@@ -9,14 +9,14 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // publishingPushStep pushes the run head to the repository's upstream and
@@ -346,7 +346,7 @@ func TestRetryRefusesADeliveryContinuationWithoutAFreshMatchingRemoteHead(t *tes
 			if err == nil {
 				t.Fatalf("retry started %s, want a published head refusal", result.RunID)
 			}
-			for _, want := range []string{"published head proof failed", tc.reason, "no-mistakes rerun"} {
+			for _, want := range []string{"published head proof failed", tc.reason, "alamino rerun"} {
 				if !strings.Contains(err.Error(), want) {
 					t.Errorf("refusal %q does not contain %q", err, want)
 				}

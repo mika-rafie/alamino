@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 	"github.com/spf13/cobra"
 )
 
 func TestFormatOmitIntentPushOption(t *testing.T) {
-	if got := formatOmitIntentPushOption(true); got != "no-mistakes.omit-intent" {
+	if got := formatOmitIntentPushOption(true); got != "alamino.omit-intent" {
 		t.Fatalf("formatOmitIntentPushOption(true) = %q", got)
 	}
 	if got := formatOmitIntentPushOption(false); got != "" {
@@ -32,10 +32,10 @@ func TestParseOmitIntentPushOptions(t *testing.T) {
 		options []string
 		want    bool
 	}{
-		{"absent", []string{"no-mistakes.pr-base-branch=epic"}, false},
-		{"present once", []string{"no-mistakes.omit-intent"}, true},
-		{"repeated", []string{"no-mistakes.omit-intent", "no-mistakes.omit-intent"}, true},
-		{"among others", []string{"no-mistakes.skip=review", "no-mistakes.omit-intent", "no-mistakes.pr-base-branch=x"}, true},
+		{"absent", []string{"alamino.pr-base-branch=epic"}, false},
+		{"present once", []string{"alamino.omit-intent"}, true},
+		{"repeated", []string{"alamino.omit-intent", "alamino.omit-intent"}, true},
+		{"among others", []string{"alamino.skip=review", "alamino.omit-intent", "alamino.pr-base-branch=x"}, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := parseOmitIntentPushOptions(tc.options)
@@ -75,7 +75,7 @@ func TestConflictingActiveRunOmitIntent(t *testing.T) {
 func olderDaemonFixture(t *testing.T, probe func() (interface{}, error), configure ...func(*ipc.Server)) (launched *[]string) {
 	t.Helper()
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	root := t.TempDir()
 	local := filepath.Join(root, "operator")
 	cliGit(t, root, "init", "-b", "main", local)

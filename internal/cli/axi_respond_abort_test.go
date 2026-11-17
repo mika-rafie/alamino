@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // `axi respond --action abort` hands the executor's existing gate abort the
@@ -172,7 +172,7 @@ func TestAxiRespond_AbortExplainsAnOlderDaemonThatCannotRecordTheReason(t *testi
 	if !errors.As(err, &ee) || ee.code != 1 {
 		t.Fatalf("error = %v, want exit 1\n%s", err, out)
 	}
-	for _, want := range []string{"too old to record an abort reason", "nothing was recorded", "no-mistakes daemon restart --force"} {
+	for _, want := range []string{"too old to record an abort reason", "nothing was recorded", "alamino daemon restart --force"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("output missing %q:\n%s", want, out)
 		}

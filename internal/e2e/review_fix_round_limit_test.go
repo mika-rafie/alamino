@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // The opt-in review.max_fix_rounds budget (issue #683), driven through the
@@ -113,7 +113,7 @@ func newFixRoundLimitHarness(t *testing.T, persistent bool, trustedConfig string
 
 func (h *Harness) setTrustedConfig(content, message string) {
 	h.t.Helper()
-	h.CommitChange("main", ".no-mistakes.yaml", content, message)
+	h.CommitChange("main", ".alamino.yaml", content, message)
 	if out, err := h.runGit(context.Background(), h.WorkDir, "push", "origin", "main"); err != nil {
 		h.t.Fatalf("push trusted repo config: %v\n%s", err, out)
 	}
@@ -336,7 +336,7 @@ func TestReviewFixRoundLimit_PushedBranchCannotSetTheLimit(t *testing.T) {
 	h := newFixRoundLimitHarness(t, true, "allow_repo_commands: true\n")
 	branch := "feature/round-limit-untrusted"
 	h.startFeature(branch)
-	h.CommitChange(branch, ".no-mistakes.yaml", "allow_repo_commands: true\nreview:\n  max_fix_rounds: 1\n", "branch tries to set a review budget")
+	h.CommitChange(branch, ".alamino.yaml", "allow_repo_commands: true\nreview:\n  max_fix_rounds: 1\n", "branch tries to set a review budget")
 	if out, err := h.Run("axi", "run", "--intent", "Fix the broken service"); err != nil || !strings.Contains(out, "broken-service") {
 		t.Fatalf("initial review gate: %v\n%s", err, out)
 	}

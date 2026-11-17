@@ -19,13 +19,13 @@ import (
 func helperFactory(mode string) CmdFactory {
 	return func(ctx context.Context, name string, args ...string) *exec.Cmd {
 		cmd := exec.CommandContext(ctx, os.Args[0], append([]string{"-test.run=TestProviderPluginHelperProcess", "--", name}, args...)...)
-		cmd.Env = append(os.Environ(), "NM_PROVIDER_PLUGIN_HELPER="+mode)
+		cmd.Env = append(os.Environ(), "ALAMINO_PROVIDER_PLUGIN_HELPER="+mode)
 		return cmd
 	}
 }
 
 func TestProviderPluginHelperProcess(t *testing.T) {
-	mode := os.Getenv("NM_PROVIDER_PLUGIN_HELPER")
+	mode := os.Getenv("ALAMINO_PROVIDER_PLUGIN_HELPER")
 	if mode == "" {
 		return
 	}
@@ -35,7 +35,7 @@ func TestProviderPluginHelperProcess(t *testing.T) {
 		// Prove the configured args lead, the subcommand and context flags
 		// follow, --json ends the argv, and stdin is empty.
 		got := strings.Join(os.Args[3:], " ")
-		want := "nm-ssm --profile work status --plugin=ssm --repo=team/repo --host=git.example.com --raw-host=alias --remote-url=https://git.example.com/team/repo.git --json"
+		want := "alamino-ssm --profile work status --plugin=ssm --repo=team/repo --host=git.example.com --raw-host=alias --remote-url=https://git.example.com/team/repo.git --json"
 		if got != want || len(stdin) != 0 {
 			os.Stdout.WriteString(`{"error":{"message":"unexpected invocation"}}`)
 			os.Stderr.WriteString("argv: " + got + "\nstdin: " + string(stdin))
@@ -55,7 +55,7 @@ func TestProviderPluginHelperProcess(t *testing.T) {
 
 func TestProcess_DeliversArgvWithEmptyStdin(t *testing.T) {
 	host := New(Options{
-		Name: "ssm", Executable: "nm-ssm", Args: []string{"--profile", "work"},
+		Name: "ssm", Executable: "alamino-ssm", Args: []string{"--profile", "work"},
 		Repository:     Repository{RemoteURL: "https://git.example.com/team/repo.git", Host: "git.example.com", RawHost: "alias", Path: "team/repo"},
 		CommandFactory: helperFactory("echo"),
 	})
@@ -68,7 +68,7 @@ func TestProcess_DeliversArgvWithEmptyStdin(t *testing.T) {
 }
 
 func TestProcess_ExitWithoutFailureDocumentReportsRedactedStderr(t *testing.T) {
-	host := New(Options{Name: "ssm", Executable: "nm-ssm", CommandFactory: helperFactory("stderr")})
+	host := New(Options{Name: "ssm", Executable: "alamino-ssm", CommandFactory: helperFactory("stderr")})
 	err := host.Available(context.Background())
 	if err == nil || !strings.Contains(err.Error(), "exit status 4") || !strings.Contains(err.Error(), "rejected") {
 		t.Fatalf("Available error = %v", err)
@@ -79,7 +79,7 @@ func TestProcess_ExitWithoutFailureDocumentReportsRedactedStderr(t *testing.T) {
 }
 
 func TestProcess_TimeoutKillsThePluginAndFailsClosed(t *testing.T) {
-	host := New(Options{Name: "ssm", Executable: "nm-ssm", Timeout: 500 * time.Millisecond, CommandFactory: helperFactory("sleep")})
+	host := New(Options{Name: "ssm", Executable: "alamino-ssm", Timeout: 500 * time.Millisecond, CommandFactory: helperFactory("sleep")})
 	start := time.Now()
 	err := host.Available(context.Background())
 	if err == nil || !strings.Contains(err.Error(), "timed out after 500ms") {

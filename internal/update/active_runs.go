@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/lifecycle"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/lifecycle"
 )
 
 func (u *updater) confirmActiveRunsBeforeUpdate() error {

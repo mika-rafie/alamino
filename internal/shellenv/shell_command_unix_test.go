@@ -173,9 +173,9 @@ func TestShellCommandGroupActivePassesImmediatelyForSessionEscapee(t *testing.T)
 	readyFile := filepath.Join(dir, "member.ready")
 	leader := exec.CommandContext(context.Background(), os.Args[0], "-test.run=^TestShellCommandSessionEscapeeHelper$")
 	leader.Env = append(os.Environ(),
-		"NM_SHELLENV_SESSION_HELPER=leader",
-		"NM_SHELLENV_SESSION_PID="+pidFile,
-		"NM_SHELLENV_SESSION_READY="+readyFile,
+		"ALAMINO_SHELLENV_SESSION_HELPER=leader",
+		"ALAMINO_SHELLENV_SESSION_PID="+pidFile,
+		"ALAMINO_SHELLENV_SESSION_READY="+readyFile,
 	)
 	ConfigureShellCommand(leader)
 	if err := StartShellCommand(leader); err != nil {
@@ -205,21 +205,21 @@ func TestShellCommandGroupActivePassesImmediatelyForSessionEscapee(t *testing.T)
 // reports that through the ready file, and only then exits - so the probe runs
 // after the member is already gone from the group.
 func TestShellCommandSessionEscapeeHelper(t *testing.T) {
-	switch os.Getenv("NM_SHELLENV_SESSION_HELPER") {
+	switch os.Getenv("ALAMINO_SHELLENV_SESSION_HELPER") {
 	case "leader":
 		child := exec.Command(os.Args[0], "-test.run=^TestShellCommandSessionEscapeeHelper$")
 		child.Env = append(os.Environ(),
-			"NM_SHELLENV_SESSION_HELPER=escapee",
-			"NM_SHELLENV_SESSION_READY="+os.Getenv("NM_SHELLENV_SESSION_READY"),
+			"ALAMINO_SHELLENV_SESSION_HELPER=escapee",
+			"ALAMINO_SHELLENV_SESSION_READY="+os.Getenv("ALAMINO_SHELLENV_SESSION_READY"),
 		)
 		if err := child.Start(); err != nil {
 			os.Exit(2)
 		}
-		if err := os.WriteFile(os.Getenv("NM_SHELLENV_SESSION_PID"), []byte(strconv.Itoa(child.Process.Pid)), 0o644); err != nil {
+		if err := os.WriteFile(os.Getenv("ALAMINO_SHELLENV_SESSION_PID"), []byte(strconv.Itoa(child.Process.Pid)), 0o644); err != nil {
 			_ = child.Process.Kill()
 			os.Exit(4)
 		}
-		if !waitForHelperReady(os.Getenv("NM_SHELLENV_SESSION_READY"), 5*time.Second) {
+		if !waitForHelperReady(os.Getenv("ALAMINO_SHELLENV_SESSION_READY"), 5*time.Second) {
 			_ = child.Process.Kill()
 			os.Exit(3)
 		}
@@ -228,7 +228,7 @@ func TestShellCommandSessionEscapeeHelper(t *testing.T) {
 		if _, err := syscall.Setsid(); err != nil {
 			os.Exit(5)
 		}
-		if err := os.WriteFile(os.Getenv("NM_SHELLENV_SESSION_READY"), []byte("ready"), 0o644); err != nil {
+		if err := os.WriteFile(os.Getenv("ALAMINO_SHELLENV_SESSION_READY"), []byte("ready"), 0o644); err != nil {
 			os.Exit(6)
 		}
 		time.Sleep(30 * time.Second)
@@ -291,10 +291,10 @@ func TestTerminateShellCommandGroup_AsksBeforeKilling(t *testing.T) {
 
 	cmd := exec.CommandContext(context.Background(), os.Args[0], "-test.run=^TestTerminateShellCommandGroupTermHelper$")
 	cmd.Env = append(os.Environ(),
-		"NM_SHELLENV_TERM_HELPER=leader",
-		"NM_SHELLENV_TERM_PID="+pidFile,
-		"NM_SHELLENV_TERM_READY="+readyFile,
-		"NM_SHELLENV_TERM_FILE="+termFile,
+		"ALAMINO_SHELLENV_TERM_HELPER=leader",
+		"ALAMINO_SHELLENV_TERM_PID="+pidFile,
+		"ALAMINO_SHELLENV_TERM_READY="+readyFile,
+		"ALAMINO_SHELLENV_TERM_FILE="+termFile,
 	)
 	ConfigureShellCommand(cmd)
 	if err := cmd.Run(); err != nil {
@@ -314,19 +314,19 @@ func TestTerminateShellCommandGroup_AsksBeforeKilling(t *testing.T) {
 }
 
 func TestTerminateShellCommandGroupTermHelper(t *testing.T) {
-	switch os.Getenv("NM_SHELLENV_TERM_HELPER") {
+	switch os.Getenv("ALAMINO_SHELLENV_TERM_HELPER") {
 	case "leader":
 		child := exec.Command(os.Args[0], "-test.run=^TestTerminateShellCommandGroupTermHelper$")
 		child.Env = append(os.Environ(),
-			"NM_SHELLENV_TERM_HELPER=grandchild",
-			"NM_SHELLENV_TERM_PID="+os.Getenv("NM_SHELLENV_TERM_PID"),
-			"NM_SHELLENV_TERM_READY="+os.Getenv("NM_SHELLENV_TERM_READY"),
-			"NM_SHELLENV_TERM_FILE="+os.Getenv("NM_SHELLENV_TERM_FILE"),
+			"ALAMINO_SHELLENV_TERM_HELPER=grandchild",
+			"ALAMINO_SHELLENV_TERM_PID="+os.Getenv("ALAMINO_SHELLENV_TERM_PID"),
+			"ALAMINO_SHELLENV_TERM_READY="+os.Getenv("ALAMINO_SHELLENV_TERM_READY"),
+			"ALAMINO_SHELLENV_TERM_FILE="+os.Getenv("ALAMINO_SHELLENV_TERM_FILE"),
 		)
 		if err := child.Start(); err != nil {
 			os.Exit(2)
 		}
-		if !waitForHelperReady(os.Getenv("NM_SHELLENV_TERM_READY"), 5*time.Second) {
+		if !waitForHelperReady(os.Getenv("ALAMINO_SHELLENV_TERM_READY"), 5*time.Second) {
 			_ = child.Process.Kill()
 			os.Exit(3)
 		}
@@ -334,14 +334,14 @@ func TestTerminateShellCommandGroupTermHelper(t *testing.T) {
 	case "grandchild":
 		term := make(chan os.Signal, 1)
 		signal.Notify(term, syscall.SIGTERM)
-		if err := os.WriteFile(os.Getenv("NM_SHELLENV_TERM_PID"), []byte(strconv.Itoa(os.Getpid())), 0o644); err != nil {
+		if err := os.WriteFile(os.Getenv("ALAMINO_SHELLENV_TERM_PID"), []byte(strconv.Itoa(os.Getpid())), 0o644); err != nil {
 			os.Exit(4)
 		}
-		if err := os.WriteFile(os.Getenv("NM_SHELLENV_TERM_READY"), []byte("ready"), 0o644); err != nil {
+		if err := os.WriteFile(os.Getenv("ALAMINO_SHELLENV_TERM_READY"), []byte("ready"), 0o644); err != nil {
 			os.Exit(5)
 		}
 		<-term
-		if err := os.WriteFile(os.Getenv("NM_SHELLENV_TERM_FILE"), []byte("terminated"), 0o644); err != nil {
+		if err := os.WriteFile(os.Getenv("ALAMINO_SHELLENV_TERM_FILE"), []byte("terminated"), 0o644); err != nil {
 			os.Exit(6)
 		}
 		os.Exit(0)
@@ -427,8 +427,8 @@ func TestCombinedOutputShellCommand_WaitDelayBoundsEscapedPipeHolder(t *testing.
 	readyFile := filepath.Join(t.TempDir(), "ready")
 	cmd := exec.CommandContext(context.Background(), os.Args[0], "-test.run=^TestShellOutputPipeHelper$")
 	cmd.Env = append(os.Environ(),
-		"NM_SHELLENV_PIPE_HELPER=leader",
-		"NM_SHELLENV_PIPE_READY="+readyFile,
+		"ALAMINO_SHELLENV_PIPE_HELPER=leader",
+		"ALAMINO_SHELLENV_PIPE_READY="+readyFile,
 	)
 	ConfigureShellCommand(cmd)
 	cmd.WaitDelay = 100 * time.Millisecond
@@ -447,26 +447,26 @@ func TestCombinedOutputShellCommand_WaitDelayBoundsEscapedPipeHolder(t *testing.
 }
 
 func TestShellOutputPipeHelper(t *testing.T) {
-	switch os.Getenv("NM_SHELLENV_PIPE_HELPER") {
+	switch os.Getenv("ALAMINO_SHELLENV_PIPE_HELPER") {
 	case "leader":
 		child := exec.Command(os.Args[0], "-test.run=^TestShellOutputPipeHelper$")
 		child.Env = append(os.Environ(),
-			"NM_SHELLENV_PIPE_HELPER=escaped",
-			"NM_SHELLENV_PIPE_READY="+os.Getenv("NM_SHELLENV_PIPE_READY"),
+			"ALAMINO_SHELLENV_PIPE_HELPER=escaped",
+			"ALAMINO_SHELLENV_PIPE_READY="+os.Getenv("ALAMINO_SHELLENV_PIPE_READY"),
 		)
 		child.Stdout = os.Stdout
 		child.Stderr = os.Stderr
 		if err := child.Start(); err != nil {
 			os.Exit(2)
 		}
-		if !waitForHelperReady(os.Getenv("NM_SHELLENV_PIPE_READY"), 5*time.Second) {
+		if !waitForHelperReady(os.Getenv("ALAMINO_SHELLENV_PIPE_READY"), 5*time.Second) {
 			os.Exit(3)
 		}
 		_, _ = os.Stdout.WriteString("leader done\nescaped pid " + strconv.Itoa(child.Process.Pid) + "\n")
 		os.Exit(0)
 	case "escaped":
 		_, _ = syscall.Setsid()
-		_ = os.WriteFile(os.Getenv("NM_SHELLENV_PIPE_READY"), []byte("ready"), 0o644)
+		_ = os.WriteFile(os.Getenv("ALAMINO_SHELLENV_PIPE_READY"), []byte("ready"), 0o644)
 		time.Sleep(30 * time.Second)
 		os.Exit(0)
 	}

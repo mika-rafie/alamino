@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestQuotaRecordOrderingPreservesSpellingsAcrossACPAliasChanges(t *testing.T) {

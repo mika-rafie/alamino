@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 var _ scm.ReviewCommentsHost = (*Host)(nil)

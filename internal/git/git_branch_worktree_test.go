@@ -273,7 +273,7 @@ func TestPushWithOptionsForwardsPushOptions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := PushWithOptions(ctx, src, "dest", "refs/heads/main", "", false, []string{"no-mistakes.skip=test,lint"}); err != nil {
+	if err := PushWithOptions(ctx, src, "dest", "refs/heads/main", "", false, []string{"alamino.skip=test,lint"}); err != nil {
 		t.Fatalf("PushWithOptions failed: %v", err)
 	}
 
@@ -281,7 +281,7 @@ func TestPushWithOptionsForwardsPushOptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := strings.TrimSpace(string(data)), "1:no-mistakes.skip=test,lint"; got != want {
+	if got, want := strings.TrimSpace(string(data)), "1:alamino.skip=test,lint"; got != want {
 		t.Fatalf("push options marker = %q, want %q", got, want)
 	}
 }
@@ -303,7 +303,7 @@ func TestPushCommitWithOptionsUpToDateOpensNoReceivePackSession(t *testing.T) {
 	run(t, src, "git", "config", "remote.dest.receivepack", "false")
 	head := run(t, src, "git", "rev-parse", "HEAD")
 
-	if err := PushCommitWithOptions(ctx, src, "dest", head, "refs/heads/main", "", false, []string{"no-mistakes.intent=x"}); err != nil {
+	if err := PushCommitWithOptions(ctx, src, "dest", head, "refs/heads/main", "", false, []string{"alamino.intent=x"}); err != nil {
 		t.Fatalf("up-to-date push with options failed: %v", err)
 	}
 	if got, _ := Run(ctx, bare, "rev-parse", "refs/heads/main"); got != head {

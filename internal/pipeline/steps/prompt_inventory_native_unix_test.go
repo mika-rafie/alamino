@@ -11,11 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // recordNativeClaude exercises the real stdin and stream-json adapter without a provider.
@@ -119,7 +119,7 @@ func testPRDraftNativeLargeInventory(t *testing.T, layout string) {
 		t.Fatal(err)
 	}
 	t.Logf("native prompt bytes=%d paths=1225 generated=1222 base=%s head=%s", len(raw), base, head)
-	if proof := os.Getenv("NM_RETRO_PROOF_DIR"); proof != "" {
+	if proof := os.Getenv("ALAMINO_RETRO_PROOF_DIR"); proof != "" {
 		if err := os.WriteFile(filepath.Join(proof, "pr-large-prompt.txt"), raw, 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -171,7 +171,7 @@ func testPRDraftNativeLargeInventory(t *testing.T, layout string) {
 		t.Fatalf("configured-title prompt bytes=%d, want <=16384", len(titleRaw))
 	}
 	assertNativeDiffRecovery(t, string(titleRaw), dir, base, head)
-	if proof := os.Getenv("NM_RETRO_PROOF_DIR"); proof != "" {
+	if proof := os.Getenv("ALAMINO_RETRO_PROOF_DIR"); proof != "" {
 		if err := os.WriteFile(filepath.Join(proof, "pr-title-large-prompt.txt"), titleRaw, 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -234,7 +234,7 @@ func testPRDraftNativeLargeInventory(t *testing.T, layout string) {
 		t.Fatal("trusted path instruction disappeared")
 	}
 	t.Logf("native Review retains all 1226 paths including both rename anchors; prompt bytes=%d", len(reviewRaw))
-	if proof := os.Getenv("NM_RETRO_PROOF_DIR"); proof != "" {
+	if proof := os.Getenv("ALAMINO_RETRO_PROOF_DIR"); proof != "" {
 		if err := os.WriteFile(filepath.Join(proof, "review-complete-coverage-prompt.txt"), reviewRaw, 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -357,7 +357,7 @@ func TestReviewNativeUncertifiedHistoryBounded(t *testing.T) {
 				}
 			}
 			t.Logf("native Review prompt bytes=%d uncertified rounds=%d unresolved=%d", len(raw), count, scenario.findings)
-			if proof := os.Getenv("NM_RETRO_PROOF_DIR"); proof != "" {
+			if proof := os.Getenv("ALAMINO_RETRO_PROOF_DIR"); proof != "" {
 				if err := os.WriteFile(filepath.Join(proof, fmt.Sprintf("review-history-%d-findings-%d-prompt.txt", count, scenario.findings)), raw, 0o600); err != nil {
 					t.Fatal(err)
 				}

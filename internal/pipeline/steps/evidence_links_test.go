@@ -10,18 +10,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const (
 	mr1016RunID          = "01M6NB7HE9AM2PB1JWRS60EN63"
-	mr1016LinkBase       = "https://vps.nevilleweb.sk/no-mistakes"
-	evidenceLinkTestBase = "https://evidence.example.com/no-mistakes"
+	mr1016LinkBase       = "https://vps.nevilleweb.sk/alamino"
+	evidenceLinkTestBase = "https://evidence.example.com/alamino"
 )
 
 // mr1016Fixture reads one file of the MR 1016 fixture under testdata.

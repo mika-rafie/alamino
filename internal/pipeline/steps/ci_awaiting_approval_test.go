@@ -3,8 +3,8 @@ package steps
 import (
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/cimonitor"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/cimonitor"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // A workflow held for maintainer approval has run nothing and will run nothing

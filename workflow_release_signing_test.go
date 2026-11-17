@@ -23,9 +23,9 @@ import (
 // The permanent signing identity. These MUST NEVER change once the first signed
 // release ships: the executable identifier and Team ID are the invariant part of
 // the Developer ID designated requirement that lets macOS permissions survive
-// `no-mistakes update`.
+// `alamino update`.
 const (
-	signingIdentifier = "com.kunchenguid.no-mistakes"
+	signingIdentifier = "io.github.mika-rafie.alamino"
 	signingTeamID     = "9T2J7MNUP9"
 
 	cscLinkSecret    = "CSC_LINK"
@@ -509,8 +509,8 @@ func TestReleaseWorkflowPreservesArtifactContract(t *testing.T) {
 			t.Fatalf("no darwin build job for %s", arch)
 		}
 		run := job.allRun()
-		if !strings.Contains(run, "no-mistakes-") || !strings.Contains(run, "${GOOS}-${GOARCH}.tar.gz") {
-			t.Errorf("darwin job %q must preserve the no-mistakes-<tag>-<goos>-<goarch>.tar.gz name", job.name)
+		if !strings.Contains(run, "alamino-") || !strings.Contains(run, "${GOOS}-${GOARCH}.tar.gz") {
+			t.Errorf("darwin job %q must preserve the alamino-<tag>-<goos>-<goarch>.tar.gz name", job.name)
 		}
 	}
 
@@ -545,8 +545,8 @@ func TestReleaseWorkflowPreservesArtifactContract(t *testing.T) {
 	}
 
 	checksums := wf.jobByRunContains("sha256sum", "checksums.txt")
-	if checksums == nil || !strings.Contains(checksums.allRun(), "sha256sum no-mistakes-*") {
-		t.Error("checksums job must still compute `sha256sum no-mistakes-*`")
+	if checksums == nil || !strings.Contains(checksums.allRun(), "sha256sum alamino-*") {
+		t.Error("checksums job must still compute `sha256sum alamino-*`")
 	}
 
 	finalize := wf.jobByRunContains("--prerelease=true")

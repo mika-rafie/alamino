@@ -2,7 +2,7 @@
 # Reproduce a partial gate response being recorded as a decline, end to end.
 #
 # A scratch project is driven through the real pipeline in a fully isolated
-# environment: its own HOME, its own NM_HOME (daemon socket, database, logs),
+# environment: its own HOME, its own ALAMINO_HOME (daemon socket, database, logs),
 # its own bare origin, and a scripted agent (the repository's cmd/fakeagent),
 # so nothing of the operator's state is read or written and no credentials,
 # network service, or API key is involved.
@@ -13,14 +13,14 @@
 #            still carried in the gate; the operator asks for only the two new
 #            ones.
 #
-# Usage: repro-gate-declines.sh <no-mistakes-checkout> <output-dir>
+# Usage: repro-gate-declines.sh <alamino-checkout> <output-dir>
 #
 # Run it against a checkout of the branch under review and against a checkout
 # of main; the last section of the output states what the gate recorded.
 set -eu
 
 if [ "$#" -ne 2 ]; then
-  echo "usage: $0 <no-mistakes-checkout> <output-dir>" >&2
+  echo "usage: $0 <alamino-checkout> <output-dir>" >&2
   exit 2
 fi
 
@@ -32,26 +32,26 @@ WORK="$OUT/work"
 exec > >(tee "$OUT/transcript.txt") 2>&1
 
 rm -rf "$WORK"
-mkdir -p "$WORK/bin" "$WORK/home" "$WORK/nm-home" "$WORK/project" "$WORK/origin.git"
+mkdir -p "$WORK/bin" "$WORK/home" "$WORK/alamino-home" "$WORK/project" "$WORK/origin.git"
 
 BIN="$WORK/bin"
 SIM_HOME="$WORK/home"
-NM_HOME="$WORK/nm-home"
+ALAMINO_HOME="$WORK/alamino-home"
 PROJECT="$WORK/project"
 AGENT_LOG="$WORK/agent.log"
 SCENARIO="$WORK/scenario.yaml"
 
-echo "# repro: no-mistakes gate declines from a partial response"
+echo "# repro: alamino gate declines from a partial response"
 echo
 echo "- checkout under test: $SRC"
 echo "- commit: $(git -C "$SRC" rev-parse --short HEAD) $(git -C "$SRC" log -1 --format=%s)"
-echo "- isolated home: $NM_HOME (the operator's own ~/.no-mistakes is never touched)"
+echo "- isolated home: $ALAMINO_HOME (the operator's own ~/.alamino is never touched)"
 echo "- scratch project: $PROJECT"
 echo
 
 echo "## Build the tool and the scripted agent from the checkout"
-(cd "$SRC" && go build -o "$BIN/no-mistakes" ./cmd/no-mistakes && go build -o "$BIN/fakeagent" ./cmd/fakeagent)
-echo "built $BIN/no-mistakes and $BIN/fakeagent"
+(cd "$SRC" && go build -o "$BIN/alamino" ./cmd/alamino && go build -o "$BIN/fakeagent" ./cmd/fakeagent)
+echo "built $BIN/alamino and $BIN/fakeagent"
 echo
 
 # The daemon resolves its PATH through a login shell, so the fake agent names
@@ -66,7 +66,7 @@ for name in claude gh tea; do
   ln -s "$BIN/fakeagent" "$BIN/$name"
 done
 
-cat > "$NM_HOME/config.yaml" <<EOF
+cat > "$ALAMINO_HOME/config.yaml" <<EOF
 agent: claude
 log_level: debug
 agent_path_override:
@@ -80,21 +80,21 @@ auto_fix:
   ci: 0
 EOF
 
-# The isolated environment every no-mistakes invocation runs in.
+# The isolated environment every alamino invocation runs in.
 nm() {
   env -i \
     PATH="$BIN:/usr/bin:/bin" \
     HOME="$SIM_HOME" \
-    NM_HOME="$NM_HOME" \
+    ALAMINO_HOME="$ALAMINO_HOME" \
     SHELL="${SHELL:-/bin/bash}" \
     FAKEAGENT_LOG="$AGENT_LOG" \
     FAKEAGENT_SCENARIO="$SCENARIO" \
-    NM_TEST_START_DAEMON=1 \
-    NM_TEST_DAEMON_START_TIMEOUT=45s \
-    NO_MISTAKES_TELEMETRY=off \
-    NO_MISTAKES_NO_UPDATE_CHECK=1 \
+    ALAMINO_TEST_START_DAEMON=1 \
+    ALAMINO_TEST_DAEMON_START_TIMEOUT=45s \
+    ALAMINO_TELEMETRY=off \
+    ALAMINO_NO_UPDATE_CHECK=1 \
     LANG=C.UTF-8 \
-    "$BIN/no-mistakes" "$@"
+    "$BIN/alamino" "$@"
 }
 
 cleanup() {
@@ -105,22 +105,22 @@ cleanup() {
   # refuses while any run is active, so force it and then verify: this daemon is
   # this simulation's own, and nothing else may be left running.
   nm daemon stop --force >/dev/null 2>&1 || true
-  if [ -f "$NM_HOME/daemon.pid" ]; then
-    pid=$(sed -n 's/.*"pid":\([0-9]*\).*/\1/p' "$NM_HOME/daemon.pid" | head -1)
+  if [ -f "$ALAMINO_HOME/daemon.pid" ]; then
+    pid=$(sed -n 's/.*"pid":\([0-9]*\).*/\1/p' "$ALAMINO_HOME/daemon.pid" | head -1)
     if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
       for _ in 1 2 3 4 5; do
         kill -0 "$pid" 2>/dev/null || break
         sleep 0.3
       done
     fi
-    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -qF "$NM_HOME"; then
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -qF "$ALAMINO_HOME"; then
       kill -TERM "$pid" 2>/dev/null || true
       sleep 1
       kill -KILL "$pid" 2>/dev/null || true
     fi
   fi
-  if pgrep -f "$NM_HOME" >/dev/null 2>&1; then
-    echo "warning: a process still references the isolated home $NM_HOME" >&2
+  if pgrep -f "$ALAMINO_HOME" >/dev/null 2>&1; then
+    echo "warning: a process still references the isolated home $ALAMINO_HOME" >&2
   fi
   echo
   echo "(isolated daemon stopped; scratch project and logs left in $WORK)"
@@ -273,13 +273,13 @@ echo
 SUBMITTED=$(git -C "$PROJECT" rev-parse HEAD)
 nm axi run --intent "Harden the deploy script: ship only committed files, fail loudly on a bad environment, and keep release artifacts out of the repository" --wait 3m
 echo
-echo "\$ no-mistakes axi respond --action fix --findings r1,r2,r3,r4,r5"
+echo "\$ alamino axi respond --action fix --findings r1,r2,r3,r4,r5"
 nm axi respond --action fix --findings r1,r2,r3,r4,r5 --wait 3m
 echo
 
 echo "## Round 2: ask for only the two new findings"
 echo
-echo "\$ no-mistakes axi respond --action fix --findings r6,r7"
+echo "\$ alamino axi respond --action fix --findings r6,r7"
 nm axi respond --action fix --findings r6,r7 --wait 3m
 echo
 
@@ -289,13 +289,13 @@ echo
 # gate then reports them as chosen for fix. A claim that is not applied would
 # make the run's accounting look better than the code, so assert that every file
 # the fixes claim really changed between the submitted head and the run's head.
-# The run's worktree is $NM_HOME/worktrees/<repo>/<run> and its `.git` is a file,
+# The run's worktree is $ALAMINO_HOME/worktrees/<repo>/<run> and its `.git` is a file,
 # so the first `.git` under that tree marks the checkout to inspect. A defect is
 # recorded rather than exited on, so the script still stops its own daemon.
-worktree=$(find "$NM_HOME/worktrees" -maxdepth 3 -name .git 2>/dev/null | head -1 | xargs -r dirname)
+worktree=$(find "$ALAMINO_HOME/worktrees" -maxdepth 3 -name .git 2>/dev/null | head -1 | xargs -r dirname)
 fixture_defect=""
 if [ -z "$worktree" ]; then
-  fixture_defect="no run worktree under $NM_HOME/worktrees; cannot verify the applied fixes"
+  fixture_defect="no run worktree under $ALAMINO_HOME/worktrees; cannot verify the applied fixes"
 else
   changed=$(git -C "$worktree" diff --name-only "$SUBMITTED"..HEAD 2>/dev/null | sort)
   echo "files the pipeline's fix rounds changed:"

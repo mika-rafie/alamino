@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestCommitIdentitySubmissionJourney(t *testing.T) {
@@ -59,7 +59,7 @@ func TestCommitIdentitySubmissionJourney(t *testing.T) {
 			t.Setenv("GIT_COMMITTER_EMAIL", "committer@example.test")
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
-			cmd := exec.CommandContext(ctx, "git", "push", "no-mistakes", branch)
+			cmd := exec.CommandContext(ctx, "git", "push", "alamino", branch)
 			cmd.Dir, cmd.Env = h.WorkDir, os.Environ()
 			if out, err := cmd.CombinedOutput(); err != nil {
 				t.Fatalf("push with submitter identity: %v\n%s", err, out)

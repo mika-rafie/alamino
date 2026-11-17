@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/evidence"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/evidence"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,7 +34,7 @@ import (
 // ci.go), so an actively-rebased PR keeps its monitor. The value is
 // deliberately long because a green PR can legitimately wait days on a
 // dependency PR or on review; a torn-down or abandoned run is reaped
-// explicitly via `no-mistakes axi abort --run <id>` rather than by a short
+// explicitly via `alamino axi abort --run <id>` rather than by a short
 // timeout.
 const (
 	// DefaultCITimeout is the monitor's idle timeout when ci_timeout is unset.
@@ -142,7 +142,7 @@ const (
 	// before the daemon reaps it. It is comfortably longer than typical PR
 	// review latency because a PR body references these artifacts by local path
 	// whenever publishing is off or the provider has no derivable links. This
-	// is no-mistakes' own budget: the point of owning it is that no OS temp
+	// is alamino's own budget: the point of owning it is that no OS temp
 	// timer decides when a user's screenshots disappear.
 	DefaultEvidenceRetention = 14 * 24 * time.Hour
 	// DefaultEvidenceMaxRuns caps how many run directories survive regardless
@@ -150,7 +150,7 @@ const (
 	// window still cannot grow the directory without bound.
 	DefaultEvidenceMaxRuns = 200
 	// DefaultWorktreeRetention bounds how long a terminal run's leftover
-	// worktree directory survives under the default <NM_HOME>/worktrees tree.
+	// worktree directory survives under the default <ALAMINO_HOME>/worktrees tree.
 	// A run's worktree is already removed the moment its pipeline finishes
 	// (see daemon.RunManager.removeRunWorktree); this budget only ever governs
 	// the leftover a failed removal - or a protected-path refusal that later
@@ -167,7 +167,7 @@ const (
 	// exhaustion must clear for an agent to stay rankable: a subscription
 	// projected to run out inside this window cannot be trusted to carry a
 	// typical run, so the candidate drops below rankable ones. It is an
-	// expectation, not a promise - no-mistakes never cancels a run for
+	// expectation, not a promise - alamino never cancels a run for
 	// exceeding it.
 	DefaultQuotaExpectedRunLength = 90 * time.Minute
 	// DefaultQuotaReadTimeout bounds one quota-axi read at run setup.
@@ -177,7 +177,7 @@ const (
 	DefaultQuotaReadTimeout = 15 * time.Second
 )
 
-// GlobalConfig represents ~/.no-mistakes/config.yaml.
+// GlobalConfig represents ~/.alamino/config.yaml.
 type GlobalConfig struct {
 	SourceYAML           []byte              `yaml:"-"`
 	Agent                types.AgentName     `yaml:"agent"`
@@ -216,10 +216,10 @@ type GlobalConfig struct {
 	ReviewAgents map[string]ReviewAgent `yaml:"review_agents"`
 	// WorktreeRoots places a repository's pipeline run worktrees under a
 	// directory the operator chose instead of the default
-	// <NM_HOME>/worktrees/<repoID>. Keys are registered checkout paths
+	// <ALAMINO_HOME>/worktrees/<repoID>. Keys are registered checkout paths
 	// (Repo.WorkingPath), values are absolute directories. It exists for
 	// directory-scoped toolchain configuration (mise, direnv), which resolves
-	// by path ancestry and therefore never reaches a worktree under NM_HOME.
+	// by path ancestry and therefore never reaches a worktree under ALAMINO_HOME.
 	// Placement is resolved for every consumer in internal/worktrees.
 	WorktreeRoots map[string]string `yaml:"worktree_roots"`
 	// Worktree bounds how long a terminal run's leftover worktree directory
@@ -253,7 +253,7 @@ type GlobalConfig struct {
 	GateReconcileTimeout  time.Duration `yaml:"-"`
 	LogLevel              string        `yaml:"log_level"`
 	// EvidenceDir is the global-only parent directory for new run evidence.
-	// Empty keeps <NM_HOME>/evidence (or test.evidence.local_root). A missing
+	// Empty keeps <ALAMINO_HOME>/evidence (or test.evidence.local_root). A missing
 	// or unwritable value falls back to the app-root default at resolution
 	// time; already-pinned runs are not moved. A repository cannot set it.
 	EvidenceDir string `yaml:"evidence_dir"`
@@ -429,7 +429,7 @@ type RepositoryPRRaw struct {
 // RepositoryOverrides maps remote URLs to machine-local per-repository settings.
 type RepositoryOverrides map[string]RepositoryOverride
 
-// RepoConfig represents .no-mistakes.yaml in a repo root.
+// RepoConfig represents .alamino.yaml in a repo root.
 type RepoConfig struct {
 	Agent          types.AgentName   `yaml:"agent"`
 	Agents         []types.AgentName `yaml:"-"`
@@ -451,7 +451,7 @@ type RepoConfig struct {
 	// AllowRepoCommands opts in to honoring the code-executing selection
 	// fields (commands.{prepare,test,lint,format} and agent) from a contributor's
 	// pushed branch instead of the trusted default-branch copy. It is read
-	// ONLY from the trusted default-branch copy of .no-mistakes.yaml (never
+	// ONLY from the trusted default-branch copy of .alamino.yaml (never
 	// the pushed SHA), so a contributor cannot self-enable. Default false:
 	// the pushed branch controls nothing that executes.
 	AllowRepoCommands bool `yaml:"allow_repo_commands"`
@@ -481,7 +481,7 @@ type RepoConfig struct {
 	Providers ProvidersRaw `yaml:"providers"`
 	// Document carries the repository's documentation placement policy. It
 	// steers the document step's gate prompt, so it is honored ONLY from the
-	// trusted default-branch copy of .no-mistakes.yaml (see
+	// trusted default-branch copy of .alamino.yaml (see
 	// EffectiveRepoConfig): a contributor's pushed branch must not be able to
 	// weaken documentation rules for its own review.
 	Document DocumentRaw `yaml:"document"`
@@ -489,7 +489,7 @@ type RepoConfig struct {
 	// path_instructions steer the review gate prompt and its conversation flag
 	// decides whether that gate may park for a human answer, so the whole
 	// block is honored ONLY from the trusted default-branch copy of
-	// .no-mistakes.yaml (see EffectiveRepoConfig), regardless of
+	// .alamino.yaml (see EffectiveRepoConfig), regardless of
 	// allow_repo_commands: a contributor's pushed branch must not be able to
 	// inject or weaken the guidance that reviews it, nor to turn the
 	// conversation on or off for its own review.
@@ -499,7 +499,7 @@ type RepoConfig struct {
 	// reorder, or replace a core step, and a failing gate parks for an operator
 	// decision.
 	// A gate executes shell on the daemon host, so it is honored ONLY from the
-	// trusted default-branch copy of .no-mistakes.yaml (see
+	// trusted default-branch copy of .alamino.yaml (see
 	// EffectiveRepoConfig), regardless of
 	// allow_repo_commands: unlike commands.{test,lint,format}, which a
 	// maintainer can opt into reading from a pushed branch because they only
@@ -512,7 +512,7 @@ type RepoConfig struct {
 	// agent-orchestration repos (e.g. firstmate) whose project instructions
 	// would otherwise install a fleet-captain identity on a gate agent. It is a
 	// SECURITY boundary honored ONLY from the trusted default-branch copy of
-	// .no-mistakes.yaml (see EffectiveRepoConfig and the daemon's
+	// .alamino.yaml (see EffectiveRepoConfig and the daemon's
 	// assertGateTrustedConfigReadable): a contributor's pushed branch must not be
 	// able to turn it off (or on). Default false; a plain bool so a missing key
 	// or a YAML/JSON null is falsy and preserves current loading.
@@ -520,7 +520,7 @@ type RepoConfig struct {
 	// NoCI declares that this repository intentionally has no CI. When true and
 	// the forge reports zero checks, the CI monitor treats that empty result as
 	// all-checks-passed. It is a readiness boundary honored ONLY from the trusted
-	// default-branch copy of .no-mistakes.yaml (see EffectiveRepoConfig): a
+	// default-branch copy of .alamino.yaml (see EffectiveRepoConfig): a
 	// contributor's pushed branch must not self-declare no-CI and bypass checks.
 	// Default false - absence means CI is expected, and an unproven empty check
 	// list remains not-ready regardless of elapsed time. If checks still appear,
@@ -645,8 +645,8 @@ const (
 	ReviewPathInstructionsHeading = "Repository review instructions for the changed paths (trusted, from the default branch). Each block below applies only to the files listed under its path, and adds to the requirements above:"
 	// The operator headings name the operator's own config as the source so
 	// the reviewer never reads a machine-local rule as the repository's.
-	ReviewGlobalPathInstructionsHeading     = "Machine-local review instructions for the changed paths (from the operator's global no-mistakes config, applied to every repository; not from this repository). Each block below applies only to the files listed under its path, and adds to the requirements above:"
-	ReviewRepositoryPathInstructionsHeading = "Machine-local review instructions for the changed paths (from the operator's global no-mistakes config, scoped to this repository; not from this repository). Each block below applies only to the files listed under its path, and adds to the requirements above:"
+	ReviewGlobalPathInstructionsHeading     = "Machine-local review instructions for the changed paths (from the operator's global alamino config, applied to every repository; not from this repository). Each block below applies only to the files listed under its path, and adds to the requirements above:"
+	ReviewRepositoryPathInstructionsHeading = "Machine-local review instructions for the changed paths (from the operator's global alamino config, scoped to this repository; not from this repository). Each block below applies only to the files listed under its path, and adds to the requirements above:"
 	ReviewPathInstructionsPathLabel         = "path: "
 	ReviewPathInstructionsFilesLabel        = "matched files: "
 	ReviewPathInstructionsRulesLabel        = "instructions:"
@@ -661,7 +661,7 @@ const (
 // Bounds on review.path_instructions.
 //
 // The injected text lands in the review prompt, which is already the largest
-// gate prompt no-mistakes builds, and an oversized prompt fails the agent
+// gate prompt alamino builds, and an oversized prompt fails the agent
 // invocation outright instead of degrading. The budget is therefore validated
 // when the config is parsed - before a run starts - rather than truncated
 // silently at review time.
@@ -1181,7 +1181,7 @@ type Review struct {
 	// Conversation is true when the reviewer may ask the operator questions
 	// mid-pass. It gates the whole protocol: the prompt section, the
 	// conversation files, the question findings that park the gate, the
-	// reviewer session a finalize turn resumes, and `no-mistakes axi answer`.
+	// reviewer session a finalize turn resumes, and `alamino axi answer`.
 	Conversation     bool
 	PathInstructions []PathInstruction
 	// GlobalPathInstructions come from the global config's review block.
@@ -1285,7 +1285,7 @@ type TestRaw struct {
 	// the product up in an isolated environment so the test step can drive
 	// end-user scenarios against the real thing. It is injected into the test
 	// gate's prompt, so like document.instructions it is honored ONLY from the
-	// trusted default-branch copy of .no-mistakes.yaml (see
+	// trusted default-branch copy of .alamino.yaml (see
 	// EffectiveRepoConfig): a contributor's pushed branch must not be able to
 	// rewrite the runbook the agent that validates it follows.
 	Instructions string `yaml:"instructions"`
@@ -1300,11 +1300,11 @@ type TestRaw struct {
 	// pinned trusted commit. Trusted-only like Instructions.
 	PathInstructions []TestPathInstruction `yaml:"path_instructions"`
 	// AllowApproveOverFailure is the recorded reason that opts this
-	// repository into letting require-no-mistakes accept a Test step that
+	// repository into letting require-alamino accept a Test step that
 	// was approved over a failing configured commands.test. Empty (the default)
 	// is off: an approved-over-failure test step is non-compliant. A non-empty
 	// value is the opt-in and the reason the required check can see. It is
-	// honored ONLY from the trusted default-branch copy of .no-mistakes.yaml
+	// honored ONLY from the trusted default-branch copy of .alamino.yaml
 	// (see EffectiveRepoConfig): a contributor's pushed branch must not be able
 	// to waive the configured-test gate that validates it.
 	AllowApproveOverFailure string `yaml:"allow_approve_over_failure"`
@@ -1327,7 +1327,7 @@ type EvidenceRaw struct {
 	Dir         *string `yaml:"dir"`
 	// Branch selects the orphan evidence branch. It names a git ref the
 	// daemon pushes to with the maintainer's credentials, so it is honored
-	// ONLY from the trusted default-branch copy of .no-mistakes.yaml (see
+	// ONLY from the trusted default-branch copy of .alamino.yaml (see
 	// EffectiveRepoConfig): a contributor's pushed branch must not be able to
 	// aim evidence commits at another branch of the repository.
 	Branch *string `yaml:"branch"`
@@ -1378,8 +1378,8 @@ type Test struct {
 	// instructions_file from the pinned trusted commit (TrustedConfigSHA).
 	InstructionsFile string
 	PathInstructions []TestPathInstruction
-	// UnknownKeys names keys under test: that no-mistakes does not recognize,
-	// in either copy of .no-mistakes.yaml. They have no effect; the Test step
+	// UnknownKeys names keys under test: that alamino does not recognize,
+	// in either copy of .alamino.yaml. They have no effect; the Test step
 	// logs them so a misspelled or unsupported key does not go unnoticed.
 	UnknownKeys []string
 }
@@ -1409,7 +1409,7 @@ type Evidence struct {
 	CommitMessage string
 	// LocalRoot overrides the app-root default for on-disk evidence; empty
 	// means paths.EvidenceDir(). Retention and MaxRuns bound how much of it
-	// survives: no-mistakes reaps its own evidence rather than leaving that to
+	// survives: alamino reaps its own evidence rather than leaving that to
 	// an OS temp-directory timer. Zero disables the corresponding bound.
 	LocalRoot string
 	Retention time.Duration
@@ -1657,7 +1657,7 @@ func resolvePathInstructions(entries []PathInstruction) []PathInstruction {
 }
 
 // defaultConfigYAML is the template written when no global config file exists.
-const defaultConfigYAML = `# no-mistakes global configuration
+const defaultConfigYAML = `# alamino global configuration
 
 # Agent to use for code generation. This may also be an ordered fallback list,
 # for example: agent: [codex, grok]
@@ -1687,7 +1687,7 @@ forgejo_axi_path: forgejo-axi
 # Set to "unlimited", "none", "off", "never", or any non-positive duration
 # to disable the timeout. By default the monitor keeps watching after checks
 # are green; ci.release_after_checks_pass ends the run at readiness, and
-# no-mistakes axi handoff ends it explicitly for human review.
+# alamino axi handoff ends it explicitly for human review.
 # See docs/src/content/docs/reference/global-config.md#ci_timeout.
 ci_timeout: "168h"
 
@@ -1757,7 +1757,7 @@ gate_reconcile_timeout: "30s"
 session_reuse: true
 
 # Quota-aware agent routing (optional, global only, off by default). When
-# enabled, no-mistakes reads one snapshot from the local quota-axi tool at the
+# enabled, alamino reads one snapshot from the local quota-axi tool at the
 # start of each run and reorders the resolved agent list by quota evidence:
 # agents whose subscription is exhausted now or at 0% move to the back, an
 # agent projected to run out of quota inside expected_run_length is treated the
@@ -1791,13 +1791,13 @@ log_level: info
 #   grok: /Users/you/.grok/bin/grok
 
 # Model and reasoning effort per agent, in one common spelling (optional, global
-# only). no-mistakes maps these down to whatever the harness actually uses:
+# only). alamino maps these down to whatever the harness actually uses:
 # --model/--effort for claude and copilot, -m plus -c model_reasoning_effort for
 # codex, --model/--reasoning-effort for grok, --model/--thinking for pi, the
 # session-message body for opencode (its model needs the provider/model form),
 # and acpx --model for cursor, devin, and acp:<target>. Effort is one of
 # minimal, low, medium, high, xhigh, max; a harness rejects any level it does not
-# implement. rovodev and antigravity expose no mechanism no-mistakes can set, so
+# implement. rovodev and antigravity expose no mechanism alamino can set, so
 # agent_config is refused for them; agent_args_override remains an escape hatch
 # only if your installed CLI build accepts a suitable flag.
 # agent_config:
@@ -1833,15 +1833,15 @@ log_level: info
 #     - model_reasoning_effort="low"
 #
 # Where a repository's pipeline run worktrees are created (optional). By
-# default they live under <NM_HOME>/worktrees/<repo id>, which inherits no
+# default they live under <ALAMINO_HOME>/worktrees/<repo id>, which inherits no
 # directory-scoped toolchain configuration. Point a checkout at a directory of
 # your own and its runs are created there instead, one directory per run, so
 # mise/direnv settings on that directory reach every run. Keys are the checkout
-# paths you ran "no-mistakes init" in, values must be absolute directories.
-# Only the directories no-mistakes' own run records name are ever created,
+# paths you ran "alamino init" in, values must be absolute directories.
+# Only the directories alamino's own run records name are ever created,
 # cleaned up, or removed there; everything else, including a directory that
 # merely looks like a run worktree, is left alone. Each checkout needs its own
-# root, and it must be outside NM_HOME and outside every checkout.
+# root, and it must be outside ALAMINO_HOME and outside every checkout.
 # worktree_roots:
 #   /Users/you/src/my-repo: /Users/you/work/my-repo-runs
 
@@ -1938,7 +1938,7 @@ ci:
 # commit:
 #   branch_pattern: '^PROJ/([0-9]+)$'
 #   branch_replacement: 'PROJ-${1}'
-#   fix_message: "no-mistakes({{.Step}}): {{.Summary}}"
+#   fix_message: "alamino({{.Step}}): {{.Summary}}"
 # To use the captured identifier in the subject, replace fix_message with:
 #   fix_message: "{{.Branch}}: {{.Summary}}"
 # Trailers appended to commits made from one agent invocation's changes.
@@ -1946,9 +1946,9 @@ ci:
 # {{.Model}} (the model it reported, or "unknown"). Repo config may replace
 # the list.
 #   trailers:
-#     - "Assisted-by: no-mistakes:{{.Agent}}:{{.Model}}"
+#     - "Assisted-by: alamino:{{.Agent}}:{{.Model}}"
 
-# User-intent extraction. When you push a branch, no-mistakes can read recent
+# User-intent extraction. When you push a branch, alamino can read recent
 # transcripts from your local agent (Claude Code, Codex, OpenCode, Rovo Dev, Pi,
 # Copilot CLI), pick the session that produced the change, summarize the user
 # intent, and feed it to review, test, document, lint, and PR agents so they
@@ -1961,7 +1961,7 @@ intent:
 
 # Test-step evidence artifacts (screenshots, recordings, logs the test step
 # gathers to demonstrate the change works). By default they are kept on local
-# disk under <NM_HOME>/evidence. attach_media (default true) uploads image and
+# disk under <ALAMINO_HOME>/evidence. attach_media (default true) uploads image and
 # video artifacts to GitHub user-attachments when the PR is rendered so remote
 # reviewers can open them; text artifacts stay inlined. Uploads need the raw
 # GitHub token from "gh auth token", read once per PR render; if your gh sits
@@ -1973,15 +1973,15 @@ intent:
 # enter the pushed branch or the default branch. When both are on, the PR body
 # carries both the attachment and the commit-pinned link.
 #
-# no-mistakes reaps its own evidence rather than leaving that to an OS temp
+# alamino reaps its own evidence rather than leaving that to an OS temp
 # directory timer: retention ages run directories out (default 14 days) and
 # max_runs caps how many survive regardless of age (default 200). Set retention
 # to "unlimited", or either to 0, to disable that bound. local_root moves the
 # directory to another disk and must be an absolute path. evidence_dir is the
 # other way to move it: a ~/path is expanded, and a missing or unwritable
-# directory falls back to <NM_HOME>/evidence with a warning. A run keeps the
+# directory falls back to <ALAMINO_HOME>/evidence with a warning. A run keeps the
 # directory it started with. These settings are global-only - a repository's
-# .no-mistakes.yaml cannot change where this machine writes evidence or how
+# .alamino.yaml cannot change where this machine writes evidence or how
 # long it keeps it.
 # link_base_url is for an operator who serves that evidence parent over HTTP
 # themselves (a synced folder behind a web server, say). See Evidence links
@@ -1990,22 +1990,22 @@ intent:
 # the run's images as links without uploading them. Unset
 # leaves PR bodies unchanged. Global-only like local_root; a repository value
 # is ignored. Hosting and access control of the served copy are yours.
-# evidence_dir: ~/Dropbox/no-mistakes-evidence
+# evidence_dir: ~/Dropbox/alamino-evidence
 # commit_message templates the evidence-branch commit subject with
 # {{.Branch}} and {{.RunID}}; it follows commit.fix_message's template rules.
 # test:
 #   evidence:
 #     store_in_repo: true
 #     attach_media: true
-#     dir: .no-mistakes/evidence
-#     branch: no-mistakes/evidence
-#     commit_message: "no-mistakes: evidence for {{.Branch}} (run {{.RunID}})"
-#     local_root: /var/lib/no-mistakes/evidence
+#     dir: .alamino/evidence
+#     branch: alamino/evidence
+#     commit_message: "alamino: evidence for {{.Branch}} (run {{.RunID}})"
+#     local_root: /var/lib/alamino/evidence
 #     retention: 720h
 #     max_runs: 50
-#     link_base_url: https://evidence.example.com/no-mistakes
+#     link_base_url: https://evidence.example.com/alamino
 
-# Local review evaluation corpus, used by "no-mistakes eval" to compare
+# Local review evaluation corpus, used by "alamino eval" to compare
 # agent candidates, pinned to an explicit model and reasoning effort, against
 # review passes your own pipeline already made.
 # capture_provenance records, on every review round, the exact commits and
@@ -2019,7 +2019,7 @@ intent:
 # dropped first, and a case that already has recorded replays is never dropped.
 # Set max_cases to 0 to keep every case. diversified_size caps the official
 # gold-only eval set (default 32); 0 means one gold case per stratum. Unlabeled
-# cases never fill it. Everything stays under <NM_HOME>/eval and is never
+# cases never fill it. Everything stays under <ALAMINO_HOME>/eval and is never
 # uploaded anywhere.
 eval:
   capture_provenance: true
@@ -2223,7 +2223,7 @@ func noRunnableAgentError(configured []types.AgentName, probed []string) error {
 		names = append(names, string(name))
 	}
 	return fmt.Errorf(
-		"no runnable agent found for configured agent %s (looked for: %s); the gate cannot validate without an agent; install a supported native agent, choose an available agent in ~/.no-mistakes/config.yaml, or configure agent: acp:<target> with acpx installed",
+		"no runnable agent found for configured agent %s (looked for: %s); the gate cannot validate without an agent; install a supported native agent, choose an available agent in ~/.alamino/config.yaml, or configure agent: acp:<target> with acpx installed",
 		strings.Join(names, ", "),
 		strings.Join(probed, ", "),
 	)
@@ -2238,7 +2238,7 @@ func (c *Config) resolveConfiguredAgent(ctx context.Context, name types.AgentNam
 		return resolved, err == nil, "auto", err
 	}
 	if _, ok := defaultBinary[name]; !ok && !isACPAgent(name) {
-		return "", false, string(name), fmt.Errorf("unknown agent %q; valid options: auto, claude, codex, grok, rovodev, opencode, pi, copilot, cursor, devin, antigravity, acp:<target> (set 'agent' in ~/.no-mistakes/config.yaml)", name)
+		return "", false, string(name), fmt.Errorf("unknown agent %q; valid options: auto, claude, codex, grok, rovodev, opencode, pi, copilot, cursor, devin, antigravity, acp:<target> (set 'agent' in ~/.alamino/config.yaml)", name)
 	}
 	if isACPAgent(name) {
 		available, bins, err := c.acpAvailable(name, lookPath)
@@ -2490,7 +2490,7 @@ var agentArgsOverrideAgents = map[string]bool{
 	string(types.AgentAntigravity): true,
 }
 
-// reservedAgentArgs lists flags that no-mistakes manages internally and that
+// reservedAgentArgs lists flags that alamino manages internally and that
 // users cannot override through agent_args_override. A flag is matched by its
 // bare form (e.g. "--color") as well as the "--color=value" form.
 var reservedAgentArgs = map[string]map[string]bool{
@@ -2603,7 +2603,7 @@ func validateAgentArgsOverride(override map[string][]string) error {
 				base = arg[:idx]
 			}
 			if reserved[base] {
-				return fmt.Errorf("invalid agent_args_override.%s[%d]: %q is managed by no-mistakes and cannot be overridden", name, i, arg)
+				return fmt.Errorf("invalid agent_args_override.%s[%d]: %q is managed by alamino and cannot be overridden", name, i, arg)
 			}
 		}
 	}
@@ -3265,12 +3265,12 @@ func validateWorkingCap(capName, silentName string, cap, silent time.Duration) e
 	return fmt.Errorf("%s (%s) must be at least %s (%s)", capName, cap, silentName, silent)
 }
 
-// LoadRepo reads per-repo config from dir/.no-mistakes.yaml.
+// LoadRepo reads per-repo config from dir/.alamino.yaml.
 // Returns zero-value config if file doesn't exist.
 func LoadRepo(dir string) (*RepoConfig, error) {
 	cfg := &RepoConfig{}
 
-	path := filepath.Join(dir, ".no-mistakes.yaml")
+	path := filepath.Join(dir, ".alamino.yaml")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -3283,7 +3283,7 @@ func LoadRepo(dir string) (*RepoConfig, error) {
 }
 
 // LoadRepoFromBytes parses per-repo config from raw YAML bytes. It is the
-// trusted-config entry point: callers that read .no-mistakes.yaml from a
+// trusted-config entry point: callers that read .alamino.yaml from a
 // specific git ref (e.g. the default branch) use this to avoid honoring a
 // contributor's checked-out copy.
 func LoadRepoFromBytes(data []byte) (*RepoConfig, error) {
@@ -3304,10 +3304,10 @@ func parseRepoConfig(data []byte) (*RepoConfig, error) {
 		return nil, fmt.Errorf("parse repo config: %w", err)
 	}
 	if !globalOnly.QuotaRouting.IsZero() {
-		return nil, fmt.Errorf("quota_routing is global-only; configure it in ~/.no-mistakes/config.yaml on this machine")
+		return nil, fmt.Errorf("quota_routing is global-only; configure it in ~/.alamino/config.yaml on this machine")
 	}
 	if !globalOnly.EvidenceDir.IsZero() {
-		return nil, fmt.Errorf("evidence_dir is global-only; configure it in ~/.no-mistakes/config.yaml on this machine")
+		return nil, fmt.Errorf("evidence_dir is global-only; configure it in ~/.alamino/config.yaml on this machine")
 	}
 	cfg := &RepoConfig{}
 	if err := yaml.Unmarshal(data, cfg); err != nil {
@@ -3434,7 +3434,7 @@ func validatePRIntent(intent PRIntentRaw) error {
 // This deliberately also runs on the PUSHED copy, even though EffectiveRepoConfig
 // discards a pushed review block: the trusted-copy read
 // (assertGateTrustedConfigReadable in internal/daemon) aborts EVERY run whose
-// default-branch .no-mistakes.yaml fails these checks, so a branch carrying an
+// default-branch .alamino.yaml fails these checks, so a branch carrying an
 // invalid block has to fail here, before it merges, rather than brick the
 // repository's pipeline afterwards. Do not scope this to the trusted copy.
 func validateReviewRaw(review ReviewRaw) error {
@@ -3570,7 +3570,7 @@ func validatePathInstructionGlob(pattern string) error {
 // fields are forced empty (Agent "" and nil Agents inherit the global agent;
 // Commands{} yields built-in defaults) rather than falling back to the pushed
 // branch - this blocks the supply-chain vector for repos that ship
-// .no-mistakes.yaml only on feature branches.
+// .alamino.yaml only on feature branches.
 //
 // Non-executing fields (ignore patterns, core-step auto-fix, commit, most
 // intent and test settings, PR title format, and providers) are always taken
@@ -3798,7 +3798,7 @@ func testDefaults() Test {
 			StoreInRepo: false,
 			Compact:     true,
 			AttachMedia: true,
-			Dir:         ".no-mistakes/evidence",
+			Dir:         ".alamino/evidence",
 			Branch:      evidence.DefaultBranch,
 			LocalRoot:   "",
 			Retention:   DefaultEvidenceRetention,

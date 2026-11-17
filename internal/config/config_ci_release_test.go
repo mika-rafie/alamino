@@ -15,7 +15,7 @@ import (
 // it for its own workflow while a pushed branch cannot.
 func TestCIReleaseAfterChecksPassDefaultsOffAndResolvesFromTrustedConfig(t *testing.T) {
 	dir := t.TempDir()
-	repoPath := filepath.Join(dir, ".no-mistakes.yaml")
+	repoPath := filepath.Join(dir, ".alamino.yaml")
 	if err := os.WriteFile(repoPath, []byte("ci:\n  release_after_checks_pass: true\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}

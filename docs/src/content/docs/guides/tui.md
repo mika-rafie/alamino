@@ -4,13 +4,13 @@ description: Terminal UI layout, keybindings, and approval workflow.
 ---
 
 The TUI is how you interact with running pipelines. Launch it with
-`no-mistakes` or `no-mistakes attach`.
+`alamino` or `alamino attach`.
 
 Think of it as the control surface for the gate. It is optimized for one job:
 show you where the run is, why it paused, what changed, and what your choices
 are without making you bounce between logs, diffs, and provider tabs.
 
-Bare `no-mistakes` can also open the [Setup Wizard](/no-mistakes/guides/setup-wizard/) first when there is no active run on the current branch and you need to create one.
+Bare `alamino` can also open the [Setup Wizard](/alamino/guides/setup-wizard/) first when there is no active run on the current branch and you need to create one.
 
 ## What the TUI is for
 
@@ -133,10 +133,10 @@ While the CI step is active, the TUI shows a dedicated CI panel instead of the g
 It shows the PR label, the latest CI activity, and a log tail.
 When a real CI auto-fix attempt starts, the panel increments `CI auto-fixes: N`.
 The panel shows `✓ Checks passed` with `still monitoring until merged or closed`, and the terminal title switches to `Checks passed`, once the monitor reports readiness and known mergeability is clear.
-Under [`ci.release_after_checks_pass`](/no-mistakes/reference/repo-config/#cirelease_after_checks_pass) the green verdict ends the run instead, so the panel's final state is the release: the run finishes as `checks_passed` and the pipeline box reports `✓ Checks passed - PR ready to merge`, with nothing left watching the PR. Readiness includes the trusted [`no_ci: true` declaration](/no-mistakes/reference/repo-config/#no_ci) when no checks are registered; an empty forge response alone is not ready. To end that green monitor without cancelling the run, use [`no-mistakes axi handoff`](/no-mistakes/reference/cli/#no-mistakes-axi-handoff) from the repository's current branch.
+Under [`ci.release_after_checks_pass`](/alamino/reference/repo-config/#cirelease_after_checks_pass) the green verdict ends the run instead, so the panel's final state is the release: the run finishes as `checks_passed` and the pipeline box reports `✓ Checks passed - PR ready to merge`, with nothing left watching the PR. Readiness includes the trusted [`no_ci: true` declaration](/alamino/reference/repo-config/#no_ci) when no checks are registered; an empty forge response alone is not ready. To end that green monitor without cancelling the run, use [`alamino axi handoff`](/alamino/reference/cli/#alamino-axi-handoff) from the repository's current branch.
 That text means the CI monitor is still active; it can still pause later if the configured idle timeout elapses with no base-branch movement.
 That ready signal clears if checks start running again, new failures appear, provider state becomes uncertain, or the PR is merged or closed.
-The ready signal is persisted for fresh attaches, so a fresh attach shows `Checks passed` without depending on delivery of an earlier log line; see the [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) for readiness write-failure behavior.
+The ready signal is persisted for fresh attaches, so a fresh attach shows `Checks passed` without depending on delivery of an earlier log line; see the [CI step reference](/alamino/reference/pipeline-steps/#ci) for readiness write-failure behavior.
 
 ### Local branch
 
@@ -145,12 +145,12 @@ Passive TUI rendering uses cached pipeline push provenance and never fetches or 
 When a clean strict-behind relation is eligible, or a diverged relation may be equivalent after refresh, the box alone offers `u sync branch`.
 Pressing `u` explicitly refreshes the configured upstream or fork target, then opens a confirmation with both full SHAs, the exact target ref, and the clean-worktree proof.
 Confirm with `u` or Enter, or cancel with Escape.
-The apply path rechecks every mutable assumption and can only perform the same exact strict fast-forward or anchored equivalent-diverged advance as `no-mistakes sync`; blocked states never trigger destructive Git recovery.
-When the owning run ended without publishing its pipeline commits, the same box offers `u recover custody` instead: `u` opens a confirmation naming the terminal status, the local head, and the preserved head, and applying routes through the guarded recovery documented in [`no-mistakes axi sync`](/no-mistakes/reference/cli/#no-mistakes-axi-sync). When the structured proof is a bound archive for divergent later work, the confirmation also names the archive and required head, and `u` uses the keep-local recovery so the archived head is never selected. If the preserved head is unavailable, the box instead tells you to keep the current local head; complete that missing-head recovery through the AXI path documented in the linked reference, because the TUI action does not discard a missing head.
+The apply path rechecks every mutable assumption and can only perform the same exact strict fast-forward or anchored equivalent-diverged advance as `alamino sync`; blocked states never trigger destructive Git recovery.
+When the owning run ended without publishing its pipeline commits, the same box offers `u recover custody` instead: `u` opens a confirmation naming the terminal status, the local head, and the preserved head, and applying routes through the guarded recovery documented in [`alamino axi sync`](/alamino/reference/cli/#alamino-axi-sync). When the structured proof is a bound archive for divergent later work, the confirmation also names the archive and required head, and `u` uses the keep-local recovery so the archived head is never selected. If the preserved head is unavailable, the box instead tells you to keep the current local head; complete that missing-head recovery through the AXI path documented in the linked reference, because the TUI action does not discard a missing head.
 
 ### Footer
 
-The footer shows detach/help/yolo actions and, when `no-mistakes attach` has a cached newer release available, a right-aligned `<version> available` indicator. That update indicator stays visible after reruns in the same TUI session.
+The footer shows detach/help/yolo actions and, when `alamino attach` has a cached newer release available, a right-aligned `<version> available` indicator. That update indicator stays visible after reruns in the same TUI session.
 When yolo mode is on, the footer changes from `y yolo` to `y end yolo`.
 
 ## Keybindings
@@ -218,8 +218,8 @@ Press `e` to add or edit extra guidance for the current finding. Press `+` to ad
 Press `y` to toggle yolo mode when you want paused approval gates to resolve automatically.
 Yolo fixes gates with `auto-fix` and `ask-user` findings by selecting every finding, then approves the resulting fix-review gate.
 It approves gates with no findings or only `action: no-op` findings as-is, and fixes each step at most once so unresolved findings do not loop forever.
-The [`protected_paths` refusal rules](/no-mistakes/reference/repo-config/#protected_paths) are an exception to this automatic handling.
-So is a Test budget-cut gate that reports `test-agent-unvalidated-work`: approval is refused there, so yolo stops at it and leaves the choice between fix and abort to you (see [`test_agent_timeout`](/no-mistakes/reference/global-config/#test_agent_timeout)).
+The [`protected_paths` refusal rules](/alamino/reference/repo-config/#protected_paths) are an exception to this automatic handling.
+So is a Test budget-cut gate that reports `test-agent-unvalidated-work`: approval is refused there, so yolo stops at it and leaves the choice between fix and abort to you (see [`test_agent_timeout`](/alamino/reference/global-config/#test_agent_timeout)).
 
 ## Outcome banner
 
@@ -234,6 +234,6 @@ After a failed or cancelled run, press `r` to start a rerun. The TUI switches to
 
 ## Detaching
 
-Press `q` to detach from the TUI. The pipeline continues running in the background. Run `no-mistakes` again to reattach to the active run on your current branch, or `no-mistakes attach` to reattach to the repo's active run without branch scoping.
+Press `q` to detach from the TUI. The pipeline continues running in the background. Run `alamino` again to reattach to the active run on your current branch, or `alamino attach` to reattach to the repo's active run without branch scoping.
 
 If the run is already finished, `q` exits the TUI.

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps/internal/stepstest"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps/internal/stepstest"
 )
 
 // TestCIStep_VerifyApprovalOverride pins CIStep's implementation of
@@ -26,13 +26,13 @@ func TestCIStep_VerifyApprovalOverride(t *testing.T) {
 	}{
 		{
 			name:           "still failing",
-			checksJSON:     `[{"name":"build","state":"SUCCESS","bucket":"pass"},{"name":"PR must be raised via no-mistakes","state":"FAILURE","bucket":"fail"}]`,
+			checksJSON:     `[{"name":"build","state":"SUCCESS","bucket":"pass"},{"name":"PR must be raised via alamino","state":"FAILURE","bucket":"fail"}]`,
 			wantUnresolved: true,
-			wantContains:   "PR must be raised via no-mistakes",
+			wantContains:   "PR must be raised via alamino",
 		},
 		{
 			name:           "became green",
-			checksJSON:     `[{"name":"build","state":"SUCCESS","bucket":"pass"},{"name":"PR must be raised via no-mistakes","state":"SUCCESS","bucket":"pass"}]`,
+			checksJSON:     `[{"name":"build","state":"SUCCESS","bucket":"pass"},{"name":"PR must be raised via alamino","state":"SUCCESS","bucket":"pass"}]`,
 			wantUnresolved: false,
 		},
 		// Regression for the upstream review P1 "unresolved checks become

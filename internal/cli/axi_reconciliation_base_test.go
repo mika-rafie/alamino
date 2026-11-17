@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
 func TestSubmissionReconciliationBase(t *testing.T) {
@@ -29,7 +29,7 @@ func TestSubmissionReconciliationBase(t *testing.T) {
 				cliGit(t, work, "config", "user.name", "fixture")
 				cliGit(t, work, "config", "user.email", "fixture@localhost")
 				if tc.trusted != "" {
-					if err := os.WriteFile(filepath.Join(work, ".no-mistakes.yaml"), []byte(tc.trusted), 0o644); err != nil {
+					if err := os.WriteFile(filepath.Join(work, ".alamino.yaml"), []byte(tc.trusted), 0o644); err != nil {
 						t.Fatal(err)
 					}
 				}
@@ -41,7 +41,7 @@ func TestSubmissionReconciliationBase(t *testing.T) {
 				cliGit(t, work, "push", "origin", "main")
 				cliGit(t, work, "checkout", "-b", "feature")
 				if tc.pushed != "" {
-					if err := os.WriteFile(filepath.Join(work, ".no-mistakes.yaml"), []byte(tc.pushed), 0o644); err != nil {
+					if err := os.WriteFile(filepath.Join(work, ".alamino.yaml"), []byte(tc.pushed), 0o644); err != nil {
 						t.Fatal(err)
 					}
 					cliGit(t, work, "add", "-A")

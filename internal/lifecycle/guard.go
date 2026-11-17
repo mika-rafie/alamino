@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // ActiveRuns returns all pending/running pipeline runs from the local state DB.

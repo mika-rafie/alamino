@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 	"golang.org/x/sys/windows"
 )
 
@@ -72,8 +72,8 @@ func TestPrepareRunStdioReleasesAConsoleOfItsOwnIntoTheBootstrapLog(t *testing.T
 // because os/exec always hands a child valid standard handles.
 func runRunStdioHelper(t *testing.T, root string, flags uint32, si *windows.StartupInfo) {
 	t.Helper()
-	t.Setenv("NM_HOME", root)
-	t.Setenv("NM_DAEMON_HELPER_PROCESS", "run-stdio")
+	t.Setenv("ALAMINO_HOME", root)
+	t.Setenv("ALAMINO_DAEMON_HELPER_PROCESS", "run-stdio")
 	exe, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)

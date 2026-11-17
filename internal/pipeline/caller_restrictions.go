@@ -3,8 +3,8 @@ package pipeline
 import (
 	"context"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
 type callerRestrictionsAgent struct {

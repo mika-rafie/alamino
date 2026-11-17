@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // outputJSON runs cmd and returns its stdout alone, leaving stderr out of the
@@ -278,7 +278,7 @@ func azureOrganizationName(raw string) string {
 // The body is clamped to Azure DevOps' description cap before it is written, so
 // az never sees an over-length description no matter how the body was produced.
 func (h *Host) runWithDescription(ctx context.Context, body string, buildArgs func(descArg string) []string) ([]byte, error) {
-	f, err := os.CreateTemp("", "nm-pr-desc-*.md")
+	f, err := os.CreateTemp("", "alamino-pr-desc-*.md")
 	if err != nil {
 		return nil, fmt.Errorf("create PR description temp file: %w", err)
 	}

@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
 )
 
 func TestAgentSummarizer_PreservesNewestOverBudgetTurn(t *testing.T) {

@@ -50,7 +50,7 @@ The script waited for one-minute load at or below 10 before each invocation.
 The observation-only extension records selected provider/model and `payload.model` through Pi's documented `before_provider_request` hook.
 It records the provider's own `response.created.response.model` field through the read-only `provider_stream_event` hook before normalization.
 All 20 provider-response model fields were exactly `gpt-6.1-sol`.
-Every candidate request declared `no_mistakes_output` with **`strict: true`**; main declared no such tool.
+Every candidate request declared `alamino_output` with **`strict: true`**; main declared no such tool.
 Every candidate's final assistant message contained one output-tool call, matched by a successful execution with `terminate: true`.
 No later assistant message displaced that call.
 
@@ -77,7 +77,7 @@ The original unredacted events, prompts, outputs, and test logs remain local.
 Credentials and complete request payloads were not captured or published.
 
 The published script was relocated to this directory and accepts `--out` for scratch artifacts.
-It resolves the real Pi executable from `PATH` or `NM_PROOF_REAL_PI` instead of a machine-specific path.
+It resolves the real Pi executable from `PATH` or `ALAMINO_PROOF_REAL_PI` instead of a machine-specific path.
 Those location changes do not alter the measured invocation, workload, observer, validation, or counters.
 The original source hashes remain in the measurement manifest; the three Go templates and two observers retain the measured bytes.
 

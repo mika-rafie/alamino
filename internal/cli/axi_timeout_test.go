@@ -16,11 +16,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -48,21 +48,21 @@ func TestAxiWaitElapsedReattachHint(t *testing.T) {
 		wait time.Duration
 		want string
 	}{
-		{"default", defaultAxiWait, "Re-run `no-mistakes axi run` to reattach for another 8m0s"},
-		{"long", 6 * time.Hour, "Re-run `no-mistakes axi run --wait 6h0m0s` to reattach for another 6h0m0s"},
+		{"default", defaultAxiWait, "Re-run `alamino axi run` to reattach for another 8m0s"},
+		{"long", 6 * time.Hour, "Re-run `alamino axi run --wait 6h0m0s` to reattach for another 6h0m0s"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			var out bytes.Buffer
 			cmd := &cobra.Command{}
 			cmd.SetOut(&out)
-			err := emitAxiWaitElapsed(cmd, tt.wait, "no-mistakes axi run")
+			err := emitAxiWaitElapsed(cmd, tt.wait, "alamino axi run")
 			assertWaitElapsed(t, err, out.String(), tt.wait.String())
 			if !strings.Contains(out.String(), tt.want) {
 				t.Fatalf("missing reattach hint %q:\n%s", tt.want, out.String())
 			}
 			if tt.wait == defaultAxiWait {
 				const want = "error: wait of 8m0s elapsed while driving the run\n" +
-					"help[3]: This bounded hold ended; it is not a pipeline failure and does not mean the daemon is dead.,Run `no-mistakes axi status` to inspect progress,Re-run `no-mistakes axi run` to reattach for another 8m0s\n"
+					"help[3]: This bounded hold ended; it is not a pipeline failure and does not mean the daemon is dead.,Run `alamino axi status` to inspect progress,Re-run `alamino axi run` to reattach for another 8m0s\n"
 				if out.String() != want {
 					t.Fatalf("default wait output changed:\ngot:  %q\nwant: %q", out.String(), want)
 				}
@@ -184,7 +184,7 @@ func TestAxiRun_WaitElapsedAgainstLiveIdleDaemon(t *testing.T) {
 	out, err := executeCmd("axi", "run", "--wait", "250ms")
 	elapsed := time.Since(started)
 	assertWaitElapsed(t, err, out, "250ms")
-	if !strings.Contains(out, "Re-run `no-mistakes axi run --wait 250ms`") {
+	if !strings.Contains(out, "Re-run `alamino axi run --wait 250ms`") {
 		t.Fatalf("reattach hint lost the caller's wait:\n%s", out)
 	}
 	if elapsed > 3*time.Second {
@@ -206,10 +206,10 @@ func TestAxiRespond_WaitElapsedAfterSubmissionReattachesWithoutRespondingAgain(t
 	if !responded.Load() {
 		t.Fatal("response was not submitted before the wait elapsed")
 	}
-	if !strings.Contains(out, "Re-run `no-mistakes axi run --wait 3s`") {
+	if !strings.Contains(out, "Re-run `alamino axi run --wait 3s`") {
 		t.Fatalf("post-response timeout did not provide a non-mutating reattach command:\n%s", out)
 	}
-	if strings.Contains(out, "Re-run `no-mistakes axi respond") {
+	if strings.Contains(out, "Re-run `alamino axi respond") {
 		t.Fatalf("post-response timeout instructed the caller to submit another response:\n%s", out)
 	}
 	if elapsed > 6*time.Second {
@@ -331,14 +331,14 @@ func TestAxiRun_SlowDaemonThenCompletesViaCLI(t *testing.T) {
 	}
 }
 
-func TestNoMistakesBinary_WaitAndSlowDaemon(t *testing.T) {
-	bin := buildNoMistakesBinary(t)
+func TestAlaminoBinary_WaitAndSlowDaemon(t *testing.T) {
+	bin := buildAlaminoBinary(t)
 
-	help := execNoMistakes(t, bin, "axi", "run", "--help")
+	help := execAlamino(t, bin, "axi", "run", "--help")
 	if !strings.Contains(help, "--wait") || !(strings.Contains(help, "8m0s") || strings.Contains(help, "8m")) {
 		t.Fatalf("real binary axi run --help missing default --wait 8m:\n%s", help)
 	}
-	respondHelp := execNoMistakes(t, bin, "axi", "respond", "--help")
+	respondHelp := execAlamino(t, bin, "axi", "respond", "--help")
 	if !strings.Contains(respondHelp, "--wait") {
 		t.Fatalf("real binary axi respond --help missing --wait:\n%s", respondHelp)
 	}
@@ -348,7 +348,7 @@ func TestNoMistakesBinary_WaitAndSlowDaemon(t *testing.T) {
 		return fx.running(), nil
 	})
 	started := time.Now()
-	out, err := execNoMistakesErr(t, bin, "axi", "run", "--wait", "300ms")
+	out, err := execAlaminoErr(t, bin, "axi", "run", "--wait", "300ms")
 	elapsed := time.Since(started)
 	if err == nil {
 		t.Fatalf("expected wait elapsed from real binary, got:\n%s", out)
@@ -371,7 +371,7 @@ func TestNoMistakesBinary_WaitAndSlowDaemon(t *testing.T) {
 		}
 		return fx.completed(), nil
 	})
-	out, err = execNoMistakesErr(t, bin, "axi", "run", "--wait", "5s")
+	out, err = execAlaminoErr(t, bin, "axi", "run", "--wait", "5s")
 	if err != nil {
 		t.Fatalf("real binary slow-but-under-deadline daemon: %v\n%s", err, out)
 	}
@@ -456,7 +456,7 @@ func (fx *axiTimeoutFixture) completed() *ipc.RunInfo {
 func newAxiTimeoutFixture(t *testing.T, opts axiTimeoutOpts) *axiTimeoutFixture {
 	t.Helper()
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	root := t.TempDir()
 	local := filepath.Join(root, "operator")
@@ -609,7 +609,7 @@ func assertWaitElapsed(t *testing.T, err error, out, wantWait string) {
 	for _, want := range []string{
 		"wait of " + wantWait + " elapsed",
 		"not a pipeline failure",
-		"no-mistakes axi status",
+		"alamino axi status",
 		"reattach",
 	} {
 		if !strings.Contains(out, want) {
@@ -629,20 +629,20 @@ var (
 	builtBinErr  error
 )
 
-func buildNoMistakesBinary(t *testing.T) string {
+func buildAlaminoBinary(t *testing.T) string {
 	t.Helper()
 	builtBinOnce.Do(func() {
-		dir, err := os.MkdirTemp("", "nm-timeout-bin-")
+		dir, err := os.MkdirTemp("", "alamino-timeout-bin-")
 		if err != nil {
 			builtBinErr = err
 			return
 		}
-		name := "no-mistakes"
+		name := "alamino"
 		if runtime.GOOS == "windows" {
 			name += ".exe"
 		}
 		builtBin = filepath.Join(dir, name)
-		cmd := exec.Command("go", "build", "-o", builtBin, "github.com/kunchenguid/no-mistakes/cmd/no-mistakes")
+		cmd := exec.Command("go", "build", "-o", builtBin, "github.com/mika-rafie/alamino/cmd/alamino")
 		cmd.Dir = repoRootFromThisFile()
 		out, err := cmd.CombinedOutput()
 		if err != nil {
@@ -650,7 +650,7 @@ func buildNoMistakesBinary(t *testing.T) string {
 		}
 	})
 	if builtBinErr != nil {
-		t.Fatalf("build no-mistakes: %v", builtBinErr)
+		t.Fatalf("build alamino: %v", builtBinErr)
 	}
 	return builtBin
 }
@@ -660,16 +660,16 @@ func repoRootFromThisFile() string {
 	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
 }
 
-func execNoMistakes(t *testing.T, bin string, args ...string) string {
+func execAlamino(t *testing.T, bin string, args ...string) string {
 	t.Helper()
-	out, err := execNoMistakesErr(t, bin, args...)
+	out, err := execAlaminoErr(t, bin, args...)
 	if err != nil {
 		t.Fatalf("%s %s: %v\n%s", bin, strings.Join(args, " "), err, out)
 	}
 	return out
 }
 
-func execNoMistakesErr(t *testing.T, bin string, args ...string) (string, error) {
+func execAlaminoErr(t *testing.T, bin string, args ...string) (string, error) {
 	t.Helper()
 	cmd := exec.Command(bin, args...)
 	cmd.Dir, _ = os.Getwd()

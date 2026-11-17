@@ -3,7 +3,7 @@ package steps
 import (
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // verificationPlanPromptSection reads only the pinned snapshot. A lost or altered

@@ -13,15 +13,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestProtectedPathRefusalRetainsWorktreeButReapsProcessesAndEvidence(t *testing.T) {
@@ -536,14 +536,14 @@ func TestRunSetupFailureSweepsTheWorktreeItRemoves(t *testing.T) {
 	}
 }
 
-// commitInvalidRepoConfig pushes a commit whose .no-mistakes.yaml cannot be
+// commitInvalidRepoConfig pushes a commit whose .alamino.yaml cannot be
 // parsed, which fails run setup after the worktree has been created.
 func commitInvalidRepoConfig(t *testing.T, workDir string) string {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(workDir, ".no-mistakes.yaml"), []byte("auto_fix: [not, a, mapping\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".alamino.yaml"), []byte("auto_fix: [not, a, mapping\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	gitCmd(t, workDir, "add", ".no-mistakes.yaml")
+	gitCmd(t, workDir, "add", ".alamino.yaml")
 	gitCmd(t, workDir, "commit", "-m", "invalid config")
 	gitCmd(t, workDir, "push", "gate", "HEAD:refs/heads/main")
 	return gitOutput(t, workDir, "rev-parse", "HEAD")

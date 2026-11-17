@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // GitHub.com GET /apps/coderabbitai identifies its immutable app ID. GHES IDs

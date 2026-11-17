@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 func assertExternalPublisherPolicy(sctx *pipeline.StepContext, head string) error {
@@ -25,7 +25,7 @@ func assertExternalPublisherPolicy(sctx *pipeline.StepContext, head string) erro
 			return fmt.Errorf("refuse publication: inspect push.external_publisher path %q at %s: %w", name, head, err)
 		}
 		if entry != "" {
-			return fmt.Errorf("refuse publication at %s: external publisher reserved by push.external_publisher path %q: %s Remedy: %s Use no-mistakes axi sync --recover to recover unpublished pipeline fixes", head, name, strings.TrimSpace(gate.Reason), strings.TrimSpace(gate.Remedy))
+			return fmt.Errorf("refuse publication at %s: external publisher reserved by push.external_publisher path %q: %s Remedy: %s Use alamino axi sync --recover to recover unpublished pipeline fixes", head, name, strings.TrimSpace(gate.Reason), strings.TrimSpace(gate.Remedy))
 		}
 	}
 	return nil

@@ -12,7 +12,7 @@ import (
 	"testing"
 	"unicode/utf16"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 const stubWindowsTaskAccount = `HOST\tester`
@@ -99,7 +99,7 @@ func assertWindowsTaskAllowsLongRunningOnBattery(t *testing.T, task windowsTaskD
 func TestRenderWindowsTaskXMLAllowsLongRunningOnBattery(t *testing.T) {
 	t.Parallel()
 
-	task := parseWindowsTaskDefinition(t, renderWindowsTaskXML(`C:\nm.exe`, `C:\nm-home`, stubWindowsTaskAccount))
+	task := parseWindowsTaskDefinition(t, renderWindowsTaskXML(`C:\nm.exe`, `C:\alamino-home`, stubWindowsTaskAccount))
 	assertWindowsTaskAllowsLongRunningOnBattery(t, task)
 }
 
@@ -109,7 +109,7 @@ func TestRenderWindowsTaskXMLAllowsLongRunningOnBattery(t *testing.T) {
 func TestRenderWindowsTaskXMLScopesLogonTriggerToInstallingUser(t *testing.T) {
 	t.Parallel()
 
-	exe := `C:\Program Files\R&D <tools>\no-mistakes.exe`
+	exe := `C:\Program Files\R&D <tools>\alamino.exe`
 	root := `C:\Users\a&b\nm home`
 	account := `CORP\a&b`
 	task := parseWindowsTaskDefinition(t, renderWindowsTaskXML(exe, root, account))
@@ -132,7 +132,7 @@ func TestRenderWindowsTaskXMLScopesLogonTriggerToInstallingUser(t *testing.T) {
 }
 
 func TestInstallWindowsTaskRemovesDefinitionFile(t *testing.T) {
-	p := paths.WithRoot(filepath.Join(t.TempDir(), "nm-home"))
+	p := paths.WithRoot(filepath.Join(t.TempDir(), "alamino-home"))
 	cleanup := stubServiceRuntime(t)
 	defer cleanup()
 	runtimeGOOS = "windows"
@@ -158,7 +158,7 @@ func TestInstallWindowsTaskRemovesDefinitionFile(t *testing.T) {
 }
 
 func TestInstallWindowsTaskFailsClosedWithoutCurrentUser(t *testing.T) {
-	p := paths.WithRoot(filepath.Join(t.TempDir(), "nm-home"))
+	p := paths.WithRoot(filepath.Join(t.TempDir(), "alamino-home"))
 	cleanup := stubServiceRuntime(t)
 	defer cleanup()
 	runtimeGOOS = "windows"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // UninstallSupported reports whether daemon uninstall can remove a managed

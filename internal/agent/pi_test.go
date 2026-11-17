@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestPiAgent_BuildArgs(t *testing.T) {
@@ -148,10 +148,10 @@ func TestPiAgent_BuildPromptNamesOutputTool(t *testing.T) {
 	if !strings.Contains(prompt, "do a thing") {
 		t.Errorf("prompt missing user prompt: %s", prompt)
 	}
-	if !strings.Contains(prompt, "no-mistakes final output contract") {
+	if !strings.Contains(prompt, "alamino final output contract") {
 		t.Errorf("prompt missing contract header: %s", prompt)
 	}
-	if !strings.Contains(prompt, "calling no_mistakes_output") {
+	if !strings.Contains(prompt, "calling alamino_output") {
 		t.Errorf("prompt missing output tool: %s", prompt)
 	}
 	if strings.Contains(prompt, `"properties"`) {
@@ -162,10 +162,10 @@ func TestPiAgent_BuildPromptNamesOutputTool(t *testing.T) {
 func TestPiAgent_BuildPromptInlinesSchemaWithoutStrictOutput(t *testing.T) {
 	schema := json.RawMessage(`{"type":"object","properties":{"summary":{"type":"string"}},"required":["summary"]}`)
 	prompt := buildPiPrompt("do a thing", schema, false)
-	if !strings.Contains(prompt, "no-mistakes final output contract") || !strings.Contains(prompt, `"summary"`) {
+	if !strings.Contains(prompt, "alamino final output contract") || !strings.Contains(prompt, `"summary"`) {
 		t.Errorf("prompt path must inline the schema: %s", prompt)
 	}
-	if strings.Contains(prompt, "no_mistakes_output") {
+	if strings.Contains(prompt, "alamino_output") {
 		t.Errorf("prompt path must not name the absent output tool: %s", prompt)
 	}
 }

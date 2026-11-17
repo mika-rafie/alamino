@@ -13,12 +13,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func requireQuotaShell(t *testing.T) {
@@ -424,12 +424,12 @@ func TestQuotaRoutingUsesTheEffectiveRawModelForScopesAndAccount(t *testing.T) {
 func TestPipelineQuotaSnapshotIsReadOnceAndNeverByReviewRoles(t *testing.T) {
 	cfg := quotaRoutingConfig(writeQuotaAXI(t, claudeThenCodexSnapshot))
 	counter := filepath.Join(t.TempDir(), "reads")
-	t.Setenv("NM_QUOTA_READS", counter)
+	t.Setenv("ALAMINO_QUOTA_READS", counter)
 	script, err := os.ReadFile(cfg.QuotaRouting.QuotaAXIPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	script = bytes.Replace(script, []byte("#!/bin/sh\n"), []byte("#!/bin/sh\nprintf x >> \"$NM_QUOTA_READS\"\n"), 1)
+	script = bytes.Replace(script, []byte("#!/bin/sh\n"), []byte("#!/bin/sh\nprintf x >> \"$ALAMINO_QUOTA_READS\"\n"), 1)
 	if err := os.WriteFile(cfg.QuotaRouting.QuotaAXIPath, script, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -528,13 +528,13 @@ func TestQuotaRoutingRecoveryRefusesAnUnavailableActiveAgent(t *testing.T) {
 func TestQuotaRoutingRecoveryWithoutARecordNeverReadsANewSnapshot(t *testing.T) {
 	manager, run, _ := gatePinFixture(t, "", nil)
 	marker := filepath.Join(t.TempDir(), "snapshot-read")
-	t.Setenv("NM_QUOTA_RECOVERY_MARKER", marker)
+	t.Setenv("ALAMINO_QUOTA_RECOVERY_MARKER", marker)
 	executable := writeQuotaAXI(t, claudeThenCodexSnapshot)
 	script, err := os.ReadFile(executable)
 	if err != nil {
 		t.Fatal(err)
 	}
-	script = bytes.Replace(script, []byte("#!/bin/sh\n"), []byte("#!/bin/sh\nprintf called > \"$NM_QUOTA_RECOVERY_MARKER\"\n"), 1)
+	script = bytes.Replace(script, []byte("#!/bin/sh\n"), []byte("#!/bin/sh\nprintf called > \"$ALAMINO_QUOTA_RECOVERY_MARKER\"\n"), 1)
 	if err := os.WriteFile(executable, script, 0o755); err != nil {
 		t.Fatal(err)
 	}

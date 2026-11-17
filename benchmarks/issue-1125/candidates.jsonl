@@ -36,5 +36,5 @@
 {"path": "internal/pipeline/steps/pr_attach_media_test.go", "coupling": 0.041666666666666664, "relevant": false, "reason": "PR media attachment test; GlobalConfig via config.Merge for evidence settings only"}
 {"path": ".gitattributes", "coupling": 0, "relevant": false, "reason": "root sibling of changed AGENTS.md; no coupling to the change"}
 {"path": ".gitignore", "coupling": 0, "relevant": false, "reason": "root sibling of changed AGENTS.md; no coupling to the change"}
-{"path": ".no-mistakes.yaml", "coupling": 0, "relevant": false, "reason": "root sibling of changed AGENTS.md; the repo's own config, not context for the Jev change"}
+{"path": ".alamino.yaml", "coupling": 0, "relevant": false, "reason": "root sibling of changed AGENTS.md; the repo's own config, not context for the Jev change"}
 {"path": ".release-please-manifest.json", "coupling": 0, "relevant": false, "reason": "root sibling of changed AGENTS.md; no coupling to the change"}

@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const structuredGateScript = `#!/bin/sh
@@ -25,7 +25,7 @@ set -eu
 
 index="$1"
 mode=$(cat gate-mode.txt)
-report="$NO_MISTAKES_FINDINGS_FILE"
+report="$ALAMINO_FINDINGS_FILE"
 
 case "$report" in
   /*) ;;
@@ -44,7 +44,7 @@ echo "gate-mode=$mode gate-index=$index"
 
 case "$mode:$index" in
   legacy:*)
-    printf '%s' "$report" >"$NM_HOME/legacy-gate-path-$index.txt"
+    printf '%s' "$report" >"$ALAMINO_HOME/legacy-gate-path-$index.txt"
     ;;
   warning:0)
     printf '%s' '{"findings":[{"id":"score-warning","severity":"warning","file":"score.go","line":7,"description":"score is near the budget"}]}' >"$report"

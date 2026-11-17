@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 type statefulGHPR struct {
@@ -120,7 +120,7 @@ func assertLinesOnce(t *testing.T, label, body string, lines ...string) {
 
 func saveEvidence(t *testing.T, name, content string) {
 	t.Helper()
-	dir := os.Getenv("NM_CLOSES_EVIDENCE_DIR")
+	dir := os.Getenv("ALAMINO_CLOSES_EVIDENCE_DIR")
 	if dir == "" {
 		return
 	}
@@ -214,7 +214,7 @@ func TestClosingIssueRefsGitHubJourney(t *testing.T) {
 		if err == nil || !strings.Contains(out, "invalid --closes") {
 			t.Fatalf("--closes %q should be rejected, err=%v out:\n%s", bad, err, out)
 		}
-		saveEvidence(t, "01-invalid-closes.txt", "$ no-mistakes axi run --closes "+bad+"\n"+out)
+		saveEvidence(t, "01-invalid-closes.txt", "$ alamino axi run --closes "+bad+"\n"+out)
 	}
 	if runs := h.Runs(); len(runs) != 0 {
 		t.Fatalf("invalid --closes started %d run(s)", len(runs))
@@ -286,7 +286,7 @@ func TestClosingIssueRefsGitHubJourney(t *testing.T) {
 	h.CommitChange(optBranch, "opt.txt", "opt\n", "add push option fixture")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	if out, err := h.runGit(ctx, h.WorkDir, "push", "-o", "no-mistakes.closes=41", "-o", "no-mistakes.closes=acme/widgets#5", "-o", "no-mistakes.skip=ci", "no-mistakes", optBranch); err != nil {
+	if out, err := h.runGit(ctx, h.WorkDir, "push", "-o", "alamino.closes=41", "-o", "alamino.closes=acme/widgets#5", "-o", "alamino.skip=ci", "alamino", optBranch); err != nil {
 		t.Fatalf("push with closes option: %v\n%s", err, out)
 	}
 	optRun := waitPublished(t, h, optBranch, "", "push option")
@@ -301,7 +301,7 @@ func TestClosingIssueRefsGitHubJourney(t *testing.T) {
 	// Scenario: an invalid push option is refused at the gate.
 	const badOptBranch = "feature/closes-bad-option"
 	h.CommitChange(badOptBranch, "bad.txt", "bad\n", "add bad option fixture")
-	out2, err := h.runGit(ctx, h.WorkDir, "push", "-o", "no-mistakes.closes=#9", "no-mistakes", badOptBranch)
+	out2, err := h.runGit(ctx, h.WorkDir, "push", "-o", "alamino.closes=#9", "alamino", badOptBranch)
 	saveEvidence(t, "06-invalid-push-option.txt", string(out2))
 	if run := h.ActiveRun(badOptBranch); run != nil {
 		t.Errorf("invalid closes push option started run %s (push err=%v)\n%s", run.ID, err, out2)
@@ -364,13 +364,13 @@ func TestClosingIssueRefsReattachAfterComposeIsRefused(t *testing.T) {
 	assertLinesOnce(t, "reattach base", livePRBody(t, statePath, branch), "Closes #95")
 
 	same, sameErr := h.RunInDir(wt, "axi", "run", "--intent", "reattach", "--closes", "95", "--wait", "5s")
-	saveEvidence(t, "08-reattach-same-ref.txt", "$ no-mistakes axi run --closes 95  # reattach, already recorded\n"+same)
+	saveEvidence(t, "08-reattach-same-ref.txt", "$ alamino axi run --closes 95  # reattach, already recorded\n"+same)
 	if strings.Contains(same, "already composed") {
 		t.Errorf("re-sending an already-recorded ref was refused: %v\n%s", sameErr, same)
 	}
 
 	added, addErr := h.RunInDir(wt, "axi", "run", "--intent", "reattach", "--closes", "77", "--wait", "5s")
-	saveEvidence(t, "09-reattach-new-ref.txt", "$ no-mistakes axi run --closes 77  # reattach after PR body composed\n"+added)
+	saveEvidence(t, "09-reattach-new-ref.txt", "$ alamino axi run --closes 77  # reattach after PR body composed\n"+added)
 	if addErr == nil || !strings.Contains(added, "already composed") || !strings.Contains(added, "NOT added") {
 		t.Errorf("new ref after compose should be refused explicitly, err=%v\n%s", addErr, added)
 	}
@@ -416,7 +416,7 @@ func TestClosingIssueRefsNonGitHubFailsAtPR(t *testing.T) {
 	out, _ := h.RunInDir(wt, "axi", "run", "--intent", "gitea closes", "--skip", "ci", "--closes", "5")
 	run := h.WaitForRun(branch, 3*time.Minute)
 	pr, _ := findStep(run.Steps, types.StepPR)
-	evidence := "$ no-mistakes axi run --closes 5   # origin is Gitea\n" + out + "\nrun status: " + string(run.Status) + "\npr step status: " + string(pr.Status) + "\npr step error: " + deref(pr.Error) + "\nrun error: " + deref(run.Error) + "\n"
+	evidence := "$ alamino axi run --closes 5   # origin is Gitea\n" + out + "\nrun status: " + string(run.Status) + "\npr step status: " + string(pr.Status) + "\npr step error: " + deref(pr.Error) + "\nrun error: " + deref(run.Error) + "\n"
 	saveEvidence(t, "10-gitea-closes.txt", evidence)
 	if run.Status == types.RunCompleted || pr.Status == types.StepStatusCompleted {
 		t.Fatalf("--closes on Gitea should fail the PR step; %s", evidence)
@@ -434,7 +434,7 @@ func TestClosingIssueRefsOwnedTemplateJourney(t *testing.T) {
 	h := NewHarness(t, SetupOpts{Agent: "claude"})
 	statePath := setupStatefulGitHub(t, h)
 	h.CommitChange("main", ".github/pr_template.md", "## Overview\n\nDescribe the change.\n", "add PR template")
-	h.CommitChange("main", ".no-mistakes.yaml", "no_ci: true\npr:\n  template: .github/pr_template.md\n", "configure PR template")
+	h.CommitChange("main", ".alamino.yaml", "no_ci: true\npr:\n  template: .github/pr_template.md\n", "configure PR template")
 	if out, err := h.runGit(t.Context(), h.WorkDir, "push", "origin", "main"); err != nil {
 		t.Fatalf("push main: %v\n%s", err, out)
 	}
@@ -450,7 +450,7 @@ func TestClosingIssueRefsOwnedTemplateJourney(t *testing.T) {
 	created := waitPublished(t, h, branch, "", "template create")
 	body := livePRBody(t, statePath, branch)
 	saveEvidence(t, "11-template-create-pr-body.md", body)
-	if !strings.Contains(body, "no-mistakes") || !strings.Contains(body, "Describe") && !strings.Contains(body, "fakeagent") {
+	if !strings.Contains(body, "alamino") || !strings.Contains(body, "Describe") && !strings.Contains(body, "fakeagent") {
 		t.Logf("template body:\n%s", body)
 	}
 	assertLinesOnce(t, "template create", body, "Closes #95")

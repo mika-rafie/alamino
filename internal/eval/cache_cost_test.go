@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agent"
 )
 
 // TestPersistEvaluationRecordsCacheTokens pins the registry's cache token

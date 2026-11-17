@@ -8,26 +8,26 @@ import (
 	"testing"
 )
 
-// Paths provides access to all no-mistakes filesystem locations.
-// The root defaults to ~/.no-mistakes but can be overridden via NM_HOME
+// Paths provides access to all alamino filesystem locations.
+// The root defaults to ~/.alamino but can be overridden via ALAMINO_HOME
 // or by using WithRoot (for testing).
 type Paths struct {
 	root string
 }
 
-// New returns Paths rooted at NM_HOME or ~/.no-mistakes.
+// New returns Paths rooted at ALAMINO_HOME or ~/.alamino.
 func New() (*Paths, error) {
-	if env := os.Getenv("NM_HOME"); env != "" {
+	if env := os.Getenv("ALAMINO_HOME"); env != "" {
 		return &Paths{root: env}, nil
 	}
-	if testing.Testing() && os.Getenv("NO_MISTAKES_ALLOW_DEFAULT_ROOT_IN_TESTS") != "1" {
-		return nil, fmt.Errorf("NM_HOME must be set under go test to avoid touching the real no-mistakes daemon root")
+	if testing.Testing() && os.Getenv("ALAMINO_ALLOW_DEFAULT_ROOT_IN_TESTS") != "1" {
+		return nil, fmt.Errorf("ALAMINO_HOME must be set under go test to avoid touching the real alamino daemon root")
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
-	return &Paths{root: filepath.Join(home, ".no-mistakes")}, nil
+	return &Paths{root: filepath.Join(home, ".alamino")}, nil
 }
 
 // ForGate returns Paths rooted at the home that owns a managed gate.
@@ -35,7 +35,7 @@ func New() (*Paths, error) {
 // A gate always lives at <root>/repos/<id>.git, so the owning root is a
 // property of the gate's own location. Every caller that is handed a gate path
 // - the receive hooks' CLI helpers - must resolve its root this way rather than
-// with New: git does not set NM_HOME for a hook, so New would resolve whatever
+// with New: git does not set ALAMINO_HOME for a hook, so New would resolve whatever
 // the pushing shell happened to export, which is usually nothing and therefore
 // the default root. A gate under any other root would then be handled by a
 // daemon that does not own it, which keeps only the repo id from the gate path
@@ -80,7 +80,7 @@ func (p *Paths) HeldPushesFile() string { return filepath.Join(p.root, "held-pus
 func (p *Paths) RunInputsDir() string { return filepath.Join(p.root, "run-inputs") }
 
 // LockFile is the OS-level advisory lock used to enforce a single live daemon
-// per NM_HOME (see the singleton lock in internal/daemon). Distinct from
+// per ALAMINO_HOME (see the singleton lock in internal/daemon). Distinct from
 // PIDFile, which is an informational record a live daemon writes for
 // CLI/status consumers: LockFile is what actually prevents two daemons from
 // ever running startup recovery or binding the socket concurrently for the
@@ -104,7 +104,7 @@ func (p *Paths) EvalDir() string { return filepath.Join(p.root, "eval") }
 // shared /tmp - which current Ubuntu mounts as a systemd tmpfs, putting every
 // screenshot and rendered-HTML artifact in RAM. The app root is disk backed on
 // macOS, Linux, and Windows alike, so this needs no per-OS branch, and it is
-// the directory no-mistakes already reaps for itself (see the daemon's
+// the directory alamino already reaps for itself (see the daemon's
 // evidence reaper) instead of waiting on an OS timer that may never run.
 //
 // EnsureDirs deliberately leaves creation to the test step, so a machine that
@@ -202,7 +202,7 @@ func writableEvidenceDir(path string) error {
 	if !info.IsDir() {
 		return fmt.Errorf("not a directory")
 	}
-	f, err := os.CreateTemp(path, ".nm-evidence-write-*")
+	f, err := os.CreateTemp(path, ".alamino-evidence-write-*")
 	if err != nil {
 		return err
 	}

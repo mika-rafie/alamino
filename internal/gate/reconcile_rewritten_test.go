@@ -19,7 +19,7 @@ func TestPlanStaleBranchReconciliationRewrittenRecoveryAnchors(t *testing.T) {
 				} else {
 					reconcileGit(t, gateDir, "fetch", work, liveHead+":refs/heads/live")
 				}
-				anchor := "refs/no-mistakes/recover-rewritten/run/1"
+				anchor := "refs/alamino/recover-rewritten/run/1"
 				switch shape {
 				case "full":
 					reconcileGit(t, dir, "update-ref", anchor, privateHead)
@@ -35,9 +35,9 @@ func TestPlanStaleBranchReconciliationRewrittenRecoveryAnchors(t *testing.T) {
 				case "unrelated":
 					reconcileGit(t, dir, "update-ref", anchor, liveHead)
 				case "recover-local":
-					reconcileGit(t, dir, "update-ref", "refs/no-mistakes/recover-local/run", privateHead)
+					reconcileGit(t, dir, "update-ref", "refs/alamino/recover-local/run", privateHead)
 				case "lookalike":
-					reconcileGit(t, dir, "update-ref", "refs/no-mistakes/recover-rewritten-other/run/1", privateHead)
+					reconcileGit(t, dir, "update-ref", "refs/alamino/recover-rewritten-other/run/1", privateHead)
 				}
 				beforeGate := reconcileGit(t, gateDir, "for-each-ref")
 				beforeWork := reconcileGit(t, work, "for-each-ref")
@@ -55,7 +55,7 @@ func TestPlanStaleBranchReconciliationRewrittenRecoveryAnchors(t *testing.T) {
 					if shape == "partial" && strings.Contains(err.Error(), first) {
 						t.Fatalf("partial anchor failed to credit the first commit: %v", err)
 					}
-					if !strings.Contains(err.Error(), "refs/no-mistakes/recover-rewritten/<run>/<generation>") {
+					if !strings.Contains(err.Error(), "refs/alamino/recover-rewritten/<run>/<generation>") {
 						t.Fatalf("refusal did not name rewritten recovery satisfier: %v", err)
 					}
 					return

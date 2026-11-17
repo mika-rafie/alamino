@@ -1,5 +1,5 @@
 // fakeagent is a deterministic stand-in for the real Claude, Codex, Grok,
-// OpenCode, Pi, and Antigravity CLIs used by no-mistakes' e2e tests. One binary is
+// OpenCode, Pi, and Antigravity CLIs used by alamino's e2e tests. One binary is
 // compiled and then symlinked under each agent's dispatch name; Antigravity
 // is linked as both `antigravity` and its probed binary name `agy`.
 // argv[0]'s basename selects which wire protocol to speak.
@@ -9,7 +9,7 @@
 //
 // Behaviour is driven by $FAKEAGENT_SCENARIO (a YAML file). When unset the
 // agent returns an "all clean" canned response that satisfies every schema
-// no-mistakes asks of it.
+// alamino asks of it.
 package main
 
 import (
@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin/fakeplugin"
+	"github.com/mika-rafie/alamino/internal/scm/plugin/fakeplugin"
 )
 
 func main() {

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 // Issue #1653: the bootstrap-log fallback is only for output without a usable
@@ -21,7 +21,7 @@ func TestPrepareRunStdioLeavesUsableOutputAlone(t *testing.T) {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(exe)
-	cmd.Env = append(os.Environ(), "NM_HOME="+root, "NM_DAEMON_HELPER_PROCESS=run-stdio")
+	cmd.Env = append(os.Environ(), "ALAMINO_HOME="+root, "ALAMINO_DAEMON_HELPER_PROCESS=run-stdio")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

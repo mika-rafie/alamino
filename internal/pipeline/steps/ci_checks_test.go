@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func TestAllChecksPassedFailsClosed(t *testing.T) {

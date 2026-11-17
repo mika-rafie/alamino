@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 	toon "github.com/toon-format/toon-go"
 )
 
@@ -22,7 +22,7 @@ import (
 // checking which opener the query selects. No daemon or agent is needed.
 func TestAxiStatusReadOnly(t *testing.T) {
 	t.Parallel()
-	bin := buildNoMistakesBinary(t)
+	bin := buildAlaminoBinary(t)
 	// All commands only read this checkout. Give each schema variant its own
 	// state root explicitly, so independent cases need no process-wide Setenv.
 	dir := t.TempDir()
@@ -55,7 +55,7 @@ func TestAxiStatusReadOnly(t *testing.T) {
 		defer cancel()
 		cmd := exec.CommandContext(ctx, bin, append([]string{"axi", command}, args...)...)
 		cmd.Dir = dir
-		cmd.Env = append(os.Environ(), "NM_HOME="+root, "NM_TEST_START_DAEMON=")
+		cmd.Env = append(os.Environ(), "ALAMINO_HOME="+root, "ALAMINO_TEST_START_DAEMON=")
 		out, err := cmd.CombinedOutput()
 		if ctx.Err() != nil {
 			t.Fatalf("%s timed out: %v\n%s", command, ctx.Err(), out)

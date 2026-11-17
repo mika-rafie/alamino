@@ -6,15 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestAgentHeadRecordingPreservesSharedGateRefs(t *testing.T) {
 	for _, recorder := range []string{"review", "ci"} {
 		for _, relation := range []string{"descendant", "divergent"} {
 			t.Run(recorder+"/"+relation, func(t *testing.T) {
-				t.Setenv("NM_HOME", t.TempDir())
+				t.Setenv("ALAMINO_HOME", t.TempDir())
 				source, baseSHA, submittedHead := setupGitRepo(t)
 				upstream := t.TempDir()
 				gitCmd(t, upstream, "init", "--bare")
@@ -34,9 +34,9 @@ func TestAgentHeadRecordingPreservesSharedGateRefs(t *testing.T) {
 					subject := name
 					if name == "agent.txt" {
 						// Already shaped by the commit settings, so recording keeps its SHA.
-						subject = "no-mistakes(review): record agent fixes"
+						subject = "alamino(review): record agent fixes"
 						if recorder == "ci" {
-							subject = "no-mistakes(ci): record CI repair"
+							subject = "alamino(ci): record CI repair"
 						}
 					}
 					gitCmd(t, dir, "commit", "-m", subject)
@@ -93,7 +93,7 @@ func TestAgentHeadRecordingPreservesSharedGateRefs(t *testing.T) {
 							t.Fatalf("shared ref overwritten in %s: got %s, want %s", dir, got, privateHead)
 						}
 					}
-					if tags := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+					if tags := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 						t.Fatalf("preserved private head was archived: %s", tags)
 					}
 				}
@@ -152,9 +152,9 @@ func TestAgentHeadRecordingUpdatesNonSharedWorktreeRef(t *testing.T) {
 				t.Fatal(err)
 			}
 			gitCmd(t, dir, "add", "agent.txt")
-			subject := "no-mistakes(review): record agent fixes"
+			subject := "alamino(review): record agent fixes"
 			if recorder == "ci" {
-				subject = "no-mistakes(ci): record CI repair"
+				subject = "alamino(ci): record CI repair"
 			}
 			gitCmd(t, dir, "commit", "-m", subject)
 			agentHead := gitCmd(t, dir, "rev-parse", "HEAD")

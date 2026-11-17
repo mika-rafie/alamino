@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 type failingRenameError string
@@ -80,7 +80,7 @@ func TestWaitForDaemonStopRetriesProcessProbeErrors(t *testing.T) {
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("NM_TEST_DAEMON_STOP_TIMEOUT", "500ms")
+	t.Setenv("ALAMINO_TEST_DAEMON_STOP_TIMEOUT", "500ms")
 
 	oldHealthCheck := daemonHealthCheck
 	oldProcessRunning := daemonProcessRunning
@@ -114,7 +114,7 @@ func TestWaitForDaemonStopRetriesProcessProbeErrors(t *testing.T) {
 }
 
 func TestDaemonStartTimeoutMatchesPlatformStartupWork(t *testing.T) {
-	t.Setenv("NM_TEST_DAEMON_START_TIMEOUT", "")
+	t.Setenv("ALAMINO_TEST_DAEMON_START_TIMEOUT", "")
 	oldGOOS := runtimeGOOS
 	t.Cleanup(func() { runtimeGOOS = oldGOOS })
 

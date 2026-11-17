@@ -1,6 +1,6 @@
 package telemetry
 
-import "github.com/kunchenguid/no-mistakes/internal/types"
+import "github.com/mika-rafie/alamino/internal/types"
 
 func StepName(name types.StepName) string {
 	if name.IsCustomGate() {

@@ -4,7 +4,7 @@
 // a passthrough git wrapper (guard shim, audit wrapper, etc.) sits on the
 // developer's PATH, that wrapper gets mistaken for "real git" and, once the
 // fake CLI directory is prepended ahead of it, the two forward into each
-// other without bound (github.com/ironerumi/no-mistakes#5).
+// other without bound (github.com/ironerumi/alamino#5).
 package testgit
 
 import (
@@ -19,7 +19,7 @@ import (
 // consulting PATH: a wrapper (guard shim, audit wrapper, etc.) or the fake
 // CLI itself can win PATH, and either one being mistaken for "real git" is
 // what let fakecli and a wrapper forward into each other without bound
-// (github.com/ironerumi/no-mistakes#5). Restricting resolution to a fixed
+// (github.com/ironerumi/alamino#5). Restricting resolution to a fixed
 // list of well-known install locations means PATH is never consulted, so
 // neither a wrapper nor the fake CLI can ever be selected.
 func RealGit() (string, error) {

@@ -23,7 +23,7 @@ import (
 )
 
 // ExecutableName is the argv[0] basename the fake CLIs dispatch on.
-const ExecutableName = "nm-fake-provider-plugin"
+const ExecutableName = "alamino-fake-provider-plugin"
 
 // Environment variables the fake reads.
 const (

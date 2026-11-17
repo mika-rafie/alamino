@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // answerPhase is one state the fake run holds for a while after the answer.
@@ -243,10 +243,10 @@ func TestAxiAnswer_LastAnswerWaitElapsedReattachesWithoutAnsweringAgain(t *testi
 
 	out, err := executeCmd("axi", "answer", "--question", "q1", "--answer", "Keep it", "--wait", "1s")
 	assertWaitElapsed(t, err, out, "1s")
-	if !strings.Contains(out, "Re-run `no-mistakes axi run --wait 1s`") {
+	if !strings.Contains(out, "Re-run `alamino axi run --wait 1s`") {
 		t.Fatalf("post-answer timeout did not provide a non-mutating reattach command:\n%s", out)
 	}
-	if strings.Contains(out, "Re-run `no-mistakes axi answer") {
+	if strings.Contains(out, "Re-run `alamino axi answer") {
 		t.Fatalf("post-answer timeout instructed the caller to answer again:\n%s", out)
 	}
 }

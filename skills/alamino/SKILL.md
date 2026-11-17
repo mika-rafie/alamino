@@ -1,50 +1,50 @@
 ---
-name: no-mistakes
-description: Validate your code changes through the no-mistakes pipeline - automated code review, tests, lint, docs, push, PR, and CI - before they reach the configured push target. Use when the user asks to run no-mistakes, gate or ship or validate their changes, push safely, asks you to do a task and then validate it, or invokes /no-mistakes.
+name: alamino
+description: Validate your code changes through the alamino pipeline - automated code review, tests, lint, docs, push, PR, and CI - before they reach the configured push target. Use when the user asks to run alamino, gate or ship or validate their changes, push safely, asks you to do a task and then validate it, or invokes /alamino.
 user-invocable: true
 ---
 
-# no-mistakes
+# alamino
 
-`no-mistakes` is a local gate that validates your code changes through a pipeline
+`alamino` is a local gate that validates your code changes through a pipeline
 (intent, rebase, review, test, document, lint, push, PR, CI) before they reach
-the configured push target. You drive it through the `no-mistakes axi` command family, which prints
+the configured push target. You drive it through the `alamino axi` command family, which prints
 machine-readable [TOON](https://toonformat.dev) to stdout and progress to stderr.
 
 
 ## Active validation-step boundary
 
-A no-mistakes validation-step agent is already inside an active outer run. It
+An alamino validation-step agent is already inside an active outer run. It
 must inspect, fix, and return only its assigned phase. It must never initialize,
 start, reattach, rerun, respond to, synchronize, abort, eject, or directly push
-a no-mistakes pipeline. Delivery requirements in user intent remain
+an alamino pipeline. Delivery requirements in user intent remain
 acceptance context, but the outer executor alone performs the other validation,
 push, PR, and CI phases.
 
-`NO_MISTAKES_GATE` is fast diagnostic evidence, not authorization by
+`ALAMINO_GATE` is fast diagnostic evidence, not authorization by
 itself. The runtime combines managed Git identity with authenticated process
 ancestry. If a pipeline-control command returns
 `error.code: nested_gate_context`, stop immediately and
 return control to the outer executor. Safe inspection remains available through
-`no-mistakes axi status`, `no-mistakes axi logs`, help, and
-`no-mistakes doctor`.
+`alamino axi status`, `alamino axi logs`, help, and
+`alamino doctor`.
 
 
-When the user invokes `/no-mistakes`, report the outcome at the end. If the user
+When the user invokes `/alamino`, report the outcome at the end. If the user
 asks for something specific, translate that request into the matching `axi run`
 flags yourself - for example, "skip the lint step" becomes `--skip=lint`. Run
-`no-mistakes axi run --help` to see the available flags.
+`alamino axi run --help` to see the available flags.
 
 ## Two ways to invoke
 
-`/no-mistakes` works in two modes, depending on whether the user hands you a
+`/alamino` works in two modes, depending on whether the user hands you a
 task along with the command:
 
-- **Validate-only** - bare `/no-mistakes` (optionally with flag-style requests
+- **Validate-only** - bare `/alamino` (optionally with flag-style requests
   like "skip the lint step"). The user's code changes are already committed;
   validate them and report the outcome.
-- **Task-first** - `/no-mistakes <task>`, e.g.
-  `/no-mistakes add a --json flag to the status command`. First carry out the
+- **Task-first** - `/alamino <task>`, e.g.
+  `/alamino add a --json flag to the status command`. First carry out the
   task yourself, then validate the result through the pipeline:
   1. **Check scope.** Inspect `git status` before you change or commit anything.
      Preserve unrelated pre-existing uncommitted changes, and when you commit,
@@ -108,24 +108,24 @@ the same way once the work is committed on a feature branch.
 - The work you want validated must be **committed** on a branch. The gate
   validates committed history, not your uncommitted working tree.
 - You must be on a **feature branch**, not the repository's default branch.
-- The repository must already be initialized with `no-mistakes init`.
+- The repository must already be initialized with `alamino init`.
 - The daemon must have a runnable configured pipeline agent: a supported native
   agent binary, the `agent: cursor` or `agent: devin` ACP alias, or an explicit
   `acp:<target>` through `acpx`. You are the AXI driver, not an
   implicit pipeline-agent backend. If none is available, the run fails
-  before its first step; `no-mistakes doctor` reports the configuration problem.
+  before its first step; `alamino doctor` reports the configuration problem.
 
 If any of these is not met, `axi run` returns an `error:` with the exact command
 to fix it - read it and act on it (commit your work, or create a branch). If the
-repository is not initialized, run `no-mistakes init` first; if the `no-mistakes`
-command itself is missing or misbehaving, `no-mistakes doctor` reports what is
+repository is not initialized, run `alamino init` first; if the `alamino`
+command itself is missing or misbehaving, `alamino doctor` reports what is
 wrong.
-Before starting, run `no-mistakes axi` (home view).
-If it shows an active run on your current branch, inspect it with `no-mistakes axi status`.
-If it is parked at a gate, drive it with `no-mistakes axi respond`.
-Reattach an in-flight run by re-running `no-mistakes axi run` when it still matches your current `HEAD` - either as the submitted head or as the current pipeline head.
-Only `no-mistakes axi abort` it when you mean to discard that run before starting over; aborting is a between-runs action, never a way to take over or bypass a gate while a run is still going (see [Validate and decide](#validate-and-decide)).
-If it shows an active run on another branch, leave that run alone and start validation for your current branch with `no-mistakes axi run --intent "..."`.
+Before starting, run `alamino axi` (home view).
+If it shows an active run on your current branch, inspect it with `alamino axi status`.
+If it is parked at a gate, drive it with `alamino axi respond`.
+Reattach an in-flight run by re-running `alamino axi run` when it still matches your current `HEAD` - either as the submitted head or as the current pipeline head.
+Only `alamino axi abort` it when you mean to discard that run before starting over; aborting is a between-runs action, never a way to take over or bypass a gate while a run is still going (see [Validate and decide](#validate-and-decide)).
+If it shows an active run on another branch, leave that run alone and start validation for your current branch with `alamino axi run --intent "..."`.
 
 ## Intent is required
 
@@ -135,10 +135,10 @@ When you start a new run you must supply explicit intent through exactly one of
 accomplish** - the goal or request behind this work, in their terms. This is not
 a description of the diff or the files you changed; it is the objective the
 change is meant to achieve. You know it from the conversation, so pass it
-directly - no-mistakes uses the supplied intent instead of inferring it from local
+directly - alamino uses the supplied intent instead of inferring it from local
 agent transcripts. Empty or whitespace-only input is rejected, never inferred.
 For input handling, whitespace preservation, and reattachment semantics, see the
-[CLI intent input reference](https://kunchenguid.github.io/no-mistakes/reference/cli/#intent-input).
+[CLI intent input reference](https://mika-rafie.github.io/alamino/reference/cli/#intent-input).
 
 Err on the side of completeness, not brevity. The review step uses explicit intent
 to tell a deliberate decision apart from a mistake, so a thin one-line summary
@@ -155,7 +155,7 @@ Run the pipeline and decide on its findings as they come up:
 
 1. Start the run. It blocks until the first decision point or the end:
    ```sh
-   no-mistakes axi run --intent "<what the user set out to accomplish>"
+   alamino axi run --intent "<what the user set out to accomplish>"
    ```
    `axi run` and every `axi respond` block synchronously - the review, test,
    and CI steps can each take **several minutes**, so a single call may not
@@ -163,13 +163,13 @@ Run the pipeline and decide on its findings as they come up:
    because it seems slow. Both commands default to `--wait 8m` so a harness
    with a 10-minute tool cap gets a structured return instead of an unbounded
    hang. If the command returns because that wait elapsed, it is not a failed
-   run and does not mean the daemon is dead: re-run `no-mistakes axi run` to reattach,
+   run and does not mean the daemon is dead: re-run `alamino axi run` to reattach,
    also after an `axi respond` whose wait elapsed.
-   Keep the blocking `no-mistakes axi run` / `no-mistakes axi respond` call
+   Keep the blocking `alamino axi run` / `alamino axi respond` call
    open, or background that same call if your harness needs to, and collect its
    return. When backgrounding, pass a long `--wait`, for example `--wait 6h`:
    a backgrounded task notifies its harness when it exits, so a short hold
-   causes repeated wake-ups. Do not poll progress with separate `no-mistakes axi status` calls
+   causes repeated wake-ups. Do not poll progress with separate `alamino axi status` calls
    or sleep loops. Use `axi status` to inspect a run after a wait expiry,
    a refusal, or during recovery, not as a progress-polling loop.
    A slow live daemon is retried after a health probe rather than treated as
@@ -208,22 +208,22 @@ Run the pipeline and decide on its findings as they come up:
    Choose one response:
    ```sh
    # accept the step as-is and continue
-   no-mistakes axi respond --action approve
+   alamino axi respond --action approve
 
    # have the pipeline fix specific findings, then continue
-   no-mistakes axi respond --action fix --findings <id1,id2> --instructions "<optional guidance>"
+   alamino axi respond --action fix --findings <id1,id2> --instructions "<optional guidance>"
 
    # fix some findings and explicitly decline the rest
-   no-mistakes axi respond --action fix --findings <id1,id2> --ignore <id3>
+   alamino axi respond --action fix --findings <id1,id2> --ignore <id3>
 
    # skip this step
-   no-mistakes axi respond --action skip
+   alamino axi respond --action skip
 
    # continue static review when coverage is incomplete and findings are empty
-   no-mistakes axi respond --step review --action complete-coverage
+   alamino axi respond --step review --action complete-coverage
 
    # reject this gate (only when the user has decided it must fail)
-   no-mistakes axi respond --action abort --reason "<why the gate is rejected>"
+   alamino axi respond --action abort --reason "<why the gate is rejected>"
    ```
    `complete-coverage` runs a fresh reviewer over only the missing paths.
    It reuses stored coverage only for the same run, step, round, head, base, and trusted scope.
@@ -253,7 +253,7 @@ Run the pipeline and decide on its findings as they come up:
 
     Each `respond` blocks until the next `gate:`, `checks-passed` decision point, or final outcome, subject to the same default `--wait 8m` hold.
 
-    A review gate whose findings are `question-<id>` rows is waiting on answers to its reviewer's questions, not on a verdict: answer each with `no-mistakes axi answer --question <id> --answer "<one of its options>"` instead of approving or fixing. The answer that closes the last open question blocks exactly like `respond` and returns the next `gate:` or outcome; any other answer returns at once.
+    A review gate whose findings are `question-<id>` rows is waiting on answers to its reviewer's questions, not on a verdict: answer each with `alamino axi answer --question <id> --answer "<one of its options>"` instead of approving or fixing. The answer that closes the last open question blocks exactly like `respond` and returns the next `gate:` or outcome; any other answer returns at once.
 
     Extra flags on `respond`:
     - `--wait` bounds the hold (default 8m).
@@ -284,14 +284,14 @@ Run the pipeline and decide on its findings as they come up:
      the PR is not merged yet. **You are done driving the pipeline.** Do not
      wait for the merge: tell the user the PR is ready and ask them to review
      and merge it (the PR link is in the `help` line). A generic empty forge
-     check list without that declaration is not ready. no-mistakes keeps
+     check list without that declaration is not ready. alamino keeps
      monitoring the PR in the background while the monitor is active; use
-     `no-mistakes axi handoff` to end green monitoring after handing
+     `alamino axi handoff` to end green monitoring after handing
      the open PR to human reviewers, or let the configured idle timeout elapse.
      Under the opt-in `ci.release_after_checks_pass` the run instead finishes at
      the verdict: `run.status` is `checks_passed`, the run released its worktree,
      and nothing is left watching the PR.
-     An update it needs later is a fresh `no-mistakes axi run` on the updated head;
+     An update it needs later is a fresh `alamino axi run` on the updated head;
      this run will not rebase or re-push it.
    - `passed` - the pipeline completed under the requested steps, including any
      explicit per-run skips. This alone is not evidence that a PR was merged.
@@ -306,28 +306,28 @@ Run the pipeline and decide on its findings as they come up:
      Follow the custody guidance below before fixing whatever the output
      points at (a failing test, a lint error, a finding you skipped). Commit the
      fix on the same feature branch, then submit it with
-     `no-mistakes axi run --intent "..."`. A fresh run or `rerun` is a
+     `alamino axi run --intent "..."`. A fresh run or `rerun` is a
      *between-runs* action, correct only after a terminal outcome like this -
      never mid-run to circumvent a gate. Do not leave the user at a `failed`
      outcome without either retrying or explaining what blocks it.
 
-`no-mistakes rerun` keeps its existing head selection: the gate head, or the
+`alamino rerun` keeps its existing head selection: the gate head, or the
 latest terminal run's verified unpublished preserved head while custody remains
 outstanding. If a known clean caller `HEAD` differs from that selected head,
 it refuses before starting or superseding any run and reports both full SHAs.
 It never substitutes the caller head or moves either branch to make them match.
-On refusal, inspect `no-mistakes axi status` and follow the custody guidance
+On refusal, inspect `alamino axi status` and follow the custody guidance
 below. Dirty callers and callers without clean-head evidence retain existing
 selection behavior.
 
 When a `failed` outcome came from the agent invocation itself - a provider
 processing error, a usage or quota limit, a transport failure, or the agent
 process exiting - in Test or an earlier step, and the run never pushed,
-`no-mistakes axi retry --run <id>` continues that run instead of repeating it:
+`alamino axi retry --run <id>` continues that run instead of repeating it:
 a new run starts at the preserved head, carries the steps before the failed
 one, and restarts the failed step from the beginning, so a failed Review
 reviews the resulting head in full before Test. First adopt the preserved head
-with the reported `no-mistakes axi sync --recover` so your clean `HEAD` is
+with the reported `alamino axi sync --recover` so your clean `HEAD` is
 exactly that head. Retry refuses, changing nothing, and names the failed proof
 whenever continuing is not provably safe - a failure about the change itself,
 a moved or dirty branch, another run, or changed configuration (repository
@@ -339,19 +339,19 @@ run carries every step through Push, never pushes, and runs only PR and CI. It
 refuses unless the remote branch still has exactly the run's pushed head.
 
 Before any post-pipeline local commit or fresh run, read the structured `branch_sync` object returned by AXI home, status, or a drive result.
-Only when its `next_action.code` is `sync`, run `no-mistakes axi sync` first.
+Only when its `next_action.code` is `sync`, run `alamino axi sync` first.
 That guarded sync may be a strict fast-forward or a content-equivalent diverged advance that anchors the pre-sync head before moving the branch with reset semantics; genuine divergence stays blocked and names `git checkout --detach <pushed-sha>`, which moves no branch ref.
 If it reports `next_action.code` is `continue_active_run`, the pipeline still owns the branch: run the reported command, keep driving the active run, and do not make local follow-up commits.
-When `next_action.code` is `recover_custody`, run its exact `next_action.command` rather than reconstructing one. That is `no-mistakes axi sync --recover` to take a still-available preserved pipeline head, or `no-mistakes axi sync --recover --keep-local` in three keep-local cases: when an accessible gate confirms the verified preserved head is missing and you are explicitly discarding those unpublished commits; when that verified head is already pinned at `refs/no-mistakes/recover/<run>` in the gate, containment does not prove it carries your local work, and the command keeps your branch while those pipeline commits stay at that ref and are not on the branch; or when a bound archive proves divergent later work remains preserved while recovery keeps the branch at the exact reported required head and never selects, merges, or replays the archive. Do not substitute plain `--recover` or `rerun` for a reported keep-local action. An unverified terminal head is not offered that recovery. `no-mistakes rerun` can resume validating a still-available ordinary preserved head instead, subject to the clean-head check above.
-Ordinary recovery takes that head by fast-forward, or by adopting a diverged preserved head proven to carry every local change - the ordinary result of the pipeline rebasing your commits onto a newer base - after anchoring your pre-recovery head under `refs/no-mistakes/recover-local/<run>`.
+When `next_action.code` is `recover_custody`, run its exact `next_action.command` rather than reconstructing one. That is `alamino axi sync --recover` to take a still-available preserved pipeline head, or `alamino axi sync --recover --keep-local` in three keep-local cases: when an accessible gate confirms the verified preserved head is missing and you are explicitly discarding those unpublished commits; when that verified head is already pinned at `refs/alamino/recover/<run>` in the gate, containment does not prove it carries your local work, and the command keeps your branch while those pipeline commits stay at that ref and are not on the branch; or when a bound archive proves divergent later work remains preserved while recovery keeps the branch at the exact reported required head and never selects, merges, or replays the archive. Do not substitute plain `--recover` or `rerun` for a reported keep-local action. An unverified terminal head is not offered that recovery. `alamino rerun` can resume validating a still-available ordinary preserved head instead, subject to the clean-head check above.
+Ordinary recovery takes that head by fast-forward, or by adopting a diverged preserved head proven to carry every local change - the ordinary result of the pipeline rebasing your commits onto a newer base - after anchoring your pre-recovery head under `refs/alamino/recover-local/<run>`.
 The ordinary containment proof is deliberately narrow, so a rebase whose fix rounds also rewrote your own lines refuses instead of being adopted: when nothing can tell a deliberate pipeline fix from a dropped change, the decision is yours.
 When a run failed in a step after Test without touching the code (a Document or Lint fetch error) and its recorded head was never verified, recovery still returns custody at that head once your clean checkout sits exactly on it and the gate proves the head is the reviewed result plus the pipeline's own later commits on top of the live gate branch; recovery never moves a behind worktree onto an unverified head, so check that exact head out first.
-When `next_action.code` is `recover_remote_rewritten`, the configured push target was force-rewritten outside the pipeline after a terminal run: run exact `no-mistakes axi sync --recover`. It re-verifies the live target, anchors the superseded pipeline head under `refs/no-mistakes/recover-rewritten/<run>/<generation>`, and rebinds only the recorded push binding to the verified live head; it never moves your branch, the gate, or the remote. It refuses `--keep-local`, a live head or target that changes during recovery, a head it cannot anchor, and a merged or closed PR. Afterwards follow the ordinary `next_action` it reports.
-When `next_action.code` is `adopt_published`, a custody-returned branch was rebased after its gate lane stopped moving: run `no-mistakes axi sync --adopt-published`. It verifies the configured push target already has the exact rebased local head, preserves the old lane head, and updates only that stale gate lane. If the target differs or changes during verification, it refuses without replacing the lane.
+When `next_action.code` is `recover_remote_rewritten`, the configured push target was force-rewritten outside the pipeline after a terminal run: run exact `alamino axi sync --recover`. It re-verifies the live target, anchors the superseded pipeline head under `refs/alamino/recover-rewritten/<run>/<generation>`, and rebinds only the recorded push binding to the verified live head; it never moves your branch, the gate, or the remote. It refuses `--keep-local`, a live head or target that changes during recovery, a head it cannot anchor, and a merged or closed PR. Afterwards follow the ordinary `next_action` it reports.
+When `next_action.code` is `adopt_published`, a custody-returned branch was rebased after its gate lane stopped moving: run `alamino axi sync --adopt-published`. It verifies the configured push target already has the exact rebased local head, preserves the old lane head, and updates only that stale gate lane. If the target differs or changes during verification, it refuses without replacing the lane.
 A `branch_sync.state` of `user_owned` means the run went terminal before changing the submitted head and cancellation released the branch: the exact branch and head are yours and immediately usable for whichever delivery path is authorized - no sync action is needed, and a repeated `--recover` there is a harmless no-op.
-A dirty worktree, or divergence that cannot be proven contained, makes the recovery refuse with explicit choices; `--keep-local` keeps your current head while the preserved commits stay anchored under `refs/no-mistakes/recover/<run>`. The same flag is the recovery when an accessible gate confirms that the verified preserved head is missing and recovery refs are compatible: it returns custody at the current local head without requiring that object.
+A dirty worktree, or divergence that cannot be proven contained, makes the recovery refuse with explicit choices; `--keep-local` keeps your current head while the preserved commits stay anchored under `refs/alamino/recover/<run>`. The same flag is the recovery when an accessible gate confirms that the verified preserved head is missing and recovery refs are compatible: it returns custody at the current local head without requiring that object.
 If synchronization is blocked, process that structured state instead of improvising reset, stash, merge, rebase, force, or branch replacement.
-After synchronization, commit the follow-up on top and re-run `no-mistakes axi run --intent "..."` with the original user intent.
+After synchronization, commit the follow-up on top and re-run `alamino axi run --intent "..."` with the original user intent.
 This preserves every prior gate-fix commit regardless of its configured subject.
 
 The CI step deliberately keeps watching the PR after checks pass, so
@@ -375,11 +375,11 @@ checks are green and the base has held still for one poll. A PR that is merely b
 the platform merges it. The one exception is when that monitor is
 no longer running - the PR was closed, the run was aborted, superseded, or
 explicitly handed off, it idle-timed-out, or its auto-fix attempts were
-exhausted - in which case recover with `no-mistakes rerun`, subject to the
+exhausted - in which case recover with `alamino rerun`, subject to the
 clean-head check above. An accepted
 rerun cancels the stale monitor and re-runs the full pipeline including a
 deterministic rebase step. Do **not** reach for
-`no-mistakes axi run` to refresh a still-active PR: with the default
+`alamino axi run` to refresh a still-active PR: with the default
 monitor, after `checks-passed` it
 reattaches to the running monitor (HEAD unchanged) and returns its output
 without rebasing.
@@ -423,7 +423,7 @@ A `protected-path-refusal` gate still requires an explicit operator response
 under `--yes`. Relay its path and rule; do not automatically fix, approve,
 or skip it. Approval is rejected. Have the operator inspect and resolve the
 reported edit, then send `--action fix` to retry the unfinished step.
-The [protected-path reference](https://kunchenguid.github.io/no-mistakes/reference/repo-config/#protected_paths)
+The [protected-path reference](https://mika-rafie.github.io/alamino/reference/repo-config/#protected_paths)
 owns the staging guard's scope and limitations.
 
 A gate holding open `question-<id>` findings is not eligible either: a question
@@ -436,24 +436,24 @@ commits or changes no Test turn validated. Approval is rejected, so `--yes`
 stops at that gate without responding. Relay what the finding names and do
 not skip Test, which would publish that work. Ask the operator to choose:
 `--action fix` spends another agent budget to validate the work, or
-`no-mistakes axi abort` stops and cancels a discarded run; its behavior is unchanged.
+`alamino axi abort` stops and cancels a discarded run; its behavior is unchanged.
 
-At a green open-PR CI monitor, `no-mistakes axi handoff` ends monitoring when the PR is handed to human reviewers. It requires authoritative `checks-passed` readiness and records terminal `handed_off`, without merging or closing the PR. Before green, resolve the checks or gates with `axi run` instead.
+At a green open-PR CI monitor, `alamino axi handoff` ends monitoring when the PR is handed to human reviewers. It requires authoritative `checks-passed` readiness and records terminal `handed_off`, without merging or closing the PR. Before green, resolve the checks or gates with `axi run` instead.
 
 ## Inspecting state
 
 ```sh
-no-mistakes axi               # home view: current branch, active runs, next steps
-no-mistakes axi status        # full detail plus cached branch_sync when relevant
-no-mistakes axi sync --check  # freshly verify an offered synchronization plan
-no-mistakes axi sync          # apply only an offered guarded synchronization
-no-mistakes axi sync --recover  # return custody after a terminal run left unpublished pipeline commits
-no-mistakes axi sync --adopt-published  # adopt an exactly published rebased head into its stale gate lane
-no-mistakes axi logs --step <name> --full   # one step's recorded findings, complete summary, and full log
-no-mistakes axi handoff       # end green CI monitoring for human review (handed_off, PR stays open)
-no-mistakes axi abort         # cancel the current-branch active run
-no-mistakes axi abort --run <id>   # cancel a specific run by id (works outside its worktree)
-no-mistakes axi respond --run <id> --action approve   # answer a specific run's parked gate by id (works outside its worktree)
+alamino axi               # home view: current branch, active runs, next steps
+alamino axi status        # full detail plus cached branch_sync when relevant
+alamino axi sync --check  # freshly verify an offered synchronization plan
+alamino axi sync          # apply only an offered guarded synchronization
+alamino axi sync --recover  # return custody after a terminal run left unpublished pipeline commits
+alamino axi sync --adopt-published  # adopt an exactly published rebased head into its stale gate lane
+alamino axi logs --step <name> --full   # one step's recorded findings, complete summary, and full log
+alamino axi handoff       # end green CI monitoring for human review (handed_off, PR stays open)
+alamino axi abort         # cancel the current-branch active run
+alamino axi abort --run <id>   # cancel a specific run by id (works outside its worktree)
+alamino axi respond --run <id> --action approve   # answer a specific run's parked gate by id (works outside its worktree)
 ```
 
 ## Reading the output
@@ -474,12 +474,12 @@ gate: review
 note: Review auto-fix is disabled by default (auto_fix.review: 0; a repo or global auto_fix.review > 0 override re-enables it), so blocking and ask-user review findings park for your decision rather than being silently self-fixed.
 findings[2]{id,severity,file,line,action,description}:
   r1,warning,internal/pipeline/executor.go,,auto-fix,Error from os.Remove is ignored
-  r2,error,cmd/no-mistakes/main.go,,ask-user,New --force flag bypasses the confirm prompt
+  r2,error,cmd/alamino/main.go,,ask-user,New --force flag bypasses the confirm prompt
 help[6]:
-  Run `no-mistakes axi respond --action approve` to accept this step and continue
-  Run `no-mistakes axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response
-  Run `no-mistakes axi respond --action skip` to skip this step
-  Run `no-mistakes axi logs --step review --full` to read the complete step summary and log
+  Run `alamino axi respond --action approve` to accept this step and continue
+  Run `alamino axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response
+  Run `alamino axi respond --action skip` to skip this step
+  Run `alamino axi logs --step review --full` to read the complete step summary and log
   A long-running call is working, not stalled - background it if your harness needs to, but the run never advances past a gate on its own. Read every return; on a `gate:`, respond; loop until an `outcome:`.
   Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits.
 ```

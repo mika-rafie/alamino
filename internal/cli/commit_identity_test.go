@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestCommitIdentityNotifyPushBindsSnapshotAndRefusesAmbiguousCheckout(t *testing.T) {
@@ -159,7 +159,7 @@ func TestCommitIdentityPushPathsCarryLinkedCheckoutSnapshot(t *testing.T) {
 			var got git.CommitIdentity
 			found := false
 			for _, option := range strings.Split(strings.TrimSpace(string(data)), "\n") {
-				encoded, ok := strings.CutPrefix(option, "no-mistakes.commit-identity=")
+				encoded, ok := strings.CutPrefix(option, "alamino.commit-identity=")
 				if !ok {
 					continue
 				}

@@ -17,8 +17,8 @@ func snapshotCommand(ctx context.Context, exe string) *exec.Cmd {
 	switch strings.ToLower(filepath.Ext(direct.Path)) {
 	case ".cmd", ".bat":
 		cmd := exec.CommandContext(ctx, "cmd.exe")
-		cmd.Env = append(os.Environ(), "NM_QUOTA_AXI_EXECUTABLE="+direct.Path)
-		cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: `cmd.exe /d /v:off /s /c ""%NM_QUOTA_AXI_EXECUTABLE%" --full --json"`}
+		cmd.Env = append(os.Environ(), "ALAMINO_QUOTA_AXI_EXECUTABLE="+direct.Path)
+		cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: `cmd.exe /d /v:off /s /c ""%ALAMINO_QUOTA_AXI_EXECUTABLE%" --full --json"`}
 		return cmd
 	default:
 		return direct

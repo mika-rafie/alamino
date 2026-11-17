@@ -15,14 +15,14 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestPRStep_GhNotAvailable(t *testing.T) {
@@ -88,8 +88,8 @@ func TestPRStep_UpdatesExistingPR(t *testing.T) {
 	if !strings.Contains(ghLog, "--body") {
 		t.Errorf("expected the PR body in the gh api PATCH, got:\n%s", ghLog)
 	}
-	if !strings.Contains(ghLog, noMistakesPRSignature) {
-		t.Errorf("expected updated PR body to include no-mistakes signature, got:\n%s", ghLog)
+	if !strings.Contains(ghLog, alaminoPRSignature) {
+		t.Errorf("expected updated PR body to include alamino signature, got:\n%s", ghLog)
 	}
 
 	// Verify PR URL was stored
@@ -744,8 +744,8 @@ func TestPRStep_GitHubForkCreatesParentPRWithForkHead(t *testing.T) {
 	}
 	sctx := newPRTestContext(t, ag, dir, baseSHA, headSHA, config.Commands{})
 	sctx.Env = env
-	sctx.Repo.UpstreamURL = "https://github.com/parent-owner/no-mistakes.git"
-	sctx.Repo.ForkURL = "https://github.com/fork-owner/no-mistakes.git"
+	sctx.Repo.UpstreamURL = "https://github.com/parent-owner/alamino.git"
+	sctx.Repo.ForkURL = "https://github.com/fork-owner/alamino.git"
 	sctx.Config.PR.BaseBranch = "develop"
 	sctx.Run.Branch = "refs/heads/feature"
 	forgeCtx, err := forgecontext.Resolve(context.Background(), config.ForgeProfiles{
@@ -755,7 +755,7 @@ func TestPRStep_GitHubForkCreatesParentPRWithForkHead(t *testing.T) {
 		t.Fatal(err)
 	}
 	sctx.ForgeContext = forgeCtx
-	sctx.Env = append(sctx.Env, "FAKE_CLI_PR_SOURCE_REPO=fork-owner/no-mistakes")
+	sctx.Env = append(sctx.Env, "FAKE_CLI_PR_SOURCE_REPO=fork-owner/alamino")
 	recordPRTestPush(t, sctx)
 
 	step := &PRStep{}
@@ -768,16 +768,16 @@ func TestPRStep_GitHubForkCreatesParentPRWithForkHead(t *testing.T) {
 		t.Fatal(err)
 	}
 	ghLog := string(logData)
-	if !strings.Contains(ghLog, "pr list --head feature --repo parent-owner/no-mistakes --state open --json number,url,baseRefName,headRefName,headRepositoryOwner") {
+	if !strings.Contains(ghLog, "pr list --head feature --repo parent-owner/alamino --state open --json number,url,baseRefName,headRefName,headRepositoryOwner") {
 		t.Fatalf("expected PR lookup to use parent repo and bare head branch, got:\n%s", ghLog)
 	}
 	if strings.Contains(ghLog, "pr list --head fork-owner:feature") {
 		t.Fatalf("PR lookup used unsupported owner-qualified --head, got:\n%s", ghLog)
 	}
-	if !strings.Contains(ghLog, "pr create --head fork-owner:feature --base develop --repo parent-owner/no-mistakes") {
+	if !strings.Contains(ghLog, "pr create --head fork-owner:feature --base develop --repo parent-owner/alamino") {
 		t.Fatalf("expected PR create to target parent repo with fork owner head, got:\n%s", ghLog)
 	}
-	if strings.Contains(ghLog, "--repo fork-owner/no-mistakes") {
+	if strings.Contains(ghLog, "--repo fork-owner/alamino") {
 		t.Fatalf("expected no self-PR against fork repo, got:\n%s", ghLog)
 	}
 	if strings.Contains(ghLog, "pr create --head feature --") {
@@ -961,9 +961,9 @@ func TestPRStep_BitbucketMissingEnvSkipsBeforeBuildingContent(t *testing.T) {
 func TestPRStep_BitbucketUsesProcessEnvWhenStepEnvIsNil(t *testing.T) {
 	dir, baseSHA, headSHA := setupGitRepo(t)
 	api := newFakeBitbucketPRAPI(t, 0, "")
-	t.Setenv("NO_MISTAKES_BITBUCKET_EMAIL", "test@example.com")
-	t.Setenv("NO_MISTAKES_BITBUCKET_API_TOKEN", "test-token")
-	t.Setenv("NO_MISTAKES_BITBUCKET_API_BASE_URL", api.server.URL)
+	t.Setenv("ALAMINO_BITBUCKET_EMAIL", "test@example.com")
+	t.Setenv("ALAMINO_BITBUCKET_API_TOKEN", "test-token")
+	t.Setenv("ALAMINO_BITBUCKET_API_BASE_URL", api.server.URL)
 
 	ag := &mockAgent{
 		name: "test",
@@ -1355,14 +1355,14 @@ func TestAssemblePRBody_RetainsAttestationWhenCoreExceedsAzureCap(t *testing.T) 
 	}
 	attestation := buildPipelineAttestation(steps, nil, testPipelineHeadSHA)
 	pipelineMD := pipelineMarkdownForTest(strings.Repeat("review detail 😀 ", 1000))
-	pipelineMD = strings.Replace(pipelineMD, noMistakesPRSignature+"\n\n", noMistakesPRSignature+"\n\n"+attestation+"\n\n", 1)
+	pipelineMD = strings.Replace(pipelineMD, alaminoPRSignature+"\n\n", alaminoPRSignature+"\n\n"+attestation+"\n\n", 1)
 
 	got := assemblePRBody(sctx, "## What Changed\n\n"+strings.Repeat("change 😀 ", 1000), strings.Repeat("risk 😀 ", 1000), "", pipelineMD, limit, scm.ProviderAzureDevOps)
 
 	if scm.PRBodyLen(got) > limit {
 		t.Fatalf("assembled body = %d units, want <= %d", scm.PRBodyLen(got), limit)
 	}
-	for _, want := range []string{"## Pipeline", noMistakesPRSignature, attestation} {
+	for _, want := range []string{"## Pipeline", alaminoPRSignature, attestation} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("budgeted body dropped required pipeline content %q:\n%s", want, got)
 		}
@@ -1495,7 +1495,7 @@ func TestAppendGeneratedSections_RetainsPipelineAttestationWhenTruncated(t *test
 	}
 	attestation := buildPipelineAttestation(steps, nil, testPipelineHeadSHA)
 	pipelineMD := pipelineMarkdownForTest(strings.Repeat("review round - "+strings.Repeat("x", 1000), 100))
-	pipelineMD = strings.Replace(pipelineMD, noMistakesPRSignature+"\n\n", noMistakesPRSignature+"\n\n"+attestation+"\n\n", 1)
+	pipelineMD = strings.Replace(pipelineMD, alaminoPRSignature+"\n\n", alaminoPRSignature+"\n\n"+attestation+"\n\n", 1)
 
 	got := appendGeneratedSections("## What Changed\n\n- summary", "", "", pipelineMD, scm.ProviderGitHub)
 
@@ -1513,7 +1513,7 @@ func TestAppendGeneratedSections_RetainsAttestationWhenEssentialSectionsOverflow
 	}
 	attestation := buildPipelineAttestation(steps, nil, testPipelineHeadSHA)
 	pipelineMD := pipelineMarkdownForTest("review round 001")
-	pipelineMD = strings.Replace(pipelineMD, noMistakesPRSignature+"\n\n", noMistakesPRSignature+"\n\n"+attestation+"\n\n", 1)
+	pipelineMD = strings.Replace(pipelineMD, alaminoPRSignature+"\n\n", alaminoPRSignature+"\n\n"+attestation+"\n\n", 1)
 
 	got := appendGeneratedSections(
 		"## What Changed\n\n"+strings.Repeat("change detail\n", 5000),
@@ -1524,7 +1524,7 @@ func TestAppendGeneratedSections_RetainsAttestationWhenEssentialSectionsOverflow
 	)
 
 	assertGitHubBodyLimitForTest(t, got)
-	for _, want := range []string{"## Pipeline", noMistakesPRSignature, attestation} {
+	for _, want := range []string{"## Pipeline", alaminoPRSignature, attestation} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("budgeted body dropped required pipeline content %q:\n%s", want, got)
 		}
@@ -2081,7 +2081,7 @@ func bitbucketPRDescriptionForTest(t *testing.T, raw string) string {
 
 func pipelineMarkdownForTest(rounds ...string) string {
 	var b strings.Builder
-	b.WriteString("## Pipeline\n\nUpdates from [git push no-mistakes](https://github.com/kunchenguid/no-mistakes)\n\n")
+	b.WriteString("## Pipeline\n\nUpdates from [git push alamino](https://github.com/mika-rafie/alamino)\n\n")
 	b.WriteString("<details>\n")
 	b.WriteString("<summary>🔧 **Review** - update rounds</summary>\n\n")
 	for _, round := range rounds {
@@ -2094,7 +2094,7 @@ func pipelineMarkdownForTest(rounds ...string) string {
 
 func bitbucketPipelineMarkdownForTest(rounds ...string) string {
 	var b strings.Builder
-	b.WriteString("## Pipeline\n\nUpdates from [git push no-mistakes](https://github.com/kunchenguid/no-mistakes)\n\n")
+	b.WriteString("## Pipeline\n\nUpdates from [git push alamino](https://github.com/mika-rafie/alamino)\n\n")
 	b.WriteString("### ✅ **Review** - passed\n\n")
 	for _, round := range rounds {
 		b.WriteString(round)
@@ -2718,12 +2718,12 @@ func TestPRStep_LateSuccessAfterTimeoutDoesNotUseAgentTitle(t *testing.T) {
 // TestPRStep_EmbeddedAttestationDoesNotShadowTheRealOne guards the compliance
 // check against the PR body's own evidence.
 //
-// require-no-mistakes reads the FIRST attestation comment in the body and binds
+// require-alamino reads the FIRST attestation comment in the body and binds
 // its head_sha to the PR head. A step agent that captures a generated PR body
 // as evidence embeds that body's attestation comment verbatim, carrying the
 // evidence run's head_sha; because the Testing section precedes the Pipeline
 // section, the embedded copy wins and the check fails a PR the pipeline did
-// produce. Seen live on kunchenguid/no-mistakes#831, whose test evidence
+// produce. Seen live on mika-rafie/alamino#831, whose test evidence
 // embedded three.
 func TestPRStep_EmbeddedAttestationDoesNotShadowTheRealOne(t *testing.T) {
 	t.Parallel()
@@ -2996,7 +2996,7 @@ func TestPRAppendixModes_RenderBodies(t *testing.T) {
 		{StepName: types.StepDocument, Status: types.StepStatusCompleted},
 	}
 	attestation := buildPipelineAttestation(steps, nil, testPipelineHeadSHA)
-	pipelineMD := strings.Replace(pipelineMarkdownForTest("review round kept"), noMistakesPRSignature+"\n\n", noMistakesPRSignature+"\n\n"+attestation+"\n\n", 1)
+	pipelineMD := strings.Replace(pipelineMarkdownForTest("review round kept"), alaminoPRSignature+"\n\n", alaminoPRSignature+"\n\n"+attestation+"\n\n", 1)
 	foreign := pipelineAttestationCommentPrefix + `{"head_sha":"` + strings.Repeat("a", 40) + `","steps":[]}` + pipelineAttestationCommentClosingToken
 
 	render := func(t *testing.T, mode string, publishIntent bool, provider scm.Provider, riskLine, testingMD string) string {

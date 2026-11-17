@@ -7,8 +7,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestLogConfiguredCommandOutputKeepsFullFileLogAndBoundsIPC(t *testing.T) {
@@ -67,7 +67,7 @@ func TestConfiguredCommandFailureSummaryBoundsHeadTailAndUTF8(t *testing.T) {
 		"TAIL_MARKER 最后的错误🙂",
 		fmt.Sprintf("original byte count: %d", len(output)),
 		"complete output: Test step log",
-		"no-mistakes axi logs --step test --full",
+		"alamino axi logs --step test --full",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("summary missing %q", want)

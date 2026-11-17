@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // installWindowsTask registers the daemon as a per-user scheduled task.
@@ -41,7 +41,7 @@ func installWindowsTask(p *paths.Paths, exe string) error {
 	if strings.TrimSpace(account) == "" {
 		return errors.New("resolve current user for scheduled task: empty account name")
 	}
-	definition, err := os.CreateTemp("", "no-mistakes-task-*.xml")
+	definition, err := os.CreateTemp("", "alamino-task-*.xml")
 	if err != nil {
 		return fmt.Errorf("write scheduled task definition: %w", err)
 	}

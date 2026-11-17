@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestExecutor_AgentCrashRetryDoesNotRetryGitExit(t *testing.T) {
@@ -172,7 +172,7 @@ import (
  "os"
 )
 func main() {
- f, err := os.OpenFile(os.Getenv("NM_TEST_CLAUDE_ATTEMPTS"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+ f, err := os.OpenFile(os.Getenv("ALAMINO_TEST_CLAUDE_ATTEMPTS"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
  if err != nil { panic(err) }
  if _, err := f.WriteString("attempt\n"); err != nil { panic(err) }
  if err := f.Close(); err != nil { panic(err) }
@@ -204,7 +204,7 @@ func main() {
 	calls := 0
 	step := &adaptiveCallStep{name: types.StepTest, fn: func(sctx *StepContext) (*StepOutcome, error) {
 		calls++
-		_, err := sctx.RunAgent(agent.RunOpts{CWD: work, Prompt: "test", Env: []string{"NM_TEST_CLAUDE_ATTEMPTS=" + attempts}})
+		_, err := sctx.RunAgent(agent.RunOpts{CWD: work, Prompt: "test", Env: []string{"ALAMINO_TEST_CLAUDE_ATTEMPTS=" + attempts}})
 		return &StepOutcome{}, err
 	}}
 	executor := NewExecutor(database, p, &config.Config{AgentCrashRetries: 1}, ag, []Step{step}, nil)
@@ -233,7 +233,7 @@ import (
  "os"
 )
 func main() {
- f, err := os.OpenFile(os.Getenv("NM_TEST_CODEX_ATTEMPTS"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+ f, err := os.OpenFile(os.Getenv("ALAMINO_TEST_CODEX_ATTEMPTS"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
  if err != nil { panic(err) }
  if _, err := f.WriteString("attempt\n"); err != nil { panic(err) }
  if err := f.Close(); err != nil { panic(err) }
@@ -273,7 +273,7 @@ func main() {
 		_, err := sctx.RunAgent(agent.RunOpts{
 			CWD: work, Prompt: "review",
 			JSONSchema: []byte(`{"type":"object","properties":{"findings":{"type":"array"}}}`),
-			Env:        []string{"NM_TEST_CODEX_ATTEMPTS=" + attempts},
+			Env:        []string{"ALAMINO_TEST_CODEX_ATTEMPTS=" + attempts},
 		})
 		if !agent.IsTerminalProviderError(err) {
 			t.Errorf("RunAgent error = %v, want terminal provider error", err)
@@ -307,7 +307,7 @@ import (
  "os"
 )
 func main() {
- f, err := os.OpenFile(os.Getenv("NM_TEST_CLAUDE_ATTEMPTS"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+ f, err := os.OpenFile(os.Getenv("ALAMINO_TEST_CLAUDE_ATTEMPTS"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
  if err != nil { panic(err) }
  if _, err := f.WriteString("attempt\n"); err != nil { panic(err) }
  if err := f.Close(); err != nil { panic(err) }
@@ -347,7 +347,7 @@ func main() {
 		stepCalls++
 		_, err := sctx.RunAgent(agent.RunOpts{
 			CWD: work, Prompt: "review",
-			Env: []string{"NM_TEST_CLAUDE_ATTEMPTS=" + attempts},
+			Env: []string{"ALAMINO_TEST_CLAUDE_ATTEMPTS=" + attempts},
 			OnAttempt: func(attempt agent.Attempt) {
 				if attempt.Agent == "claude" {
 					if !agent.IsTerminalProviderError(attempt.Err) {

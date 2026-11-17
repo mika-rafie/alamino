@@ -58,7 +58,7 @@ Without `-response`, the harness rebuilds the production state from the repo
 (`steps.BuildJevReplayState`: same digest, same candidates, excerpts per
 `-excerpt-bytes`) and calls the live TypeSafe API once, then persists the
 full response beside the summary so later replays are score-ranked. The live
-arm requires `NO_MISTAKES_JEV_LIVE=1` and `TYPESAFE_API_KEY` and refuses
+arm requires `ALAMINO_JEV_LIVE=1` and `TYPESAFE_API_KEY` and refuses
 without both, so plain `go test ./...` and excerpt-off replays never touch
 the network. The live arm also refuses a candidate without a label, so an
 unlabeled change cannot silently score.

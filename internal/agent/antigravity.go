@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 // antigravityAgent spawns the agy CLI for each invocation.
@@ -84,7 +84,7 @@ func antigravityUserSetPrintTimeout(extraArgs []string) bool {
 func (a *antigravityAgent) runOnce(ctx context.Context, opts RunOpts) (*Result, error) {
 	schemaPath := ""
 	if len(opts.JSONSchema) > 0 {
-		f, err := os.CreateTemp("", "no-mistakes-antigravity-schema-*.json")
+		f, err := os.CreateTemp("", "alamino-antigravity-schema-*.json")
 		if err != nil {
 			return nil, fmt.Errorf("antigravity schema temp file: %w", err)
 		}

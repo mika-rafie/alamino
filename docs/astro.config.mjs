@@ -3,17 +3,15 @@ import mermaid from "astro-mermaid";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
-  site: "https://kunchenguid.github.io",
-  base: "/no-mistakes",
+  site: "https://mika-rafie.github.io",
+  base: "/alamino",
   integrations: [
     mermaid({ enableLog: false }),
     starlight({
-      title: "git push no-mistakes",
+      title: "git push alamino",
       customCss: ["./src/styles/custom.css"],
       social: {
-        github: "https://github.com/kunchenguid/no-mistakes",
-        discord: "https://discord.gg/Wsy2NpnZDu",
-        "x.com": "https://x.com/kunchenguid",
+        github: "https://github.com/mika-rafie/alamino",
       },
       sidebar: [
         {

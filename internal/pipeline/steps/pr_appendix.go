@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // Closed by default: GitHub, GitLab, Gitea, Forgejo, and Azure render a
@@ -66,7 +66,7 @@ func wrapValidation(inner string) string {
 // carries that comment inside a text fence, and the fence is kept so the
 // marker stays visible there.
 func minimalTail(risk, pipelineMD string, provider scm.Provider) string {
-	intro := noMistakesPRSignature
+	intro := alaminoPRSignature
 	if rest, ok := strings.CutPrefix(pipelineMD, "## Pipeline\n\n"); ok {
 		intro, _, _ = strings.Cut(rest, "\n\n")
 	}
@@ -185,7 +185,7 @@ func retainPRHeadProofDisclosure(body, pipelineMD string) string {
 		return body
 	}
 	intro, _, _ := strings.Cut(rest, "\n\n")
-	notice := strings.TrimSpace(strings.TrimPrefix(intro, noMistakesPRSignature))
+	notice := strings.TrimSpace(strings.TrimPrefix(intro, alaminoPRSignature))
 	if notice == "" {
 		return body
 	}

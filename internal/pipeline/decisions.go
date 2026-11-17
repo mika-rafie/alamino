@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
 // BindBranchDecisions loads the decisions a human already made on this branch

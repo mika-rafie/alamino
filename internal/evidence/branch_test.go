@@ -14,7 +14,7 @@ func TestNormalizeBranch_EmptyUsesDefault(t *testing.T) {
 
 func TestNormalizeBranch_AcceptsConfiguredNames(t *testing.T) {
 	for _, name := range []string{
-		"no-mistakes/evidence",
+		"alamino/evidence",
 		"evidence",
 		"team/ci/evidence",
 		"evidence-2",

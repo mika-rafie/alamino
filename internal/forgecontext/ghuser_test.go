@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // installFakeGH puts a gh on PATH that answers `gh auth token` with
@@ -71,7 +71,7 @@ func TestResolveGHUserSelectsTheForkOwnersLoginToken(t *testing.T) {
 		"github.com/remicaesar": {GHUser: "remicaesar"},
 	}
 
-	resolved, err := Resolve(context.Background(), profiles, "https://github.com/kunchenguid/no-mistakes.git", "https://github.com/RemiCaesar/no-mistakes.git")
+	resolved, err := Resolve(context.Background(), profiles, "https://github.com/mika-rafie/alamino.git", "https://github.com/RemiCaesar/alamino.git")
 	if err != nil {
 		t.Fatalf("Resolve: %v", err)
 	}
@@ -132,7 +132,7 @@ func TestResolveOwnerScopedKeyOutranksTheParentsHostKey(t *testing.T) {
 		"github.com/remicaesar": {GHUser: "remicaesar"},
 	}
 
-	resolved, err := Resolve(context.Background(), profiles, "https://github.com/kunchenguid/no-mistakes.git", "https://github.com/remicaesar/no-mistakes.git")
+	resolved, err := Resolve(context.Background(), profiles, "https://github.com/mika-rafie/alamino.git", "https://github.com/remicaesar/alamino.git")
 	if err != nil {
 		t.Fatalf("Resolve: %v", err)
 	}
@@ -140,7 +140,7 @@ func TestResolveOwnerScopedKeyOutranksTheParentsHostKey(t *testing.T) {
 		t.Fatalf("resolved %v, want the owner-scoped profile", resolved)
 	}
 
-	plain, err := Resolve(context.Background(), profiles, "https://github.com/kunchenguid/no-mistakes.git", "")
+	plain, err := Resolve(context.Background(), profiles, "https://github.com/mika-rafie/alamino.git", "")
 	if err != nil {
 		t.Fatalf("Resolve without fork: %v", err)
 	}
@@ -197,7 +197,7 @@ func TestResolveOwnerScopedKeyLeavesOtherOwnersAmbient(t *testing.T) {
 	argsFile := installFakeGH(t, "remicaesar")
 	profiles := config.ForgeProfiles{"github.com/remicaesar": {GHUser: "remicaesar"}}
 
-	resolved, err := Resolve(context.Background(), profiles, "https://github.com/kunchenguid/no-mistakes.git", "")
+	resolved, err := Resolve(context.Background(), profiles, "https://github.com/mika-rafie/alamino.git", "")
 	if err != nil {
 		t.Fatalf("Resolve: %v", err)
 	}
@@ -213,7 +213,7 @@ func TestResolveRefusesAGHUserThatIsNotSignedIn(t *testing.T) {
 	installFakeGH(t, "emir-lovie")
 	profiles := config.ForgeProfiles{"github.com/remicaesar": {GHUser: "remicaesar"}}
 
-	resolved, err := Resolve(context.Background(), profiles, "https://github.com/remicaesar/no-mistakes.git", "")
+	resolved, err := Resolve(context.Background(), profiles, "https://github.com/remicaesar/alamino.git", "")
 	if err == nil {
 		t.Fatalf("Resolve = %v, want refusal instead of the active account", resolved)
 	}

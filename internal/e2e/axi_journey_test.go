@@ -13,11 +13,11 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // axiIntent is a distinctive intent string so we can prove it flowed all the
@@ -74,8 +74,8 @@ func axiScenario(t *testing.T) string {
 	return path
 }
 
-// TestAxiAgentJourney proves an autonomous agent can drive a full no-mistakes
-// pipeline headlessly through the `no-mistakes axi` surface in an isolated
+// TestAxiAgentJourney proves an autonomous agent can drive a full alamino
+// pipeline headlessly through the `alamino axi` surface in an isolated
 // dummy environment: init installs the skill, the home view reports state,
 // `axi run` blocks at an approval gate and emits TOON, `axi respond` clears it
 // and runs to completion, and `axi status`/`logs` inspect the result. It also
@@ -166,7 +166,7 @@ func TestAxiBranchSyncJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("approve fix review: %v\n%s", err, doneOut)
 	}
-	for _, want := range []string{"outcome: passed", "branch_sync:", "state: behind", "command: no-mistakes axi sync"} {
+	for _, want := range []string{"outcome: passed", "branch_sync:", "state: behind", "command: alamino axi sync"} {
 		if !strings.Contains(doneOut, want) {
 			t.Errorf("post-push output missing %q:\n%s", want, doneOut)
 		}
@@ -322,7 +322,7 @@ func TestAxiRunReattachesAfterManagedFix(t *testing.T) {
 		"status: running",
 		"safety: blocked_pipeline_owned",
 		"code: continue_active_run",
-		"command: no-mistakes axi status",
+		"command: alamino axi status",
 	} {
 		if !strings.Contains(blockedOut, want) {
 			t.Errorf("pipeline-owned fresh run missing %q:\n%s", want, blockedOut)
@@ -386,7 +386,7 @@ func TestAxiCustodyRecoveryJourney(t *testing.T) {
 		"status: cancelled",
 		"safety: blocked_pipeline_owned_recoverable",
 		"code: recover_custody",
-		"command: no-mistakes axi sync --recover",
+		"command: alamino axi sync --recover",
 	} {
 		if !strings.Contains(abortOut, want) {
 			t.Errorf("abort output missing %q:\n%s", want, abortOut)
@@ -423,7 +423,7 @@ func TestAxiCustodyRecoveryJourney(t *testing.T) {
 		"status: cancelled",
 		"safety: blocked_pipeline_owned_recoverable",
 		"code: recover_custody",
-		"command: no-mistakes axi sync --recover",
+		"command: alamino axi sync --recover",
 	} {
 		if !strings.Contains(blockedOut, want) {
 			t.Errorf("blocked fresh run missing %q:\n%s", want, blockedOut)
@@ -454,8 +454,8 @@ func TestAxiCustodyRecoveryJourney(t *testing.T) {
 		"status: cancelled",
 		"safety: blocked_pipeline_owned_recoverable",
 		"code: recover_custody",
-		"command: no-mistakes axi sync --recover",
-		"no-mistakes rerun",
+		"command: alamino axi sync --recover",
+		"alamino rerun",
 	} {
 		if !strings.Contains(checkOut, want) {
 			t.Errorf("stranded check missing %q:\n%s", want, checkOut)
@@ -467,7 +467,7 @@ func TestAxiCustodyRecoveryJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("guarded recovery: %v\n%s", err, recoverOut)
 	}
-	for _, want := range []string{"recovered: true", "state: custody_returned", "changed: true", "no-mistakes axi run --intent"} {
+	for _, want := range []string{"recovered: true", "state: custody_returned", "changed: true", "alamino axi run --intent"} {
 		if !strings.Contains(recoverOut, want) {
 			t.Errorf("recover output missing %q:\n%s", want, recoverOut)
 		}
@@ -476,7 +476,7 @@ func TestAxiCustodyRecoveryJourney(t *testing.T) {
 	if got, gitErr := h.runGit(context.Background(), operator, "rev-parse", "HEAD"); gitErr != nil || strings.TrimSpace(string(got)) != preserved {
 		t.Fatalf("operator HEAD after recovery = %s (err %v), want preserved %s", strings.TrimSpace(string(got)), gitErr, preserved)
 	}
-	anchorRef := "refs/no-mistakes/recover/" + run.ID
+	anchorRef := "refs/alamino/recover/" + run.ID
 	if got, gitErr := h.runGit(context.Background(), operator, "rev-parse", anchorRef); gitErr != nil || strings.TrimSpace(string(got)) != preserved {
 		t.Fatalf("recovery anchor %s = %s (err %v), want preserved %s", anchorRef, strings.TrimSpace(string(got)), gitErr, preserved)
 	}
@@ -535,14 +535,14 @@ func TestAxiTerminalEqualTreeRecoveryJourney(t *testing.T) {
 		t.Fatalf("record reviewed result: %v\n%s", gitErr, out)
 	}
 	recorded := strings.TrimSpace(h.WorktreeRefSHA(branch))
-	if out, gitErr := h.runGit(context.Background(), gateDir, "fetch", operator, recorded+":refs/no-mistakes/test-recorded"); gitErr != nil {
+	if out, gitErr := h.runGit(context.Background(), gateDir, "fetch", operator, recorded+":refs/alamino/test-recorded"); gitErr != nil {
 		t.Fatalf("import recorded result: %v\n%s", gitErr, out)
 	}
 	treeBytes, err := h.runGit(context.Background(), gateDir, "rev-parse", recorded+"^{tree}")
 	if err != nil {
 		t.Fatalf("recorded tree: %v\n%s", err, treeBytes)
 	}
-	liveBytes, err := h.runGit(context.Background(), gateDir, "-c", "user.name=No Mistakes E2E", "-c", "user.email=e2e@example.com", "commit-tree", strings.TrimSpace(string(treeBytes)), "-p", strings.TrimSpace(string(mainBytes)), "-m", "live equal-tree rewrite")
+	liveBytes, err := h.runGit(context.Background(), gateDir, "-c", "user.name=Alamino E2E", "-c", "user.email=e2e@example.com", "commit-tree", strings.TrimSpace(string(treeBytes)), "-p", strings.TrimSpace(string(mainBytes)), "-m", "live equal-tree rewrite")
 	if err != nil {
 		t.Fatalf("commit live rewrite: %v\n%s", err, liveBytes)
 	}
@@ -556,7 +556,7 @@ func TestAxiTerminalEqualTreeRecoveryJourney(t *testing.T) {
 	if out, gitErr := h.runGit(context.Background(), gateDir, "merge-tree", "--write-tree", "--merge-base", strings.TrimSpace(string(mainBytes)), live, submitted); gitErr == nil {
 		t.Fatalf("fixture did not reproduce direct live/local merge conflict: %s", out)
 	}
-	if out, gitErr := h.runGit(context.Background(), gateDir, "update-ref", "-d", "refs/no-mistakes/test-recorded"); gitErr != nil {
+	if out, gitErr := h.runGit(context.Background(), gateDir, "update-ref", "-d", "refs/alamino/test-recorded"); gitErr != nil {
 		t.Fatalf("remove fixture ref: %v\n%s", gitErr, out)
 	}
 
@@ -595,7 +595,7 @@ func TestAxiTerminalEqualTreeRecoveryJourney(t *testing.T) {
 	if got := strings.TrimSpace(h.WorktreeRefSHA(branch)); got != live {
 		t.Fatalf("operator HEAD = %s, want live gate head %s", got, live)
 	}
-	for _, ref := range []string{"refs/no-mistakes/recover/" + run.ID, "refs/no-mistakes/recover-local/" + run.ID} {
+	for _, ref := range []string{"refs/alamino/recover/" + run.ID, "refs/alamino/recover-local/" + run.ID} {
 		if out, gitErr := h.runGit(context.Background(), operator, "rev-parse", ref); gitErr != nil {
 			t.Fatalf("missing recovery ref %s: %v\n%s", ref, gitErr, out)
 		}
@@ -738,7 +738,7 @@ func TestAxiCustodyRecoveryAfterRebaseJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("rebase-superset recovery escalated instead of returning custody: %v\n%s", err, recoverOut)
 	}
-	for _, want := range []string{"recovered: true", "state: custody_returned", "changed: true", "no-mistakes axi run --intent"} {
+	for _, want := range []string{"recovered: true", "state: custody_returned", "changed: true", "alamino axi run --intent"} {
 		if !strings.Contains(recoverOut, want) {
 			t.Errorf("recover output missing %q:\n%s", want, recoverOut)
 		}
@@ -762,7 +762,7 @@ func TestAxiCustodyRecoveryAfterRebaseJourney(t *testing.T) {
 	if out, gitErr := h.runGit(context.Background(), operator, "status", "--porcelain"); gitErr != nil || strings.TrimSpace(string(out)) != "" {
 		t.Fatalf("worktree not clean after adoption: %q (err %v)", string(out), gitErr)
 	}
-	localAnchor := "refs/no-mistakes/recover-local/" + run.ID
+	localAnchor := "refs/alamino/recover-local/" + run.ID
 	if got, gitErr := h.runGit(context.Background(), operator, "rev-parse", localAnchor); gitErr != nil || strings.TrimSpace(string(got)) != submitted {
 		t.Fatalf("pre-recovery anchor %s = %s (err %v), want submitted %s", localAnchor, strings.TrimSpace(string(got)), gitErr, submitted)
 	}
@@ -943,7 +943,7 @@ func TestAxiPrePushAbortUnmovedHeadCustodyJourney(t *testing.T) {
 	if got, gitErr := h.runGit(context.Background(), operator, "rev-parse", "HEAD"); gitErr != nil || strings.TrimSpace(string(got)) != submitted {
 		t.Fatalf("operator HEAD after released recover = %s (err %v), want submitted %s", strings.TrimSpace(string(got)), gitErr, submitted)
 	}
-	anchorRef := "refs/no-mistakes/recover/" + run.ID
+	anchorRef := "refs/alamino/recover/" + run.ID
 	if _, gitErr := h.runGit(context.Background(), operator, "rev-parse", "--verify", anchorRef); gitErr == nil {
 		t.Fatalf("released recover wrote anchor ref %s", anchorRef)
 	}
@@ -992,7 +992,7 @@ func operatorContext() context.Context { return context.Background() }
 
 // TestAxiRunSkipsRepositoryPrePushHookForLocalGate reproduces the launch hang
 // from a repository whose ordinary upstream pushes run a substantial pre-push
-// gate. The no-mistakes push is only the control-plane trigger for the real
+// gate. The alamino push is only the control-plane trigger for the real
 // validation pipeline, so invoking that repository hook here can block before
 // the gate's post-receive hook registers any run.
 func TestAxiRunSkipsRepositoryPrePushHookForLocalGate(t *testing.T) {
@@ -1008,7 +1008,7 @@ func TestAxiRunSkipsRepositoryPrePushHookForLocalGate(t *testing.T) {
 	operator := h.AddWorktree("feature/pre-push")
 	hookDir := t.TempDir()
 	marker := filepath.Join(t.TempDir(), "pre-push-ran")
-	hook := "#!/bin/sh\nprintf 'invoked\\n' > \"$NM_E2E_PRE_PUSH_MARKER\"\nexit 97\n"
+	hook := "#!/bin/sh\nprintf 'invoked\\n' > \"$ALAMINO_E2E_PRE_PUSH_MARKER\"\nexit 97\n"
 	if err := os.WriteFile(filepath.Join(hookDir, "pre-push"), []byte(hook), 0o755); err != nil {
 		t.Fatalf("write pre-push hook: %v", err)
 	}
@@ -1018,8 +1018,8 @@ func TestAxiRunSkipsRepositoryPrePushHookForLocalGate(t *testing.T) {
 
 	tracePath := filepath.Join(t.TempDir(), "git-trace.json")
 	out, err := h.RunInDirWithEnv(operator, map[string]string{
-		"GIT_TRACE2_EVENT":       tracePath,
-		"NM_E2E_PRE_PUSH_MARKER": marker,
+		"GIT_TRACE2_EVENT":            tracePath,
+		"ALAMINO_E2E_PRE_PUSH_MARKER": marker,
 	}, "axi", "run", "--intent", "validate without duplicating the repository pre-push gate")
 	if err != nil {
 		t.Fatalf("axi run was blocked by the repository pre-push hook: %v\n%s", err, out)
@@ -1081,7 +1081,7 @@ func TestAxiAgentJourney(t *testing.T) {
 		"status: awaiting_approval",
 		"ask-user",
 		"potential nil deref",
-		"no-mistakes axi respond --action approve",
+		"alamino axi respond --action approve",
 	} {
 		if !strings.Contains(gateOut, want) {
 			t.Errorf("axi run gate output missing %q in:\n%s", want, gateOut)
@@ -1415,15 +1415,15 @@ func anyPromptContains(h *Harness, sub string) bool {
 	return false
 }
 
-// assertSkillInstalled verifies init wrote the no-mistakes skill into both
+// assertSkillInstalled verifies init wrote the alamino skill into both
 // user-level agent skill directories (the Claude Code and vendor-neutral
 // conventions under the user's home) with valid frontmatter, and left the
 // repo's working tree untouched by skill files.
 func assertSkillInstalled(t *testing.T, h *Harness) {
 	t.Helper()
 	for _, rel := range []string{
-		filepath.Join(".claude", "skills", "no-mistakes", "SKILL.md"),
-		filepath.Join(".agents", "skills", "no-mistakes", "SKILL.md"),
+		filepath.Join(".claude", "skills", "alamino", "SKILL.md"),
+		filepath.Join(".agents", "skills", "alamino", "SKILL.md"),
 	} {
 		path := filepath.Join(h.HomeDir, rel)
 		data, err := os.ReadFile(path)
@@ -1432,9 +1432,9 @@ func assertSkillInstalled(t *testing.T, h *Harness) {
 		}
 		content := string(data)
 		for _, want := range []string{
-			"name: no-mistakes",
+			"name: alamino",
 			"user-invocable: true",
-			"no-mistakes axi run",
+			"alamino axi run",
 		} {
 			if !strings.Contains(content, want) {
 				t.Errorf("%s missing %q", rel, want)

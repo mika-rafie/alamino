@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // This fixture makes no live-product claim: it tests setup, not a user journey.
@@ -124,7 +124,7 @@ func TestAgentOnlyPreparation_RestorationFailureRetainsSnapshot(t *testing.T) {
 		if err := cleanupPreparationChanges(ctx, workDir, head, submodules); err != nil {
 			return err
 		}
-		indexes, err := filepath.Glob(filepath.Join(sctx.GateDir, "no-mistakes-preparation", "prepare-*", "root", "index"))
+		indexes, err := filepath.Glob(filepath.Join(sctx.GateDir, "alamino-preparation", "prepare-*", "root", "index"))
 		if err != nil || len(indexes) != 1 {
 			t.Fatalf("snapshot indexes=%v, err=%v", indexes, err)
 		}

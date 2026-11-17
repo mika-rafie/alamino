@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Greptile on #1697: a parked gate that reconciles on its own must not resume

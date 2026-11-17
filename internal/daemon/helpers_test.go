@@ -12,19 +12,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/logstore"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/logstore"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 func TestMain(m *testing.M) {
-	switch os.Getenv("NM_DAEMON_HELPER_PROCESS") {
+	switch os.Getenv("ALAMINO_DAEMON_HELPER_PROCESS") {
 	case "integration-remote":
-		p := paths.WithRoot(os.Getenv("NM_HOME"))
+		p := paths.WithRoot(os.Getenv("ALAMINO_HOME"))
 		database, err := db.Open(p.DB())
 		if err == nil {
 			err = RunWithOptions(p, database, func() []pipeline.Step {
@@ -38,11 +38,11 @@ func TestMain(m *testing.M) {
 		}
 		os.Exit(0)
 	case "1":
-		if capturePath := os.Getenv("NM_CAPTURE_NM_HOME_FILE"); capturePath != "" {
+		if capturePath := os.Getenv("ALAMINO_CAPTURE_ALAMINO_HOME_FILE"); capturePath != "" {
 			// Atomic rename so a poller that treats "file exists" as "content
 			// ready" cannot observe the empty create-before-write window that
 			// os.WriteFile leaves open (TestStartDetachedDaemonUsesProvidedRootViaNMHome).
-			_ = writeFileAtomic(capturePath, []byte(os.Getenv("NM_HOME")), 0o644)
+			_ = writeFileAtomic(capturePath, []byte(os.Getenv("ALAMINO_HOME")), 0o644)
 		}
 		// Stay alive long enough for tests with a synthetic health transition
 		// to distinguish launch from readiness. The production exit regression
@@ -88,7 +88,7 @@ func TestMain(m *testing.M) {
 			os.Exit(4)
 		}
 		child := exec.Command(exe)
-		child.Env = upsertEnv(os.Environ(), "NM_DAEMON_HELPER_PROCESS", "stderr-marker")
+		child.Env = upsertEnv(os.Environ(), "ALAMINO_DAEMON_HELPER_PROCESS", "stderr-marker")
 		child.Stderr = os.Stderr // as the bootstrap log-sink inherits it
 		winproc.Harden(child)
 		if err := child.Run(); err != nil {
@@ -99,7 +99,7 @@ func TestMain(m *testing.M) {
 		_, _ = os.Stderr.WriteString("child-stderr-marker\n")
 		os.Exit(0)
 	case "capture-output":
-		p := paths.WithRoot(os.Getenv("NM_HOME"))
+		p := paths.WithRoot(os.Getenv("ALAMINO_HOME"))
 		if err := p.EnsureDirs(); err != nil {
 			os.Exit(2)
 		}
@@ -115,13 +115,13 @@ func TestMain(m *testing.M) {
 		}
 		os.Exit(0)
 	}
-	// The post-receive hook embeds os.Executable() as NM_BIN. In tests that
+	// The post-receive hook embeds os.Executable() as ALAMINO_BIN. In tests that
 	// path is the test binary itself, so every `git push` to a bare gate
 	// would re-enter TestMain and run the whole daemon test suite inside
 	// the hook. Short-circuit: when we're being invoked as the hook's
 	// notifier, exit 0 immediately. Tests that care about the daemon seeing
 	// the push call push_received via IPC directly.
-	if os.Getenv("NM_HOOK_HELPER") == "1" {
+	if os.Getenv("ALAMINO_HOOK_HELPER") == "1" {
 		os.Exit(0)
 	}
 	// Agent harnesses inject git config (e.g. safe.bareRepository=explicit)
@@ -135,7 +135,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	// Fixtures must not inherit the developer's global git config: a
 	// commit.gpgsign=true there makes every fixture commit ask gpg to sign.
-	globalConfigDir, err := os.MkdirTemp("", "no-mistakes-daemon-tests-")
+	globalConfigDir, err := os.MkdirTemp("", "alamino-daemon-tests-")
 	if err != nil {
 		panic(err)
 	}
@@ -178,7 +178,7 @@ func startTestDaemon(t *testing.T) (*paths.Paths, *db.DB) {
 // TestRunTestDaemonStartupError exercises the helper through a failed daemon
 // startup in a child test process, so its fatal diagnostic can be asserted.
 func TestRunTestDaemonStartupError(t *testing.T) {
-	const childEnv = "NM_TEST_DAEMON_STARTUP_ERROR"
+	const childEnv = "ALAMINO_TEST_DAEMON_STARTUP_ERROR"
 	if os.Getenv(childEnv) == "1" {
 		p := paths.WithRoot(t.TempDir())
 		if err := p.EnsureDirs(); err != nil {
@@ -348,7 +348,7 @@ func setupTestGitRepo(t *testing.T, p *paths.Paths, d *db.DB, repoID string) (*d
 		t.Fatal(err)
 	}
 	// Disable auto-fix so approval-based tests pause immediately.
-	if err := os.WriteFile(filepath.Join(workDir, ".no-mistakes.yaml"), []byte("auto_fix:\n  lint: 0\n  test: 0\n  review: 0\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".alamino.yaml"), []byte("auto_fix:\n  lint: 0\n  test: 0\n  review: 0\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	gitCmd(t, workDir, "add", ".")
@@ -382,10 +382,10 @@ func setupTestGitRepo(t *testing.T, p *paths.Paths, d *db.DB, repoID string) (*d
 
 func commitTrustedRepoConfig(t *testing.T, repo *db.Repo, contents string) string {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".no-mistakes.yaml"), []byte(contents), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".alamino.yaml"), []byte(contents), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	gitCmd(t, repo.WorkingPath, "add", ".no-mistakes.yaml")
+	gitCmd(t, repo.WorkingPath, "add", ".alamino.yaml")
 	gitCmd(t, repo.WorkingPath, "commit", "-m", "configure trusted test policy")
 	gitCmd(t, repo.WorkingPath, "push", "gate", "HEAD:refs/heads/main")
 	return gitOutput(t, repo.WorkingPath, "rev-parse", "HEAD")

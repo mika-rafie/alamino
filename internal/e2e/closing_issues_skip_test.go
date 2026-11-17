@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestClosingIssueRefsSkippedPRIsRefused drives every way a run carrying
@@ -29,7 +29,7 @@ func TestClosingIssueRefsSkippedPRIsRefused(t *testing.T) {
 	h.CommitChange(cliBranch, "c.txt", "c\n", "add cli skip fixture")
 	wt := h.AddWorktree(cliBranch)
 	out, err := h.RunInDir(wt, "axi", "run", "--intent", "skip", "--skip", "ci,pr", "--closes", "95")
-	saveEvidence(t, "15-skip-pr-cli-rejected.txt", "$ no-mistakes axi run --skip ci,pr --closes 95\n"+out+"\nerr: "+errString(err)+"\n")
+	saveEvidence(t, "15-skip-pr-cli-rejected.txt", "$ alamino axi run --skip ci,pr --closes 95\n"+out+"\nerr: "+errString(err)+"\n")
 	if err == nil || !strings.Contains(out, "cannot be combined with --skip pr") {
 		t.Fatalf("--closes with --skip pr should be refused, err=%v out:\n%s", err, out)
 	}
@@ -43,12 +43,12 @@ func TestClosingIssueRefsSkippedPRIsRefused(t *testing.T) {
 	h.CommitChange(optBranch, "o.txt", "o\n", "add option skip fixture")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	if out, err := h.runGit(ctx, h.WorkDir, "push", "-o", "no-mistakes.closes=95", "-o", "no-mistakes.skip=ci,pr", "no-mistakes", optBranch); err != nil {
+	if out, err := h.runGit(ctx, h.WorkDir, "push", "-o", "alamino.closes=95", "-o", "alamino.skip=ci,pr", "alamino", optBranch); err != nil {
 		t.Fatalf("push: %v\n%s", err, out)
 	}
 	run := h.WaitForRun(optBranch, 3*time.Minute)
 	pr, _ := findStep(run.Steps, types.StepPR)
-	evidence := "$ git push -o no-mistakes.closes=95 -o no-mistakes.skip=ci,pr no-mistakes " + optBranch +
+	evidence := "$ git push -o alamino.closes=95 -o alamino.skip=ci,pr alamino " + optBranch +
 		"\nrun status: " + string(run.Status) + "\npr step status: " + string(pr.Status) + "\npr step error: " + deref(pr.Error) + "\n"
 	saveEvidence(t, "16-skip-pr-push-option-fails.txt", evidence)
 	if run.Status != types.RunFailed || pr.Status != types.StepStatusFailed || !strings.Contains(deref(pr.Error), "--closes requires publishing a pull request") {
@@ -69,7 +69,7 @@ func TestClosingIssueRefsSkippedPRIsRefused(t *testing.T) {
 	out, _ = h.RunInDir(ewt, "axi", "run", "--intent", "already merged", "--skip", "ci", "--closes", "96")
 	run = h.WaitForRun(emptyBranch, 3*time.Minute)
 	pr, _ = findStep(run.Steps, types.StepPR)
-	evidence = "$ no-mistakes axi run --skip ci --closes 96   # branch change already on main\n" + out +
+	evidence = "$ alamino axi run --skip ci --closes 96   # branch change already on main\n" + out +
 		"\nrun status: " + string(run.Status) + "\npr step status: " + string(pr.Status) + "\npr step error: " + deref(pr.Error) + "\n"
 	for _, s := range run.Steps {
 		evidence += "step " + string(s.StepName) + ": " + string(s.Status) + "\n"

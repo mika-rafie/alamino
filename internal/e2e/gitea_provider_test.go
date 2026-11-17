@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestGiteaProviderJourney exercises the Gitea provider end to end through

@@ -20,12 +20,12 @@ var buildDir string
 func TestMain(m *testing.M) {
 	// Helper mode for the console probe's control run: a console-subsystem
 	// process without the manifest that follows the probe's protocol.
-	if os.Getenv("NM_WINRES_TEST_HELPER") == "ready" {
+	if os.Getenv("ALAMINO_WINRES_TEST_HELPER") == "ready" {
 		fmt.Println("ready")
 		_, _ = io.Copy(io.Discard, os.Stdin)
 		os.Exit(0)
 	}
-	dir, err := os.MkdirTemp("", "nm-winres-test-")
+	dir, err := os.MkdirTemp("", "alamino-winres-test-")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "create build dir: %v\n", err)
 		os.Exit(1)
@@ -157,13 +157,13 @@ func TestCommittedObjectsMatchGenerator(t *testing.T) {
 	}
 }
 
-func TestNoMistakesExecutableCarriesExactlyTheManifest(t *testing.T) {
+func TestAlaminoExecutableCarriesExactlyTheManifest(t *testing.T) {
 	if testing.Short() {
-		t.Skip("cross-builds no-mistakes.exe for every Windows target")
+		t.Skip("cross-builds alamino.exe for every Windows target")
 	}
 	for _, target := range Targets {
 		t.Run(target.GOARCH, func(t *testing.T) {
-			f, err := pe.Open(buildNoMistakes(t, target.GOARCH))
+			f, err := pe.Open(buildAlamino(t, target.GOARCH))
 			if err != nil {
 				t.Fatalf("open executable: %v", err)
 			}
@@ -195,19 +195,19 @@ var (
 	buildCache = map[string]string{}
 )
 
-// buildNoMistakes builds cmd/no-mistakes for windows/goarch once per test
+// buildAlamino builds cmd/alamino for windows/goarch once per test
 // process, exactly as `make dist` does apart from version stamping.
-func buildNoMistakes(t *testing.T, goarch string) string {
+func buildAlamino(t *testing.T, goarch string) string {
 	t.Helper()
 	buildMu.Lock()
 	defer buildMu.Unlock()
 	if exe, ok := buildCache[goarch]; ok {
 		return exe
 	}
-	exe := filepath.Join(buildDir, "no-mistakes-"+goarch+".exe")
+	exe := filepath.Join(buildDir, "alamino-"+goarch+".exe")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "go", "build", "-o", exe, "github.com/kunchenguid/no-mistakes/cmd/no-mistakes")
+	cmd := exec.CommandContext(ctx, "go", "build", "-o", exe, "github.com/mika-rafie/alamino/cmd/alamino")
 	cmd.Env = append(os.Environ(), "GOOS=windows", "GOARCH="+goarch, "CGO_ENABLED=0")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("go build windows/%s: %v\n%s", goarch, err, out)

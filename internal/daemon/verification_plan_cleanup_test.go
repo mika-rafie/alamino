@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
 )
 
 func TestReleaseVerificationPlanPreservesRunOwnership(t *testing.T) {
@@ -25,7 +25,7 @@ func TestReleaseVerificationPlanPreservesRunOwnership(t *testing.T) {
 	mgr := &RunManager{paths: p, db: d}
 	srv := ipc.NewServer()
 	registerHandlers(srv, mgr, d, func() {})
-	socketRoot, err := os.MkdirTemp("", "nm-cleanup-")
+	socketRoot, err := os.MkdirTemp("", "alamino-cleanup-")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestExecutorAutomaticSkipReasonRedactsCredentials(t *testing.T) {
@@ -596,7 +596,7 @@ func TestExecutor_StepError_FailsRun(t *testing.T) {
 
 func TestExecutor_OutOfMemoryFailureReasonKeepsRestorationDetail(t *testing.T) {
 	database, p, run, repo := setupTest(t)
-	const snapshot = "/tmp/nm-recovery-snapshot"
+	const snapshot = "/tmp/alamino-recovery-snapshot"
 	stepErr := errors.Join(
 		fmt.Errorf("run prepare command: %w", shellenv.ErrOutOfMemory),
 		fmt.Errorf("restore pre-preparation changes; recovery snapshot retained at %s: %w", snapshot, errors.New("git stash apply failed")),

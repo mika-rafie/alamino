@@ -6,11 +6,11 @@ import (
 )
 
 func TestLoadGlobalConfig_EvidenceDir(t *testing.T) {
-	global, err := LoadGlobalFromBytes([]byte("evidence_dir: ~/Dropbox/no-mistakes-evidence\n"))
+	global, err := LoadGlobalFromBytes([]byte("evidence_dir: ~/Dropbox/alamino-evidence\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if global.EvidenceDir != "~/Dropbox/no-mistakes-evidence" {
+	if global.EvidenceDir != "~/Dropbox/alamino-evidence" {
 		t.Fatalf("evidence_dir = %q", global.EvidenceDir)
 	}
 	merged := Merge(global, &RepoConfig{})

@@ -7,15 +7,15 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // MaxRunPRBodyBytes bounds a caller-supplied PR description (axi run
 // --pr-body-file). The body travels as one base64 push option, so this is the
 // same pkt-line budget as intent; internal/cli pins the two together.
-const MaxRunPRBodyBytes = 49122
+const MaxRunPRBodyBytes = 49125
 
 // NormalizeRunPRTitle validates a caller-supplied PR title and returns it
 // trimmed. An empty input means none was supplied. The CLI checks it before any
@@ -69,7 +69,7 @@ func ValidateRunPRBody(body string) error {
 		}
 	}
 	if hasPRAppendixMarkers(body) || strings.Contains(body, pipelineAttestationCommentPrefix) {
-		return fmt.Errorf("must not contain reserved no-mistakes publication markers")
+		return fmt.Errorf("must not contain reserved alamino publication markers")
 	}
 	return nil
 }
