@@ -77,7 +77,8 @@ func TestCIWorkflow_RetainsFullRaceSuiteAsBroadRegressionOwner(t *testing.T) {
 		t.Fatalf("read ci.yml: %v", err)
 	}
 	content := string(data)
-	if !regexp.MustCompile(`(?m)^\s+run: go test -race( -timeout=\S+)? \./\.\.\.$`).MatchString(content) {
+	// \r? because a Windows checkout can carry CRLF line endings.
+	if !regexp.MustCompile(`(?m)^\s+run: go test -race( -timeout=\S+)? \./\.\.\.\r?$`).MatchString(content) {
 		t.Fatal("CI workflow must still run go test -race ./... as the broad regression owner")
 	}
 	if !strings.Contains(content, "if: runner.os != 'Windows'") {

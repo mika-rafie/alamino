@@ -234,7 +234,9 @@ func TestSuppliedPRTextExistingPRJourney(t *testing.T) {
 		if failed == nil {
 			continue
 		}
-		if st, _ := findStep(failed.Steps, types.StepPR); failed.Status.Terminal() || (st.Status != types.StepStatusPending && st.Status != types.StepStatusRunning) {
+		// Step rows appear one at a time, so a missing PR step means the run is
+		// still being set up, not that the step has finished.
+		if st, ok := findStep(failed.Steps, types.StepPR); failed.Status.Terminal() || (ok && st.Status != types.StepStatusPending && st.Status != types.StepStatusRunning) {
 			break
 		}
 	}

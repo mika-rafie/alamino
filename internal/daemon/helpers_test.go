@@ -541,7 +541,11 @@ printf '%s\n' '{"type":"result","subtype":"success","is_error":false,"structured
 func waitForRunTerminalState(t *testing.T, d *db.DB, runID string) *db.Run {
 	t.Helper()
 
-	timeout := 5 * time.Second
+	// A git-backed run takes about 4s on an idle machine under the race
+	// detector, so a tighter bound fails on a loaded runner without anything
+	// being wrong. The bound only limits how long a broken run can stall the
+	// suite; a passing run returns as soon as it is terminal.
+	timeout := 30 * time.Second
 	if runtime.GOOS == "windows" {
 		// Git-backed daemon runs routinely take about 10x longer on Windows,
 		// especially while the git-heavy CI shard runs several packages at once.
