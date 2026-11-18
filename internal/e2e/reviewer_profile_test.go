@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/e2edaemon"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/e2edaemon"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func reviewerJourneyConfig(model string) string {
@@ -203,7 +203,7 @@ func TestLiveReviewerSelectionMissingBeforeCustody(t *testing.T) {
 				if marshalErr != nil {
 					t.Fatal(marshalErr)
 				}
-				option := "no-mistakes.reviewer-profile=" + base64.RawURLEncoding.EncodeToString(raw)
+				option := "alamino.reviewer-profile=" + base64.RawURLEncoding.EncodeToString(raw)
 				output, pushErr := h.runGit(context.Background(), h.WorkDir, "push", "-o", option, gate.RemoteName, "HEAD")
 				out, err = string(output), pushErr
 			} else {

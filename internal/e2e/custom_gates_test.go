@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const gateRegistryStep = types.StepName("gate.test.package-registry")
@@ -148,10 +148,10 @@ func TestCustomGatesJourney(t *testing.T) {
 		}
 
 		// The contributor's branch: a new package that is registered nowhere, plus
-		// a .no-mistakes.yaml that drops the maintainer's gates and declares its own.
+		// a .alamino.yaml that drops the maintainer's gates and declares its own.
 		const branch = "feature/custom-gates"
 		h.CommitChange(branch, "internal/pricing/pricing.go", "package pricing\n\nfunc Quote() int { return 1 }\n", "add pricing package")
-		h.CommitChange(branch, ".no-mistakes.yaml", pushedRepoConfigAttemptingToAuthorItsOwnGates,
+		h.CommitChange(branch, ".alamino.yaml", pushedRepoConfigAttemptingToAuthorItsOwnGates,
 			"contributor: retarget the maintainer's gate")
 		h.PushToGate(branch)
 
@@ -232,7 +232,7 @@ func TestCustomGatesJourney(t *testing.T) {
 		// satisfies the maintainer's own script.
 		assertPushedHead(t, final.HeadSHA, h.UpstreamBranchSHA(branch))
 		log := upstreamLog(t, h, branch)
-		if !strings.Contains(log, "no-mistakes(gate.test.package-registry): register internal/pricing in ARCHITECTURE.md") {
+		if !strings.Contains(log, "alamino(gate.test.package-registry): register internal/pricing in ARCHITECTURE.md") {
 			t.Errorf("pushed branch is missing the gate's fix commit:\n%s", log)
 		}
 		registry := upstreamFile(t, h, branch, "ARCHITECTURE.md")
@@ -266,7 +266,7 @@ func TestCustomGatesJourney(t *testing.T) {
 
 		const branch = "feature/default-gate-budget"
 		h.CommitChange(branch, "internal/pricing/pricing.go", "package pricing\n\nfunc Quote() int { return 1 }\n", "add pricing package")
-		h.CommitChange(branch, ".no-mistakes.yaml", pushedRepoConfigAttemptingToAuthorItsOwnGates,
+		h.CommitChange(branch, ".alamino.yaml", pushedRepoConfigAttemptingToAuthorItsOwnGates,
 			"contributor: enable gate auto-fix")
 		h.PushToGate(branch)
 
@@ -305,7 +305,7 @@ func TestCustomGatesJourney(t *testing.T) {
 		}
 
 		const branch = "feature/gate-after-push"
-		h.CommitChange(branch, ".no-mistakes.yaml", `ignore_patterns:
+		h.CommitChange(branch, ".alamino.yaml", `ignore_patterns:
   - 'vendor/**'
 gates:
   - name: too-late
@@ -335,7 +335,7 @@ gates:
 
 		const branch = "feature/pushed-gates-only"
 		h.CommitChange(branch, "notes.txt", "a note\n", "add a note")
-		h.CommitChange(branch, ".no-mistakes.yaml", pushedRepoConfigAttemptingToAuthorItsOwnGates,
+		h.CommitChange(branch, ".alamino.yaml", pushedRepoConfigAttemptingToAuthorItsOwnGates,
 			"contributor: declare my own gates on my own branch")
 		h.PushToGate(branch)
 

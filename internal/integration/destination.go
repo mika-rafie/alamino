@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/evidence"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/evidence"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/safeurl"
 )
 
 // Destination is immutable run input. URL never contains embedded credentials.
@@ -177,7 +177,7 @@ func (d *Destination) RuntimeURL(ctx context.Context, workDir string) (string, e
 }
 
 func (d *Destination) Ref(branch string) string {
-	return "refs/no-mistakes/integration/" + d.Key + "/" + branch
+	return "refs/alamino/integration/" + d.Key + "/" + branch
 }
 
 func (d *Destination) Validate() error {

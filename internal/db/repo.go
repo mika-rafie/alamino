@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/integration"
+	"github.com/mika-rafie/alamino/internal/integration"
 )
 
 // Repo represents a registered repository.

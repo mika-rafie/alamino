@@ -11,16 +11,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // --- RunManager integration tests ---
@@ -49,70 +48,6 @@ func TestValidateRecoveredSessionProviders_RejectsUnavailableFixerProvider(t *te
 	defer claude.Close()
 	if err := validateRecoveredSessionProviders(database, run.ID, claude); err == nil || !strings.Contains(err.Error(), `session provider "codex" is no longer configured`) {
 		t.Fatalf("validate recovered fixer provider error = %v", err)
-	}
-}
-
-func TestPushReceivedTracksRunTelemetry(t *testing.T) {
-	recorder := &telemetryRecorder{}
-	restore := telemetry.SetDefaultForTesting(recorder)
-	defer restore()
-
-	step := &mockPassStep{name: types.StepReview}
-	p, d := startTestDaemonWithSteps(t, func() []pipeline.Step {
-		return []pipeline.Step{step}
-	})
-
-	_, headSHA := setupTestGitRepo(t, p, d, "telemetry-run-repo")
-
-	client, err := ipc.Dial(p.Socket())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer client.Close()
-
-	var result ipc.PushReceivedResult
-	err = client.Call(ipc.MethodPushReceived, &ipc.PushReceivedParams{
-		Gate: p.RepoDir("telemetry-run-repo"),
-		Ref:  "refs/heads/main",
-		Old:  "0000000000000000000000000000000000000000",
-		New:  headSHA,
-	}, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	run := waitForRunTerminalState(t, d, result.RunID)
-	if run.Status != types.RunCompleted {
-		t.Fatalf("run status = %q, want %q", run.Status, types.RunCompleted)
-	}
-
-	started := recorder.find("run", "action", "started")
-	if started == nil {
-		t.Fatal("expected run started telemetry event")
-	}
-	if got := started.fields["trigger"]; got != "push" {
-		t.Fatalf("started trigger = %v, want push", got)
-	}
-	if got := started.fields["agent"]; got != string(types.AgentClaude) {
-		t.Fatalf("started agent = %v, want %q", got, types.AgentClaude)
-	}
-	if got := started.fields["branch_role"]; got != "default" {
-		t.Fatalf("started branch_role = %v, want default", got)
-	}
-
-	// The executor persists terminal status before its owner goroutine emits
-	// terminal telemetry. Wait for that asynchronous handoff instead of
-	// assuming it completed in the same scheduling slice, which is especially
-	// unreliable on Windows.
-	finished := waitForTelemetryEvent(t, recorder, "run", "action", "finished")
-	if finished == nil {
-		t.Fatal("expected run finished telemetry event")
-	}
-	if got := finished.fields["status"]; got != string(types.RunCompleted) {
-		t.Fatalf("finished status = %v, want %q", got, types.RunCompleted)
-	}
-	if _, ok := finished.fields["duration_ms"]; !ok {
-		t.Fatal("expected duration_ms in run finished telemetry")
 	}
 }
 
@@ -826,7 +761,7 @@ func TestPushReceivedConcurrentDifferentBranchRunsAvoidSharedConfigLock(t *testi
 	_, headSHA := setupTestGitRepo(t, p, d, repoID)
 
 	// Mirror a real gate: enable the per-worktree config isolation that
-	// `no-mistakes init` installs, which is what lets identity writes avoid the
+	// `alamino init` installs, which is what lets identity writes avoid the
 	// shared config.lock.
 	if err := git.IsolateHooksPath(context.Background(), p.RepoDir(repoID)); err != nil {
 		t.Fatalf("isolate hooks path: %v", err)
@@ -1424,7 +1359,7 @@ func TestResolveRerunHeadUsesPreservedTerminalHeadInsteadOfStaleGateBranch(t *te
 	run := &db.Run{ID: "run-1", Branch: "feature/recover", Status: types.RunFailed, HeadSHA: preserved, SubmittedHeadSHA: &submitted}
 	now := int64(1)
 	run.TerminalHeadVerifiedAt = &now
-	gitCmd(t, work, "push", gate, preserved+":refs/no-mistakes/recover/"+run.ID)
+	gitCmd(t, work, "push", gate, preserved+":refs/alamino/recover/"+run.ID)
 
 	head, err := resolveRerunHead(context.Background(), gate, run.Branch, run)
 	if err != nil {
@@ -1566,66 +1501,8 @@ func writeManagerClaudeFixture(t *testing.T, home, repoCWD string, lines []strin
 	}
 }
 
-func TestPushReceivedTracksRunTelemetryAfterPanic(t *testing.T) {
-	recorder := &telemetryRecorder{}
-	restore := telemetry.SetDefaultForTesting(recorder)
-	defer restore()
-
-	step := &mockPanicStep{name: types.StepReview}
-	p, d := startTestDaemonWithSteps(t, func() []pipeline.Step {
-		return []pipeline.Step{step}
-	})
-
-	_, headSHA := setupTestGitRepo(t, p, d, "telemetry-panic-repo")
-
-	client, err := ipc.Dial(p.Socket())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer client.Close()
-
-	var result ipc.PushReceivedResult
-	err = client.Call(ipc.MethodPushReceived, &ipc.PushReceivedParams{
-		Gate: p.RepoDir("telemetry-panic-repo"),
-		Ref:  "refs/heads/main",
-		Old:  "0000000000000000000000000000000000000000",
-		New:  headSHA,
-	}, &result)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	deadline := time.Now().Add(5 * time.Second)
-	for time.Now().Before(deadline) {
-		run, err := d.GetRun(result.RunID)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if run != nil && run.Error != nil && strings.Contains(*run.Error, "internal panic") {
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-
-	finished := recorder.find("run", "action", "finished")
-	if finished == nil {
-		t.Fatal("expected run finished telemetry event after panic")
-	}
-	if got := finished.fields["status"]; got != string(types.RunFailed) {
-		t.Fatalf("finished status = %v, want %q", got, types.RunFailed)
-	}
-	if _, ok := finished.fields["duration_ms"]; !ok {
-		t.Fatal("expected duration_ms in run finished telemetry after panic")
-	}
-	for _, field := range []string{"agent_invocations", "resumed_invocations", "fallback_invocations"} {
-		if got, ok := finished.fields[field]; !ok || got != 0 {
-			t.Fatalf("%s = %v, want 0", field, got)
-		}
-	}
-}
-
 func TestPushReceivedDemoModeBypassesAgentResolution(t *testing.T) {
-	t.Setenv("NM_DEMO", "1")
+	t.Setenv("ALAMINO_DEMO", "1")
 
 	step := &mockPassStep{name: types.StepReview}
 	p, d := startTestDaemonWithSteps(t, func() []pipeline.Step {
@@ -1828,8 +1705,8 @@ func TestPushReceivedRejectsGateFromAnotherHome(t *testing.T) {
 	const repoID = "cross-home-repo"
 	_, headSHA := setupTestGitRepo(t, p, d, repoID)
 
-	// Same repo id, a different NM_HOME: exactly what the default root's daemon
-	// received when a second root's hook shelled out without NM_HOME set.
+	// Same repo id, a different ALAMINO_HOME: exactly what the default root's daemon
+	// received when a second root's hook shelled out without ALAMINO_HOME set.
 	foreignHome := t.TempDir()
 	foreignGate := filepath.Join(foreignHome, "repos", repoID+".git")
 	if err := os.MkdirAll(foreignGate, 0o755); err != nil {
@@ -1908,7 +1785,7 @@ func TestAdmitPushRejectsGateFromAnotherHome(t *testing.T) {
 }
 
 // TestOwnedGateAcceptsARelativeRootSpelling pins the guard against the root
-// spelling: NM_HOME may be relative, while the gate path always arrives
+// spelling: ALAMINO_HOME may be relative, while the gate path always arrives
 // absolute from git rev-parse, so a textual compare would refuse every push to
 // the daemon's own gate.
 func TestOwnedGateAcceptsARelativeRootSpelling(t *testing.T) {

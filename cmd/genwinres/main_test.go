@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/winres"
+	"github.com/mika-rafie/alamino/internal/winres"
 )
 
 func TestGenwinresWritesObjectsThatPassCheck(t *testing.T) {

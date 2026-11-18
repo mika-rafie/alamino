@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/scm/plugin"
 )
 
 func TestPRAppendixVerifyPublicationParity(t *testing.T) {
@@ -30,7 +30,7 @@ func TestPRAppendixVerifyPublicationParity(t *testing.T) {
 		{"legacy subset", strings.ReplaceAll(wrapPRAppendix(legacy), "\x1b", "^["), "match"},
 		{"legacy all above cap", strings.ReplaceAll(wrapPRAppendix(appendix+strings.Repeat("\x1b", 13)), "\x1b", "^["), "match"},
 		{"open fence", wrapPRAppendix(appendix + "\n```"), "malformed"},
-		{"bad attestation", wrapPRAppendix("<!-- no-mistakes-pipeline-attestation:v1 {} -->"), "malformed"},
+		{"bad attestation", wrapPRAppendix("<!-- alamino-pipeline-attestation:v1 {} -->"), "malformed"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

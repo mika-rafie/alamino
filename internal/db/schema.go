@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS runs (
     evidence_dir            TEXT,
 	transcript_homes        TEXT,
     submitted_head_sha      TEXT,
-    no_mistakes_version     TEXT,
-    no_mistakes_build_sha   TEXT,
+    alamino_version     TEXT,
+    alamino_build_sha   TEXT,
     review_approved_head_sha TEXT,
     status                  TEXT NOT NULL DEFAULT 'pending',
     pr_url                  TEXT,
@@ -328,15 +328,15 @@ var migrationStatements = []string{
 	// runs already in flight instead of retargeting their resume, diff, and
 	// cleanup at a directory they were never created in. Nullable for rows
 	// written before the column existed, which resolve to the default
-	// <NM_HOME>/worktrees placement at read time - the only one they can have,
+	// <ALAMINO_HOME>/worktrees placement at read time - the only one they can have,
 	// since this column shipped with the setting that moves it
 	// (worktrees.RecordedDir).
 	`ALTER TABLE runs ADD COLUMN worktree_dir TEXT`,
 	`ALTER TABLE runs ADD COLUMN evidence_dir TEXT`,
 	// Build identity is nullable for historical records. New runs record the
 	// version and embedded build SHA used by the running binary.
-	`ALTER TABLE runs ADD COLUMN no_mistakes_version TEXT`,
-	`ALTER TABLE runs ADD COLUMN no_mistakes_build_sha TEXT`,
+	`ALTER TABLE runs ADD COLUMN alamino_version TEXT`,
+	`ALTER TABLE runs ADD COLUMN alamino_build_sha TEXT`,
 	// Review authority is nullable and never backfilled. A historical mutable
 	// head_sha cannot prove which exact commit a completed review approved.
 	`ALTER TABLE runs ADD COLUMN review_approved_head_sha TEXT`,

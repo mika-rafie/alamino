@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 	toon "github.com/toon-format/toon-go"
 )

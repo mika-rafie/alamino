@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // A GetRun response carrying the maximum 16 configured gates uses well under
@@ -59,7 +59,7 @@ func (s *CustomGateStep) runFixTurn(sctx *pipeline.StepContext) (string, error) 
 		return "", err
 	}
 
-	requirement := fmt.Sprintf("This gate passes only when the following command exits 0 and reports no error findings through NO_MISTAKES_FINDINGS_FILE:\n%s", strings.TrimSpace(s.Gate.Command))
+	requirement := fmt.Sprintf("This gate passes only when the following command exits 0 and reports no error findings through ALAMINO_FINDINGS_FILE:\n%s", strings.TrimSpace(s.Gate.Command))
 
 	prompt := fmt.Sprintf(
 		`Fix the violations reported by the repository gate %q.
@@ -111,7 +111,7 @@ func (s *CustomGateStep) executeCommand(sctx *pipeline.StepContext, fixSummary s
 		return nil, fmt.Errorf("resolve gate worktree: %w", err)
 	}
 	// A sibling directory stays outside the worktree even when TMPDIR points inside it.
-	dir, err := os.MkdirTemp(filepath.Dir(workDir), ".no-mistakes-gate-")
+	dir, err := os.MkdirTemp(filepath.Dir(workDir), ".alamino-gate-")
 	if err != nil {
 		return nil, fmt.Errorf("create gate findings directory: %w", err)
 	}
@@ -121,7 +121,7 @@ func (s *CustomGateStep) executeCommand(sctx *pipeline.StepContext, fixSummary s
 		return nil, fmt.Errorf("create gate findings file: %w", err)
 	}
 	commandContext := *sctx
-	commandContext.Env = append(append([]string(nil), sctx.Env...), "NO_MISTAKES_FINDINGS_FILE="+path)
+	commandContext.Env = append(append([]string(nil), sctx.Env...), "ALAMINO_FINDINGS_FILE="+path)
 	sctx.Log(fmt.Sprintf("running gate %q: %s", s.Gate.Name, command))
 	output, exitCode, err := runStepShellCommand(&commandContext, command)
 	if err != nil {

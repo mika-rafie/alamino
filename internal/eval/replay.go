@@ -13,17 +13,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/e2edaemon"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/e2edaemon"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // ReplayOptions controls one isolated candidate comparison. The optional
@@ -56,7 +56,7 @@ const (
 )
 
 // Replay runs exactly the captured review pass. It does not start a daemon or
-// use the production NM_HOME: every case is restored into a fresh temp gate and
+// use the production ALAMINO_HOME: every case is restored into a fresh temp gate and
 // worktree. Candidates inherit the caller's HOME so harness sign-in matches
 // an ordinary pipeline agent spawn. Push, PR, CI, and all fix loops are
 // intentionally absent from the MVP subject under test.
@@ -211,14 +211,14 @@ func replayOne(ctx context.Context, store *Store, c Case, session Session, candi
 		}
 	}()
 
-	// The replay sandbox deliberately stays OUTSIDE the source NM_HOME: it
-	// materializes its own nested NM_HOME and worktree, and the eval store,
-	// object pools, and Store.Prune all live under <NM_HOME>/eval, so a live
+	// The replay sandbox deliberately stays OUTSIDE the source ALAMINO_HOME: it
+	// materializes its own nested ALAMINO_HOME and worktree, and the eval store,
+	// object pools, and Store.Prune all live under <ALAMINO_HOME>/eval, so a live
 	// sandbox nested there would sit inside the very state it is replaying.
 	// That isolation outranks moving it off the system temp directory; see the
-	// held-scope note under "no-mistakes Owns Its Own Scratch" in
+	// held-scope note under "alamino Owns Its Own Scratch" in
 	// .agents/skills/test-evidence-storage/SKILL.md.
-	root, err := os.MkdirTemp("", "nm-eval-replay-")
+	root, err := os.MkdirTemp("", "alamino-eval-replay-")
 	if err != nil {
 		evaluation.Error = safeurl.RedactText(fmt.Sprintf("create isolated replay root: %v", err))
 		evaluation.CompletedAt = time.Now().Unix()
@@ -314,12 +314,12 @@ func replayOne(ctx context.Context, store *Store, c Case, session Session, candi
 		EvalReplay:            true,
 		ReviewStartingHeadSHA: startingHeadSHA,
 		PreviousFindings:      previousFindings,
-		// Keep NM_HOME on the nested sandbox so replay cannot see or mutate
+		// Keep ALAMINO_HOME on the nested sandbox so replay cannot see or mutate
 		// production pipeline/eval state. Do not rewrite HOME: candidates use
 		// the same harness sign-in and user settings as an ordinary pipeline
 		// agent spawn. That is not a security sandbox; a candidate may still
 		// read and write ordinary HOME-relative agent files.
-		Env:          []string{"NM_HOME=" + isolatedPaths.Root()},
+		Env:          []string{"ALAMINO_HOME=" + isolatedPaths.Root()},
 		Log:          func(string) {},
 		LogChunk:     func(string) {},
 		LogFile:      func(string) {},

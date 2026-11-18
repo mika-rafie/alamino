@@ -125,12 +125,12 @@ func TestClassifyTransient_Positive(t *testing.T) {
 		},
 		{
 			name:    "pi missing output tool",
-			errMsg:  `pi did not finish by calling no_mistakes_output alone`,
+			errMsg:  `pi did not finish by calling alamino_output alone`,
 			wantSub: "missing output tool",
 		},
 		{
 			name:    "pi missing output tool with benign stderr",
-			errMsg:  `pi did not finish by calling no_mistakes_output alone: transient provider response`,
+			errMsg:  `pi did not finish by calling alamino_output alone: transient provider response`,
 			wantSub: "missing output tool",
 		},
 		{
@@ -193,15 +193,15 @@ func TestClassifyTransient_Negative(t *testing.T) {
 		},
 		{
 			name:   "pi missing output unauthorized",
-			errMsg: `pi did not finish by calling no_mistakes_output alone: unable to verify model access: 401 unauthorized`,
+			errMsg: `pi did not finish by calling alamino_output alone: unable to verify model access: 401 unauthorized`,
 		},
 		{
 			name:   "pi missing output permission denied",
-			errMsg: `pi did not finish by calling no_mistakes_output alone: permission denied`,
+			errMsg: `pi did not finish by calling alamino_output alone: permission denied`,
 		},
 		{
 			name:   "pi missing output forbidden",
-			errMsg: `pi did not finish by calling no_mistakes_output alone: unable to verify model access: 403 forbidden`,
+			errMsg: `pi did not finish by calling alamino_output alone: unable to verify model access: 403 forbidden`,
 		},
 		{
 			name:   "pi schema validation",
@@ -221,7 +221,7 @@ func TestClassifyTransient_Negative(t *testing.T) {
 		},
 		{
 			name:   "pi missing output quota exhausted",
-			errMsg: `pi did not finish by calling no_mistakes_output alone: insufficient_quota`,
+			errMsg: `pi did not finish by calling alamino_output alone: insufficient_quota`,
 		},
 		{
 			name:   "generic fetch failure",
@@ -286,7 +286,7 @@ func TestClassifyTransient_NilAndContext(t *testing.T) {
 		t.Error("context.DeadlineExceeded should not be transient")
 	}
 	for _, message := range []string{
-		"pi did not finish by calling no_mistakes_output alone",
+		"pi did not finish by calling alamino_output alone",
 		"pi exited: exit status 1: fetch failed",
 	} {
 		for _, cause := range []error{context.Canceled, context.DeadlineExceeded} {
@@ -371,7 +371,7 @@ func TestRunWithRetry_PiTransientThenSucceeds(t *testing.T) {
 	t.Cleanup(func() { transientBackoff = previous })
 
 	for _, message := range []string{
-		"pi did not finish by calling no_mistakes_output alone",
+		"pi did not finish by calling alamino_output alone",
 		"pi exited: exit status 1: fetch failed",
 	} {
 		t.Run(message, func(t *testing.T) {

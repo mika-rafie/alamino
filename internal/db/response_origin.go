@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // SetStepResponseOrigin records caller-supplied provenance for a gate response

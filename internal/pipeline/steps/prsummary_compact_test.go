@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func TestPRTestingSummary_ExpandedAttachmentsKeepLinksAndVideoParagraph(t *testing.T) {

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/testgit"
 )
 
 func TestCIStep_CommitAndPush_CommitsLocallyWithoutPushing(t *testing.T) {
@@ -70,7 +70,7 @@ func TestCIStep_CommitAndPush_CommitsLocallyWithoutPushing(t *testing.T) {
 	if localSHA == headSHA {
 		t.Fatal("local head should include the CI repair commit")
 	}
-	if message := gitCmd(t, dir, "log", "-1", "--format=%s"); message != "no-mistakes(ci): stabilize Windows path test" {
+	if message := gitCmd(t, dir, "log", "-1", "--format=%s"); message != "alamino(ci): stabilize Windows path test" {
 		t.Fatalf("repair commit message = %q", message)
 	}
 	dbRun, err := sctx.DB.GetRun(sctx.Run.ID)
@@ -472,7 +472,7 @@ func TestCIStep_CommitAndPush_NoChanges_ReconcilesStaleDatabaseHeadSHA(t *testin
 	gitCmd(t, dir, "checkout", "-b", "feature")
 	os.WriteFile(filepath.Join(dir, "feature.txt"), []byte("feature"), 0o644)
 	gitCmd(t, dir, "add", "-A")
-	gitCmd(t, dir, "commit", "-m", "no-mistakes(ci): repair failing checks")
+	gitCmd(t, dir, "commit", "-m", "alamino(ci): repair failing checks")
 	actualHeadSHA := gitCmd(t, dir, "rev-parse", "HEAD")
 	gitCmd(t, dir, "push", "origin", "feature")
 
@@ -526,7 +526,7 @@ func TestCIStep_CommitAndPush_NoChanges_ReconcilesStaleDatabaseHeadSHA_UsesStepE
 	gitCmd(t, dir, "checkout", "-b", "feature")
 	os.WriteFile(filepath.Join(dir, "feature.txt"), []byte("feature"), 0o644)
 	gitCmd(t, dir, "add", "-A")
-	gitCmd(t, dir, "commit", "-m", "no-mistakes(ci): repair failing checks")
+	gitCmd(t, dir, "commit", "-m", "alamino(ci): repair failing checks")
 	actualHeadSHA := gitCmd(t, dir, "rev-parse", "HEAD")
 	gitCmd(t, dir, "push", "origin", "feature")
 
@@ -599,7 +599,7 @@ func TestCIStep_CommitAndPush_NoDirtyChangesRecordsAdvancedLocalHead(t *testing.
 
 	os.WriteFile(filepath.Join(dir, "resolved.txt"), []byte("resolved"), 0o644)
 	gitCmd(t, dir, "add", "-A")
-	gitCmd(t, dir, "commit", "-m", "no-mistakes(ci): repair failing checks")
+	gitCmd(t, dir, "commit", "-m", "alamino(ci): repair failing checks")
 	advancedHeadSHA := gitCmd(t, dir, "rev-parse", "HEAD")
 
 	ag := &mockAgent{name: "test"}

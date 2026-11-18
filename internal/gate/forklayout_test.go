@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // setupForkLayoutRepo builds a working repo whose "origin" is the GitHub fork
@@ -73,15 +73,15 @@ func stubResolveForkParent(t *testing.T, fn func(ctx context.Context, remoteURL 
 }
 
 func TestInitRefusesForkOriginWhenUpstreamNamesTheRealParent(t *testing.T) {
-	originURL := "https://github.com/fork-owner/no-mistakes.git"
-	upstreamURL := "https://github.com/parent-owner/no-mistakes.git"
+	originURL := "https://github.com/fork-owner/alamino.git"
+	upstreamURL := "https://github.com/parent-owner/alamino.git"
 	work := setupForkLayoutRepo(t, originURL, upstreamURL)
 
 	calls := stubResolveForkParent(t, func(ctx context.Context, remoteURL string) (string, bool, error) {
 		if remoteURL != originURL {
 			t.Fatalf("resolveForkParent called with %q, want origin URL %q", remoteURL, originURL)
 		}
-		return "parent-owner/no-mistakes", true, nil
+		return "parent-owner/alamino", true, nil
 	})
 
 	nmRoot := t.TempDir()
@@ -97,8 +97,8 @@ func TestInitRefusesForkOriginWhenUpstreamNamesTheRealParent(t *testing.T) {
 	}
 	msg := err.Error()
 	for _, want := range []string{
-		"fork-owner/no-mistakes",
-		"parent-owner/no-mistakes",
+		"fork-owner/alamino",
+		"parent-owner/alamino",
 		"git remote set-url origin",
 		"--fork-url",
 		"CONTRIBUTING.md",
@@ -122,7 +122,7 @@ func TestInitRefusesForkOriginWhenUpstreamNamesTheRealParent(t *testing.T) {
 }
 
 func TestInitProceedsWithoutAnUpstreamRemote(t *testing.T) {
-	originURL := "https://github.com/fork-owner/no-mistakes.git"
+	originURL := "https://github.com/fork-owner/alamino.git"
 	work := setupForkLayoutRepo(t, originURL, "")
 
 	calls := stubResolveForkParent(t, func(context.Context, string) (string, bool, error) {
@@ -146,7 +146,7 @@ func TestInitProceedsWithoutAnUpstreamRemote(t *testing.T) {
 }
 
 func TestInitProceedsWhenUpstreamNamesAnUnrelatedRepo(t *testing.T) {
-	originURL := "https://github.com/fork-owner/no-mistakes.git"
+	originURL := "https://github.com/fork-owner/alamino.git"
 	// Different repo name entirely: a template/reference remote, not a fork
 	// parent, must never trigger a gh lookup.
 	upstreamURL := "https://github.com/some-owner/other-project.git"
@@ -194,15 +194,15 @@ func writeGhHostsConfig(t *testing.T, hosts ...string) {
 
 func TestInitProceedsWhenUpstreamSharesOwnerAndNameOnADifferentHost(t *testing.T) {
 	// A GitHub fork and its parent always share a host (forking across
-	// instances does not exist), so a same-named "parent-owner/no-mistakes"
+	// instances does not exist), so a same-named "parent-owner/alamino"
 	// on a DIFFERENT Enterprise Server instance from origin can never
 	// actually be origin's parent - even though owner and name read
 	// identically. This must be rejected on host alone, without ever calling
 	// gh (Greptile finding on PR #1183).
 	writeGhHostsConfig(t, "ghe-a.example.com", "ghe-b.example.com")
 
-	originURL := "https://ghe-a.example.com/fork-owner/no-mistakes.git"
-	upstreamURL := "https://ghe-b.example.com/parent-owner/no-mistakes.git"
+	originURL := "https://ghe-a.example.com/fork-owner/alamino.git"
+	upstreamURL := "https://ghe-b.example.com/parent-owner/alamino.git"
 	work := setupForkLayoutRepo(t, originURL, upstreamURL)
 
 	calls := stubResolveForkParent(t, func(context.Context, string) (string, bool, error) {
@@ -226,8 +226,8 @@ func TestInitProceedsWhenUpstreamSharesOwnerAndNameOnADifferentHost(t *testing.T
 }
 
 func TestInitProceedsWhenForkParentCannotBeConfirmed(t *testing.T) {
-	originURL := "https://github.com/fork-owner/no-mistakes.git"
-	upstreamURL := "https://github.com/parent-owner/no-mistakes.git"
+	originURL := "https://github.com/fork-owner/alamino.git"
+	upstreamURL := "https://github.com/parent-owner/alamino.git"
 	work := setupForkLayoutRepo(t, originURL, upstreamURL)
 
 	// Simulates gh being unavailable, unauthenticated, or offline: detection
@@ -249,8 +249,8 @@ func TestInitProceedsWhenForkParentCannotBeConfirmed(t *testing.T) {
 }
 
 func TestInitProceedsWhenOriginIsNotActuallyAFork(t *testing.T) {
-	originURL := "https://github.com/fork-owner/no-mistakes.git"
-	upstreamURL := "https://github.com/parent-owner/no-mistakes.git"
+	originURL := "https://github.com/fork-owner/alamino.git"
+	upstreamURL := "https://github.com/parent-owner/alamino.git"
 	work := setupForkLayoutRepo(t, originURL, upstreamURL)
 
 	stubResolveForkParent(t, func(context.Context, string) (string, bool, error) {
@@ -270,13 +270,13 @@ func TestInitProceedsWhenOriginIsNotActuallyAFork(t *testing.T) {
 }
 
 func TestInitProceedsWhenGHReportsADifferentParent(t *testing.T) {
-	originURL := "https://github.com/fork-owner/no-mistakes.git"
-	upstreamURL := "https://github.com/parent-owner/no-mistakes.git"
+	originURL := "https://github.com/fork-owner/alamino.git"
+	upstreamURL := "https://github.com/parent-owner/alamino.git"
 	work := setupForkLayoutRepo(t, originURL, upstreamURL)
 
 	// origin is a fork, but of some other repo - not the one "upstream" names.
 	stubResolveForkParent(t, func(context.Context, string) (string, bool, error) {
-		return "someone-else/no-mistakes", true, nil
+		return "someone-else/alamino", true, nil
 	})
 
 	nmRoot := t.TempDir()
@@ -295,8 +295,8 @@ func TestInitWithExplicitForkURLSkipsMisroutingCheck(t *testing.T) {
 	// The correct topology per CONTRIBUTING.md: origin IS the parent, and the
 	// fork is passed explicitly. An unrelated (or even matching-looking)
 	// "upstream" remote must not trigger the new check at all.
-	parentURL := "https://github.com/parent-owner/no-mistakes.git"
-	forkAsUpstreamURL := "https://github.com/fork-owner/no-mistakes.git"
+	parentURL := "https://github.com/parent-owner/alamino.git"
+	forkAsUpstreamURL := "https://github.com/fork-owner/alamino.git"
 	work := setupForkLayoutRepo(t, parentURL, forkAsUpstreamURL)
 
 	calls := stubResolveForkParent(t, func(context.Context, string) (string, bool, error) {
@@ -311,7 +311,7 @@ func TestInitWithExplicitForkURLSkipsMisroutingCheck(t *testing.T) {
 	}
 	d := openTestDB(t, p)
 
-	forkURL := "https://github.com/fork-owner/no-mistakes.git"
+	forkURL := "https://github.com/fork-owner/alamino.git"
 	if _, _, err := InitWithFork(context.Background(), d, p, work, forkURL); err != nil {
 		t.Fatalf("init --fork-url should succeed: %v", err)
 	}
@@ -321,8 +321,8 @@ func TestInitWithExplicitForkURLSkipsMisroutingCheck(t *testing.T) {
 }
 
 func TestInitPlainReinitWithRecordedForkSkipsMisroutingCheck(t *testing.T) {
-	parentURL := "https://github.com/parent-owner/no-mistakes.git"
-	forkURL := "https://github.com/fork-owner/no-mistakes.git"
+	parentURL := "https://github.com/parent-owner/alamino.git"
+	forkURL := "https://github.com/fork-owner/alamino.git"
 	work := setupForkLayoutRepo(t, parentURL, "")
 
 	nmRoot := t.TempDir()

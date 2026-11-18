@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // testFixMessageEllipsis is the documented cut marker; it is spelled out here
@@ -22,7 +22,7 @@ func TestCommitRenderFixMessage_Default(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "no-mistakes(review): address review findings"
+	want := "alamino(review): address review findings"
 	if got != want {
 		t.Fatalf("RenderFixMessage() = %q, want %q", got, want)
 	}
@@ -31,12 +31,12 @@ func TestCommitRenderFixMessage_Default(t *testing.T) {
 func TestCommitRenderFixMessage_CustomTemplate(t *testing.T) {
 	t.Parallel()
 
-	commit := Commit{FixMessage: "chore(no-mistakes-{{.Step}}): {{.Summary}}"}
+	commit := Commit{FixMessage: "chore(alamino-{{.Step}}): {{.Summary}}"}
 	got, err := commit.RenderFixMessage(types.StepDocument, "update configuration docs")
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "chore(no-mistakes-document): update configuration docs"
+	want := "chore(alamino-document): update configuration docs"
 	if got != want {
 		t.Fatalf("RenderFixMessage() = %q, want %q", got, want)
 	}
@@ -95,7 +95,7 @@ func TestCommitRenderFixMessage_DefaultRemainsUnchangedWithBranchPattern(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "no-mistakes(lint): fix failing lint"; got != want {
+	if want := "alamino(lint): fix failing lint"; got != want {
 		t.Fatalf("RenderFixMessageForBranch() = %q, want %q", got, want)
 	}
 }
@@ -134,7 +134,7 @@ func TestCommitRenderFixMessage_TruncatesSummaryToSubjectCap(t *testing.T) {
 	// past 4,076 bytes overflows the 4,096-byte subject cap. The fix round must
 	// still commit a bounded subject instead of failing the run and losing the
 	// fix commit. 4,090 bytes is the maintainer's repro; 4,096 is the input cap.
-	const prefix = "no-mistakes(review): "
+	const prefix = "alamino(review): "
 	for _, size := range []int{MaxFixMessageSummaryBytes - 6, MaxFixMessageSummaryBytes} {
 		summary := strings.Repeat("x", size)
 		for name, render := range map[string]func(Commit, string) (string, error){
@@ -188,8 +188,8 @@ func TestCommitRenderFixMessage_TruncationKeepsRunesWhole(t *testing.T) {
 			if !strings.HasSuffix(got, testFixMessageEllipsis) {
 				t.Fatalf("truncated message %q lacks the ellipsis marker", got)
 			}
-			wantSummaryBytes := maxFixMessageSubjectBytes - len("no-mistakes(review): ") - len(testFixMessageEllipsis)
-			if gotSummary := len(got) - len("no-mistakes(review): ") - len(testFixMessageEllipsis); gotSummary > wantSummaryBytes || gotSummary < wantSummaryBytes-utf8.UTFMax+1 {
+			wantSummaryBytes := maxFixMessageSubjectBytes - len("alamino(review): ") - len(testFixMessageEllipsis)
+			if gotSummary := len(got) - len("alamino(review): ") - len(testFixMessageEllipsis); gotSummary > wantSummaryBytes || gotSummary < wantSummaryBytes-utf8.UTFMax+1 {
 				t.Fatalf("kept %d summary bytes, want the largest whole-rune prefix of %d", gotSummary, wantSummaryBytes)
 			}
 		})
@@ -199,7 +199,7 @@ func TestCommitRenderFixMessage_TruncationKeepsRunesWhole(t *testing.T) {
 func TestCommitRenderFixMessage_ExactFitSummaryIsUnchanged(t *testing.T) {
 	t.Parallel()
 
-	const prefix = "no-mistakes(review): "
+	const prefix = "alamino(review): "
 	summary := strings.Repeat("x", maxFixMessageSubjectBytes-len(prefix))
 	got, err := (Commit{}).RenderFixMessage(types.StepReview, summary)
 	if err != nil {
@@ -315,7 +315,7 @@ func TestCommitRenderFixMessage_NormalizesMultilineSummary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "no-mistakes(document): update configuration docs"
+	want := "alamino(document): update configuration docs"
 	if got != want {
 		t.Fatalf("RenderFixMessage() = %q, want %q", got, want)
 	}
@@ -392,7 +392,7 @@ func TestLoadGlobal_CommitFixMessage(t *testing.T) {
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.yaml")
-	const source = "chore(no-mistakes-{{.Step}}): {{.Summary}}"
+	const source = "chore(alamino-{{.Step}}): {{.Summary}}"
 	data := []byte("commit:\n  fix_message: '" + source + "'\n")
 	if err := os.WriteFile(path, data, 0o644); err != nil {
 		t.Fatal(err)
@@ -466,7 +466,7 @@ func TestLoadRepo_CommitFixMessage(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	path := filepath.Join(dir, ".no-mistakes.yaml")
+	path := filepath.Join(dir, ".alamino.yaml")
 	const source = "{{.Summary}}"
 	data := []byte("commit:\n  fix_message: '" + source + "'\n")
 	if err := os.WriteFile(path, data, 0o644); err != nil {
@@ -593,16 +593,16 @@ func TestCommitRenderTrailers_UsesInvocationIdentity(t *testing.T) {
 	t.Parallel()
 
 	commit := Commit{Trailers: []string{
-		"Co-Authored-By: no-mistakes {{.Agent}} <noreply@example.com>",
-		"Assisted-by: no-mistakes:{{.Agent}}:{{.Model}}",
+		"Co-Authored-By: alamino {{.Agent}} <noreply@example.com>",
+		"Assisted-by: alamino:{{.Agent}}:{{.Model}}",
 	}}
 	got, err := commit.RenderTrailers(TrailerData{Agent: "codex", Model: "gpt-5.5"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
-		"Co-Authored-By: no-mistakes codex <noreply@example.com>",
-		"Assisted-by: no-mistakes:codex:gpt-5.5",
+		"Co-Authored-By: alamino codex <noreply@example.com>",
+		"Assisted-by: alamino:codex:gpt-5.5",
 	}
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("RenderTrailers() = %q, want %q", got, want)

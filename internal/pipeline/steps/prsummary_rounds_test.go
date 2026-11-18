@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestBuildPipelineSummary_AutoFix(t *testing.T) {
@@ -129,7 +129,7 @@ func TestBuildPipelineSummary_DescriptiveFixSummaryDoesNotClaimAppliedFix(t *tes
 
 func TestBuildPipelineSummary_AutoFixRetainsExplicitNoChangeSummary(t *testing.T) {
 	t.Parallel()
-	findings := `{"findings":[{"id":"rebase-1","severity":"warning","file":"cmd/no-mistakes/main.go","line":1,"description":"local default branch requires manual reconciliation"}],"summary":"1 warning"}`
+	findings := `{"findings":[{"id":"rebase-1","severity":"warning","file":"cmd/alamino/main.go","line":1,"description":"local default branch requires manual reconciliation"}],"summary":"1 warning"}`
 	noChanges := "no changes applied"
 	steps := []*db.StepResult{{ID: "s1", StepName: types.StepRebase, Status: types.StepStatusCompleted}}
 	rounds := map[string][]*db.StepRound{

@@ -15,26 +15,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/buildinfo"
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gatecontext"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/logstore"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/procreap"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/buildinfo"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gatecontext"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/logstore"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/procreap"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 )
 
 // orphanProcessMinAge is the age floor for the startup orphan-process sweep.
@@ -55,7 +54,7 @@ var renameDaemonPIDFile = os.Rename
 
 // Run starts the daemon process. It blocks until a shutdown signal is received
 // or the shutdown IPC method is called. This is called via the hidden
-// `no-mistakes daemon run` entrypoint used by managed and detached services.
+// `alamino daemon run` entrypoint used by managed and detached services.
 func Run() (retErr error) {
 	startupStarted := time.Now()
 	p, err := paths.New()
@@ -117,7 +116,7 @@ func Run() (retErr error) {
 }
 
 func prepareDaemonEnvironment() error {
-	nmHome := os.Getenv("NM_HOME")
+	nmHome := os.Getenv("ALAMINO_HOME")
 	for _, key := range []string{
 		"CLAUDECODE",
 		"CLAUDE_CODE_ENTRYPOINT",
@@ -137,17 +136,12 @@ func prepareDaemonEnvironment() error {
 }
 
 // applyLoginShellEnvironment applies a login-shell probe to the process and
-// keeps the service-supplied NM_HOME authoritative over anything the shell's
-// rc files export. A supplied telemetry opt-out also survives the probe, while
-// an enabling value may still be replaced by the shell's opt-out.
+// keeps the service-supplied ALAMINO_HOME authoritative over anything the shell's
+// rc files export.
 func applyLoginShellEnvironment(apply func(...string) error, nmHome string) error {
 	var excluded []string
 	if nmHome != "" {
-		excluded = append(excluded, "NM_HOME")
-	}
-	switch strings.ToLower(strings.TrimSpace(os.Getenv("NO_MISTAKES_TELEMETRY"))) {
-	case "0", "false", "off":
-		excluded = append(excluded, "NO_MISTAKES_TELEMETRY")
+		excluded = append(excluded, "ALAMINO_HOME")
 	}
 	return apply(excluded...)
 }
@@ -192,7 +186,7 @@ func RunWithResources(p *paths.Paths, d *db.DB) error {
 // stepFactory overrides the default pipeline steps (for testing).
 func RunWithOptions(p *paths.Paths, d *db.DB, stepFactory StepFactory) error {
 	startupStarted := time.Now()
-	// Singleton guard: only one live daemon may own this NM_HOME at a time.
+	// Singleton guard: only one live daemon may own this ALAMINO_HOME at a time.
 	// This must be acquired before recoverOnStartup (global stale-run
 	// recovery and orphan-worktree cleanup) and before the IPC socket is
 	// bound, and held for the rest of the process lifetime - otherwise a
@@ -222,7 +216,7 @@ func runWithOptionsLocked(p *paths.Paths, d *db.DB, globalCfg *config.GlobalConf
 	// Refuse an unusable worktree placement before anything walks, sweeps, or
 	// removes a directory under it. This is the second half of worktree_roots
 	// validation: internal/config checks every entry it can judge without
-	// knowing NM_HOME, and this process is the one that knows.
+	// knowing ALAMINO_HOME, and this process is the one that knows.
 	layout, err := validatedWorktreeLayout(d, p, globalCfg)
 	if err != nil {
 		return err
@@ -235,12 +229,6 @@ func runWithOptionsLocked(p *paths.Paths, d *db.DB, globalCfg *config.GlobalConf
 	agent.SetManagedServerOutput(managedServerLog)
 	defer managedServerLog.Close()
 	defer agent.SetManagedServerOutput(nil)
-
-	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 750*time.Millisecond)
-		defer cancel()
-		_ = telemetry.Close(ctx)
-	}()
 
 	// Point the agent package at our PID tracking dir so any managed
 	// servers we spawn from here on leave crash-recovery breadcrumbs.
@@ -491,7 +479,7 @@ func recoverOnStartup(d *db.DB, p *paths.Paths, mgr *RunManager, layout *worktre
 	logStartupPhase("orphan_processes", orphanProcStarted)
 
 	// reapWorktrees applies the operator's retention policy to the default
-	// <NM_HOME>/worktrees tree before cleanupOrphanWorktrees runs its
+	// <ALAMINO_HOME>/worktrees tree before cleanupOrphanWorktrees runs its
 	// unconditional sweep of operator-placed (worktree_roots) leftovers, so a
 	// disabled or wide retention window is honored on the default tree
 	// instead of being bypassed by startup cleanup.
@@ -677,7 +665,7 @@ func sweepableWorktrees(sets ...[]db.RunWorktree) []procreap.Worktree {
 }
 
 // leftoverRecordedRunWorktrees returns the run worktrees this machine placed
-// outside <NM_HOME>/worktrees that are still on disk, as the runs that created
+// outside <ALAMINO_HOME>/worktrees that are still on disk, as the runs that created
 // them recorded them (see internal/worktrees). It is what startup cleanup
 // removes there, so cleanup depends on no configuration at all: an operator who
 // edits or drops a worktree_roots entry after a crash would otherwise hide a
@@ -796,7 +784,7 @@ func registeredCheckouts(d *db.DB) ([]string, error) {
 // checkout - or one that differs from the recorded path in a way this
 // filesystem does not consider equal, such as letter case - silently places
 // nothing, which has no other symptom than runs continuing to appear under
-// NM_HOME. That is the one placement worth only a log line: a root that does
+// ALAMINO_HOME. That is the one placement worth only a log line: a root that does
 // not work at all already refused startup (see
 // validatedWorktreeLayout and worktrees.Layout.Validate).
 func reportUnusableWorktreeRoots(d *db.DB, layout *worktrees.Layout) {
@@ -832,7 +820,7 @@ func reportUnusableWorktreeRoots(d *db.DB, layout *worktrees.Layout) {
 // RecoverStaleRuns, so in the normal single-daemon path every run this loop
 // sees has already been resolved to a terminal status.
 //
-// Leftovers under the default <NM_HOME>/worktrees tree are NOT removed here:
+// Leftovers under the default <ALAMINO_HOME>/worktrees tree are NOT removed here:
 // that tree is bounded by the operator's retention policy via reapWorktrees,
 // which recoverOnStartup runs first, so this only reclaims the (now likely
 // empty) per-repo directories reapWorktrees left behind.
@@ -873,7 +861,7 @@ type orphanWorktree struct {
 	runID   string
 }
 
-// defaultTreeOrphanWorktrees walks <NM_HOME>/worktrees, which no-mistakes owns
+// defaultTreeOrphanWorktrees walks <ALAMINO_HOME>/worktrees, which alamino owns
 // outright, and returns the run worktrees no run still owns plus the repository
 // directories to drop once they are empty.
 func defaultTreeOrphanWorktrees(d *db.DB, p *paths.Paths) (removable []orphanWorktree, repoDirs []string) {
@@ -911,9 +899,9 @@ func defaultTreeOrphanWorktrees(d *db.DB, p *paths.Paths) (removable []orphanWor
 }
 
 // recordedOrphanWorktrees names the leftover worktrees of runs the operator
-// placed outside <NM_HOME>/worktrees (see worktree_roots in the global config).
+// placed outside <ALAMINO_HOME>/worktrees (see worktree_roots in the global config).
 //
-// That directory belongs to the operator, not to no-mistakes: it holds the
+// That directory belongs to the operator, not to alamino: it holds the
 // mise.local.toml, .envrc, or scratch checkout that motivated pointing runs at
 // it in the first place, and it can hold a run-shaped directory this daemon
 // never created - another tool's, or one left by a repository that used to

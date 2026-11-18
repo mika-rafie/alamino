@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 type appendixReadOnlyForge struct {
@@ -36,7 +36,7 @@ func TestPRAppendixVerifyCommandIsReadOnly(t *testing.T) {
 	if err := os.Mkdir(home, 0700); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("NM_HOME", home)
+	t.Setenv("ALAMINO_HOME", home)
 	dbPath := filepath.Join(home, "state.sqlite")
 	if err := os.WriteFile(dbPath, []byte("existing database must never be opened"), 0600); err != nil {
 		t.Fatal(err)
@@ -51,9 +51,9 @@ func TestPRAppendixVerifyCommandIsReadOnly(t *testing.T) {
 	}
 	git("init")
 	refs := git("for-each-ref")
-	appendix := "evidence\n<!-- no-mistakes-pipeline-attestation:v1 {\"head_sha\":\"abc\"} -->"
+	appendix := "evidence\n<!-- alamino-pipeline-attestation:v1 {\"head_sha\":\"abc\"} -->"
 	wrap := func(s string) string {
-		return fmt.Sprintf("<!-- no-mistakes-pr-appendix:v1 sha256=%x -->\n%s\n<!-- /no-mistakes-pr-appendix:v1 -->", sha256.Sum256([]byte(s)), s)
+		return fmt.Sprintf("<!-- alamino-pr-appendix:v1 sha256=%x -->\n%s\n<!-- /alamino-pr-appendix:v1 -->", sha256.Sum256([]byte(s)), s)
 	}
 	valid := wrap(appendix)
 	for _, tc := range []struct{ body, verdict string }{
@@ -61,10 +61,10 @@ func TestPRAppendixVerifyCommandIsReadOnly(t *testing.T) {
 		{strings.Replace(valid, "evidence", "Evidence", 1), "mismatch"},
 		{"author", "absent"},
 		{appendix, "absent"},
-		{"<!-- no-mistakes-pr-appendix", "malformed"},
+		{"<!-- alamino-pr-appendix", "malformed"},
 		{valid + valid, "malformed"},
-		{strings.ReplaceAll(valid, "<!-- /no-mistakes-pr-appendix:v1 -->", ""), "malformed"},
-		{strings.ReplaceAll(valid, "<!-- no-mistakes-pr-appendix:v1 sha256=", ""), "malformed"},
+		{strings.ReplaceAll(valid, "<!-- /alamino-pr-appendix:v1 -->", ""), "malformed"},
+		{strings.ReplaceAll(valid, "<!-- alamino-pr-appendix:v1 sha256=", ""), "malformed"},
 		{strings.ReplaceAll(wrap(appendix+"\x1b ^ERROR"), "\x1b", "^["), "match"},
 		{strings.ReplaceAll(wrap(appendix+strings.Repeat("\x1b", 13)), "\x1b", "^["), "match"},
 	} {

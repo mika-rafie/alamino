@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // This integration driver uses the production renderer, SQLite, git publication,
@@ -27,7 +27,7 @@ func TestPRMediaOptOutWithRealGH(t *testing.T) {
 	home := t.TempDir()
 	bin := t.TempDir()
 	calls := filepath.Join(home, "gh-calls.txt")
-	wrapper := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$NM_MEDIA_GH_CALLS\"\nexec \"$NM_MEDIA_REAL_GH\" \"$@\"\n"
+	wrapper := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$ALAMINO_MEDIA_GH_CALLS\"\nexec \"$ALAMINO_MEDIA_REAL_GH\" \"$@\"\n"
 	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte(wrapper), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -39,10 +39,10 @@ func TestPRMediaOptOutWithRealGH(t *testing.T) {
 	}
 	t.Setenv("GH_HOST", "github.com")
 	t.Setenv("GH_PROMPT_DISABLED", "1")
-	t.Setenv("NM_MEDIA_GH_CALLS", calls)
-	t.Setenv("NM_MEDIA_REAL_GH", realGH)
+	t.Setenv("ALAMINO_MEDIA_GH_CALLS", calls)
+	t.Setenv("ALAMINO_MEDIA_REAL_GH", realGH)
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
-	evidence := os.Getenv("NM_ATTACH_MEDIA_EVIDENCE")
+	evidence := os.Getenv("ALAMINO_ATTACH_MEDIA_EVIDENCE")
 
 	for _, tc := range []struct {
 		name          string
@@ -103,15 +103,15 @@ func TestPRMediaOptOutWithRealGH(t *testing.T) {
 			}
 			remoteState := "no evidence branch"
 			if tc.store {
-				tip := gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence")
+				tip := gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence")
 				remoteState = gitCmd(t, remote, "ls-tree", "-r", "--name-only", tip)
 				for _, artifact := range artifacts {
 					name := filepath.Base(artifact.Path)
-					want := "https://github.com/example/widgets/blob/" + tip + "/.no-mistakes/evidence/feature/add-login/" + name
+					want := "https://github.com/example/widgets/blob/" + tip + "/.alamino/evidence/feature/add-login/" + name
 					if !strings.Contains(markdown, want) {
 						t.Errorf("missing commit-pinned link for %s: %s", name, markdown)
 					}
-					if got := gitCmd(t, remote, "show", tip+":.no-mistakes/evidence/feature/add-login/"+name); got != "\x89PNG binary" {
+					if got := gitCmd(t, remote, "show", tip+":.alamino/evidence/feature/add-login/"+name); got != "\x89PNG binary" {
 						t.Errorf("published artifact %s changed: %q", name, got)
 					}
 				}

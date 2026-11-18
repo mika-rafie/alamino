@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/kunchenguid/no-mistakes/internal/eval"
+	"github.com/mika-rafie/alamino/internal/eval"
 )
 
 // The eval dashboards reuse the stats dashboard idioms (titled box, metric

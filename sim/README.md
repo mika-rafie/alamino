@@ -43,13 +43,13 @@ kept here:
 
 ## Isolation
 
-- Its own `HOME` and its own `NM_HOME` under the output directory: the daemon, socket, database,
-  worktrees, and logs are fresh, and nothing in the operator's `~/.no-mistakes`, projects, or git
+- Its own `HOME` and its own `ALAMINO_HOME` under the output directory: the daemon, socket, database,
+  worktrees, and logs are fresh, and nothing in the operator's `~/.alamino`, projects, or git
   configuration is read or written.
 - Its own bare origin and gate: no forge, no network service, and no credentials.
 - A scripted agent (the repository's own `cmd/fakeagent`) answers every turn from a scenario file, so
   runs are deterministic and cost nothing.
-- `NM_TEST_START_DAEMON=1` starts the daemon as a detached child process instead of installing a
+- `ALAMINO_TEST_START_DAEMON=1` starts the daemon as a detached child process instead of installing a
   system service, and the script stops that daemon when it finishes.
 
 The only external requirement is a Go toolchain, used to build the checkout under test and the

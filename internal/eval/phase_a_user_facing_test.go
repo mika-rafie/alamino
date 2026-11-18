@@ -8,16 +8,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestPhaseAUserFacingTranscripts exercises the same public summaries and
 // renderers the `eval sets` / `eval report` / `eval capture` commands consume,
-// and writes them as reviewer-visible evidence when NM_EVIDENCE_DIR is set.
+// and writes them as reviewer-visible evidence when ALAMINO_EVIDENCE_DIR is set.
 // The `eval sets` dashboard itself renders in internal/cli; here the set
 // summaries are recorded structurally.
 func TestPhaseAUserFacingTranscripts(t *testing.T) {
-	evidenceDir := strings.TrimSpace(os.Getenv("NM_EVIDENCE_DIR"))
+	evidenceDir := strings.TrimSpace(os.Getenv("ALAMINO_EVIDENCE_DIR"))
 	write := func(name, body string) {
 		t.Helper()
 		if evidenceDir == "" {

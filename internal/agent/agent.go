@@ -15,9 +15,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Agent is the interface for running AI agent tasks.
@@ -240,7 +240,7 @@ func EnsureGateNeutralized(a Agent) error {
 		"agent-instruction files (AGENTS.md/CLAUDE.md); refusing to launch it in the target "+
 		"checkout. Only codex, claude, pi, and acp:omp have a verified neutralization knob (and only "+
 		"when it is not overridden by agent_args_override or an acp_registry_overrides entry); set "+
-		"'agent' to codex, claude, pi, or acp:omp in ~/.no-mistakes/config.yaml", a.Name())
+		"'agent' to codex, claude, pi, or acp:omp in ~/.alamino/config.yaml", a.Name())
 }
 
 // LifecycleEvent describes process-level activity for an agent invocation.
@@ -1341,7 +1341,7 @@ func (u *TokenUsage) Add(other TokenUsage) {
 
 // New creates an agent by name with the given binary path.
 // For native agents, extraArgs are user CLI flags from agent_args_override that
-// are injected into the underlying tool's argv ahead of no-mistakes' managed flags.
+// are injected into the underlying tool's argv ahead of alamino's managed flags.
 // ACP agents and aliases ignore extraArgs; use NewWithOptions to provide
 // registry overrides and the harness-neutral model/effort Profile.
 func New(name types.AgentName, bin string, extraArgs []string) (Agent, error) {
@@ -1362,7 +1362,7 @@ func NewWithOptions(name types.AgentName, bin string, extraArgs []string, opts O
 		return &acpxAgent{bin: bin, target: target, rawCommand: rawCommand, model: opts.Profile.Model, disableProjectSettings: opts.DisableProjectSettings, subprocessContext: newSubprocessContext(opts.Environment)}, nil
 	}
 	// Mapped flags follow the operator's raw agent_args_override flags, so they
-	// still precede no-mistakes' managed flags in every adapter's argv. A knob
+	// still precede alamino's managed flags in every adapter's argv. A knob
 	// the raw args already pin natively is not emitted at all (see agentcfg),
 	// which is what keeps pre-existing configurations byte-identical.
 	if mapped := agentcfg.NativeArgs(name, opts.Profile, extraArgs); len(mapped) > 0 {
@@ -1394,7 +1394,7 @@ func NewWithOptions(name types.AgentName, bin string, extraArgs []string, opts O
 	case types.AgentAntigravity:
 		return &antigravityAgent{bin: bin, extraArgs: extraArgs, subprocessContext: newSubprocessContext(opts.Environment)}, nil
 	default:
-		return nil, fmt.Errorf("unknown agent %q; valid options: auto, claude, codex, grok, rovodev, opencode, pi, copilot, cursor, devin, antigravity, acp:<target> (set 'agent' in ~/.no-mistakes/config.yaml)", name)
+		return nil, fmt.Errorf("unknown agent %q; valid options: auto, claude, codex, grok, rovodev, opencode, pi, copilot, cursor, devin, antigravity, acp:<target> (set 'agent' in ~/.alamino/config.yaml)", name)
 	}
 }
 

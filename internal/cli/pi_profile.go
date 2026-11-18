@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +42,7 @@ func piProfileFromFlags(cmd *cobra.Command, model, effort string) (*agentcfg.PiP
 	return p, p.ValidateRequest()
 }
 
-const piProfilePushOptionPrefix = "no-mistakes.pi-profile="
+const piProfilePushOptionPrefix = "alamino.pi-profile="
 
 func formatPiProfilePushOptions(p *agentcfg.PiProfile) []string {
 	if p == nil {

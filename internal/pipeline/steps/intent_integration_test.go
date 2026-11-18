@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/intent"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/intent"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // fakeIntentAgent always returns a canned summary - bypasses any real LLM.

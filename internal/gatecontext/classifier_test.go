@@ -11,11 +11,11 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/gatecontext"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/gatecontext"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 type topologyFixture struct {
@@ -88,7 +88,7 @@ func TestInspectorCanonicalManagedGitIdentityMatrix(t *testing.T) {
 
 func TestInspectorRejectsRelocatedAndSymlinkedManagedRoots(t *testing.T) {
 	f := newTopologyFixture(t)
-	link := filepath.Join(t.TempDir(), "nm-home-link")
+	link := filepath.Join(t.TempDir(), "alamino-home-link")
 	if err := os.Symlink(f.root, link); err != nil {
 		t.Fatalf("symlink root: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestInspectorUsesAuthenticatedProcessAncestryAfterCWDChange(t *testing.T) {
 
 // TestInspectorAttributesRunInConfiguredWorktreeRoot covers a repository whose
 // run worktrees the operator placed in a directory of their own
-// (worktree_roots): the path no longer spells out <NM_HOME>/worktrees, so
+// (worktree_roots): the path no longer spells out <ALAMINO_HOME>/worktrees, so
 // run/phase attribution comes from the placement the run recorded. Without it
 // the caller is still refused as managed Git, but the refusal cannot name what
 // it is standing in - and reading the record rather than the configuration is
@@ -300,7 +300,7 @@ func TestInspectorClassifiesAgainstADatabaseOlderThanTheBinary(t *testing.T) {
 
 func newTopologyFixture(t *testing.T) *topologyFixture {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), "relocated-nm-home")
+	root := filepath.Join(t.TempDir(), "relocated-alamino-home")
 	p := paths.WithRoot(root)
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatalf("ensure paths: %v", err)

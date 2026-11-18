@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 	"net/http"
 	"net/http/httptest"
 	"testing"

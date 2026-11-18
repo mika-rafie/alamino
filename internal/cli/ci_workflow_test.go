@@ -148,7 +148,7 @@ func TestGenerateCIWorkflow(t *testing.T) {
 
 			// Write config file
 			if err := os.WriteFile(
-				filepath.Join(dir, ".no-mistakes.yaml"),
+				filepath.Join(dir, ".alamino.yaml"),
 				[]byte(tt.configYAML),
 				0644,
 			); err != nil {
@@ -211,7 +211,7 @@ func TestGenerateCIWorkflow_GoSetup(t *testing.T) {
 				if withLint {
 					configYAML += "  lint: sh scripts/lint.sh\n"
 				}
-				if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte(configYAML), 0644); err != nil {
+				if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte(configYAML), 0644); err != nil {
 					t.Fatal(err)
 				}
 				// Detection must use the git root, not the caller's subdirectory.
@@ -264,7 +264,7 @@ func TestGenerateCIWorkflow_RootsAtGitToplevel(t *testing.T) {
 	initGitRepo(t, dir)
 
 	if err := os.WriteFile(
-		filepath.Join(dir, ".no-mistakes.yaml"),
+		filepath.Join(dir, ".alamino.yaml"),
 		[]byte("commands:\n  test: \"go test ./...\"\n"),
 		0644,
 	); err != nil {
@@ -305,7 +305,7 @@ func TestGenerateCIWorkflow_RefusesSymlinkedWorkflowsDir(t *testing.T) {
 	}
 
 	if err := os.WriteFile(
-		filepath.Join(dir, ".no-mistakes.yaml"),
+		filepath.Join(dir, ".alamino.yaml"),
 		[]byte("commands:\n  test: \"go test ./...\"\n"),
 		0644,
 	); err != nil {
@@ -339,7 +339,7 @@ func TestGenerateCIWorkflow_RefusesSymlinkedWorkflowFile(t *testing.T) {
 	}
 
 	if err := os.WriteFile(
-		filepath.Join(dir, ".no-mistakes.yaml"),
+		filepath.Join(dir, ".alamino.yaml"),
 		[]byte("commands:\n  test: \"go test ./...\"\n"),
 		0644,
 	); err != nil {

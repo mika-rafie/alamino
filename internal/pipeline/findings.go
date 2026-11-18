@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // findingIDsJSON extracts the finding IDs from a findings JSON payload and

@@ -14,13 +14,13 @@ import (
 	"github.com/spf13/cobra"
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/skill"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/skill"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func findingsJSON(t *testing.T, items []types.Finding, summary string) string {
@@ -359,7 +359,7 @@ func TestGateHelpForUnvalidatedTestWorkDoesNotOfferSkip(t *testing.T) {
 	if strings.Contains(out, "--action skip") || strings.Contains(out, "--action approve") {
 		t.Fatalf("gate help offers a response that would publish unvalidated work:\n%s", out)
 	}
-	if !strings.Contains(out, "Do not skip this step") || !strings.Contains(out, "--action fix") || !strings.Contains(out, "`no-mistakes axi abort`") {
+	if !strings.Contains(out, "Do not skip this step") || !strings.Contains(out, "--action fix") || !strings.Contains(out, "`alamino axi abort`") {
 		t.Fatalf("gate help missing the skip warning, the fix path, or the real abort command:\n%s", out)
 	}
 }
@@ -381,7 +381,7 @@ func TestGateHelpForProtectedPathRefusalWithExhaustedReviewBudget(t *testing.T) 
 		if strings.Contains(out, "--action fix") || strings.Contains(out, "--action approve") {
 			t.Fatalf("gate help offers a response the executor refuses (fix: budget exhausted, approve: protected path):\n%s", out)
 		}
-		for _, want := range []string{"--action skip", "`no-mistakes axi abort" + runFlag(runID) + "`", "Approve is rejected", "fix-round budget is exhausted"} {
+		for _, want := range []string{"--action skip", "`alamino axi abort" + runFlag(runID) + "`", "Approve is rejected", "fix-round budget is exhausted"} {
 			if !strings.Contains(out, want) {
 				t.Fatalf("gate help missing %q:\n%s", want, out)
 			}
@@ -406,7 +406,7 @@ func TestWriteGateShape(t *testing.T) {
 		"  summary: 1 blocking issue\n",
 		"  findings[1]{id,severity,file,action,description}:\n",
 		`    review-1,warning,main.go,ask-user,"calls os.Exit, leaks fd"`,
-		"no-mistakes axi respond --action approve",
+		"alamino axi respond --action approve",
 		"to have the pipeline fix the selected findings (do not edit files yourself)",
 		// Review gate carries the auto-fix-disabled note and the keep-driving
 		// reminder so an agent reads them at the point of use.
@@ -435,7 +435,7 @@ func TestRenderDriveResult_ProtectedPathGateHelp(t *testing.T) {
 				want: []string{
 					"explicit operator response", "Approve is rejected",
 					"operator inspect and resolve", "repository's authorized workflow",
-					"no-mistakes axi respond --action fix`", "retry the refused step",
+					"alamino axi respond --action fix`", "retry the refused step",
 					"including its commit and publication",
 				},
 				absent: []string{"--action approve", "do not edit files yourself"},
@@ -443,7 +443,7 @@ func TestRenderDriveResult_ProtectedPathGateHelp(t *testing.T) {
 			{
 				name:     "ordinary",
 				findings: findingsJSON(t, []types.Finding{{ID: "doc-1", Action: types.ActionAskUser, Description: "clarify documentation"}}, "Documentation decision"),
-				want:     []string{"no-mistakes axi respond --action approve", "--action fix --findings <ids>", "do not edit files yourself"},
+				want:     []string{"alamino axi respond --action approve", "--action fix --findings <ids>", "do not edit files yourself"},
 				absent:   []string{"protected-path", "Approve is rejected"},
 			},
 		} {
@@ -495,7 +495,7 @@ func TestGateSummaryUsesBoundedDisclosure(t *testing.T) {
 		!strings.Contains(out, fmt.Sprintf("truncated, %d chars total", len(summary))) {
 		t.Fatalf("gate status should disclose summary truncation:\n%s", out)
 	}
-	if !strings.Contains(out, "no-mistakes axi logs --step test --full") {
+	if !strings.Contains(out, "alamino axi logs --step test --full") {
 		t.Fatalf("truncated gate should point to the complete step log:\n%s", out)
 	}
 }
@@ -597,7 +597,7 @@ func TestOutcomeFor(t *testing.T) {
 // green completion from one where a human approved past a live CI failure
 // (rv.CIOverrideReason, see pipeline.ApprovalOverrideVerifier). Without this,
 // "outcome=passed" in axi's agent-facing output is ambiguous between the two -
-// exactly the ambiguity that let no-mistakes self-report a passing terminal
+// exactly the ambiguity that let alamino self-report a passing terminal
 // outcome while the live PR still showed a failed check.
 func TestOutcomeForRun(t *testing.T) {
 	cases := []struct {
@@ -1003,7 +1003,7 @@ func TestLogsNoRunHelpIncludesRequiredIntent(t *testing.T) {
 func TestAxiHomeStartsCurrentBranchWhenOtherBranchIsActive(t *testing.T) {
 	repoDir := t.TempDir()
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	run(t, repoDir, "git", "init")
 	run(t, repoDir, "git", "config", "user.email", "test@test.com")
 	run(t, repoDir, "git", "config", "user.name", "Test")
@@ -1058,7 +1058,7 @@ func TestAxiHomeStartsCurrentBranchWhenOtherBranchIsActive(t *testing.T) {
 		"current_branch: feature/current",
 		"other_branch_active_run:",
 		"branch: feature/other",
-		"no-mistakes axi run --intent",
+		"alamino axi run --intent",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("axi home missing %q in:\n%s", want, got)
@@ -1067,8 +1067,8 @@ func TestAxiHomeStartsCurrentBranchWhenOtherBranchIsActive(t *testing.T) {
 	for _, forbidden := range []string{
 		"\nactive_run:",
 		"gate:",
-		"no-mistakes axi respond --action approve",
-		"no-mistakes axi abort",
+		"alamino axi respond --action approve",
+		"alamino axi abort",
 	} {
 		if strings.Contains(got, forbidden) {
 			t.Fatalf("axi home should not tell the agent to act on another branch via %q, got:\n%s", forbidden, got)
@@ -1172,7 +1172,7 @@ func TestAxiLogsFullEscapesControlByteOutsideTailWithoutRewritingLog(t *testing.
 func TestAxiStatusIgnoresInvalidGlobalConfig(t *testing.T) {
 	repoDir := t.TempDir()
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	run(t, repoDir, "git", "init")
 	run(t, repoDir, "git", "config", "user.email", "test@test.com")
 	run(t, repoDir, "git", "config", "user.name", "Test")
@@ -1232,9 +1232,9 @@ func TestAxiStatusIgnoresInvalidGlobalConfig(t *testing.T) {
 func TestAxiRunReportsInvalidGlobalConfig(t *testing.T) {
 	repoDir := t.TempDir()
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
-	t.Setenv("NM_TEST_DAEMON_START_TIMEOUT", "100ms")
-	t.Setenv("NM_TEST_DAEMON_START_POLL_INTERVAL", "10ms")
+	t.Setenv("ALAMINO_HOME", nmHome)
+	t.Setenv("ALAMINO_TEST_DAEMON_START_TIMEOUT", "100ms")
+	t.Setenv("ALAMINO_TEST_DAEMON_START_POLL_INTERVAL", "10ms")
 	run(t, repoDir, "git", "init")
 	run(t, repoDir, "git", "config", "user.email", "test@test.com")
 	run(t, repoDir, "git", "config", "user.name", "Test")
@@ -1284,7 +1284,7 @@ func TestAxiRunReportsInvalidGlobalConfig(t *testing.T) {
 // or worktree.
 func TestAxiAbortByRunIDNoOpWhenDaemonStopped(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	var out bytes.Buffer
 	cmd := &cobra.Command{}
@@ -1335,7 +1335,7 @@ func setupAxiQueryRepo(t *testing.T) (string, *paths.Paths, *db.DB, *db.Repo) {
 	t.Helper()
 	repoDir := t.TempDir()
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	run(t, repoDir, "git", "init")
 	run(t, repoDir, "git", "config", "user.email", "test@test.com")
 	run(t, repoDir, "git", "config", "user.name", "Test")
@@ -1363,7 +1363,7 @@ func setupAxiQueryRepo(t *testing.T) (string, *paths.Paths, *db.DB, *db.Repo) {
 
 func openTestDB(t *testing.T) *db.DB {
 	t.Helper()
-	database, err := db.Open(filepath.Join(t.TempDir(), "no-mistakes.db"))
+	database, err := db.Open(filepath.Join(t.TempDir(), "alamino.db"))
 	if err != nil {
 		t.Fatalf("open db: %v", err)
 	}
@@ -1418,7 +1418,7 @@ func TestAxiHomeLeadsWithAnsweringWhenTheGateHasAnOpenQuestion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			repoDir := t.TempDir()
 			nmHome := t.TempDir()
-			t.Setenv("NM_HOME", nmHome)
+			t.Setenv("ALAMINO_HOME", nmHome)
 			run(t, repoDir, "git", "init")
 			run(t, repoDir, "git", "config", "user.email", "test@test.com")
 			run(t, repoDir, "git", "config", "user.name", "Test")

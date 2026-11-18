@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func requiresExternalReview(sctx *pipeline.StepContext) bool {

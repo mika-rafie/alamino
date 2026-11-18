@@ -9,10 +9,10 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestCIStep_FixPromptIncludesSummaryBudget(t *testing.T) {
@@ -22,7 +22,7 @@ func TestCIStep_FixPromptIncludesSummaryBudget(t *testing.T) {
 		template string
 		budget   int
 	}{
-		{"default", "", 72 - len("no-mistakes(ci): ")},
+		{"default", "", 72 - len("alamino(ci): ")},
 		{"custom prefix", "fix(web): {{.Step}}: {{.Summary}}", 72 - len("fix(web): ci: ")},
 		{"repeated summary", "fix: {{.Summary}} / {{.Summary}}", (72 - len("fix:  / ")) / 2},
 		{"unicode prefix", "修复({{.Step}}): {{.Summary}}", 72 - utf8.RuneCountInString("修复(ci): ")},

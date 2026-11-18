@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func TestResolveSelectsGitHubProfileAndBuildsAuthoritativeEnvironment(t *testing.T) {
@@ -396,7 +396,7 @@ func TestResolveExpectedLoginRequiresDeclaredActiveUser(t *testing.T) {
 // its SSH HostName, so a profile keyed by an alias and a plugin claiming the
 // alias's target only collide once the run's remote is known.
 func TestRefuseProviderPluginOverlap(t *testing.T) {
-	plugins := config.ProviderPlugins{"ssm": {Command: "nm-ssm", Hosts: []string{"*.sourcemanager.dev"}}}
+	plugins := config.ProviderPlugins{"ssm": {Command: "alamino-ssm", Hosts: []string{"*.sourcemanager.dev"}}}
 	profile := &Context{Provider: scm.ProviderGitLab, ProfileHost: "work-alias"}
 	resolvesTo := func(host string) func() string { return func() string { return host } }
 

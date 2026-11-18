@@ -17,7 +17,7 @@ import (
 // contract.
 const ProtocolVersion = 1
 
-// Subcommands. A plugin is an AXI-shaped CLI, driven the way no-mistakes
+// Subcommands. A plugin is an AXI-shaped CLI, driven the way alamino
 // drives forgejo-axi: every invocation is
 //
 //	<command> <configured args...> <subcommand words> [operation args] [context flags] --json
@@ -40,7 +40,7 @@ const (
 // Error codes a plugin may report in its failure document. Unknown codes are
 // ordinary failures.
 const (
-	// ErrorCodeUnsupported is never a valid answer: no-mistakes only invokes
+	// ErrorCodeUnsupported is never a valid answer: alamino only invokes
 	// required subcommands and the ones a plugin declared in "status", so a
 	// plugin that refuses one contradicts its own handshake. It surfaces as
 	// ErrProtocol (a capability mismatch), never as scm.ErrUnsupported,
@@ -50,7 +50,7 @@ const (
 	ErrorCodeHeadChanged = "head_changed"
 )
 
-// ErrProtocol marks a plugin that broke this contract: output no-mistakes
+// ErrProtocol marks a plugin that broke this contract: output alamino
 // cannot validate (empty, non-JSON, a second document, a missing required
 // key, a mismatched PR identity, an unknown enum value), a protocol version
 // it does not speak, a capability it declared but then refused, a success

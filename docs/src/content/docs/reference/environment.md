@@ -1,33 +1,33 @@
 ---
 title: Environment Variables
-description: All environment variables recognized by no-mistakes.
+description: All environment variables recognized by alamino.
 ---
 
-## `NM_HOME`
+## `ALAMINO_HOME`
 
 Override the data directory.
 
 |         |                  |
 | ------- | ---------------- |
 | Type    | `string`         |
-| Default | `~/.no-mistakes` |
+| Default | `~/.alamino` |
 
 When set, everything else moves under this root:
 
-- Global config: `$NM_HOME/config.yaml`
-- Gate repos: `$NM_HOME/repos/<id>.git`
-- Worktrees: `$NM_HOME/worktrees/<repoID>/<runID>/`, unless [`worktree_roots`](/no-mistakes/reference/global-config/#worktree_roots) places a repository's run worktrees elsewhere
-- Logs: `$NM_HOME/logs/`
-- Database: `$NM_HOME/state.sqlite`
-- Socket / PID / singleton lock: `$NM_HOME/socket`, `$NM_HOME/daemon.pid`, and `$NM_HOME/daemon.lock`
-- The socket path must fit the platform's Unix socket limit: 103 bytes on macOS, 107 on Linux. `daemon start`, `daemon restart`, `daemon status`, `init`, `attach`, `rerun`, `axi run`, and the push hook fail with a message that names the path, its length, and the limit when it is too long. Use a shorter `NM_HOME`. The physical path counts: a symbolic link to a long directory does not help, because the push hook dials the resolved path.
-- Managed agent server PID records: `$NM_HOME/servers/`
-- Local evaluation cases and registry: `$NM_HOME/eval/` (created by automatic collection or an explicit `no-mistakes eval` command)
-- Managed service names get a short stable suffix derived from `$NM_HOME` so multiple installs don't collide.
+- Global config: `$ALAMINO_HOME/config.yaml`
+- Gate repos: `$ALAMINO_HOME/repos/<id>.git`
+- Worktrees: `$ALAMINO_HOME/worktrees/<repoID>/<runID>/`, unless [`worktree_roots`](/alamino/reference/global-config/#worktree_roots) places a repository's run worktrees elsewhere
+- Logs: `$ALAMINO_HOME/logs/`
+- Database: `$ALAMINO_HOME/state.sqlite`
+- Socket / PID / singleton lock: `$ALAMINO_HOME/socket`, `$ALAMINO_HOME/daemon.pid`, and `$ALAMINO_HOME/daemon.lock`
+- The socket path must fit the platform's Unix socket limit: 103 bytes on macOS, 107 on Linux. `daemon start`, `daemon restart`, `daemon status`, `init`, `attach`, `rerun`, `axi run`, and the push hook fail with a message that names the path, its length, and the limit when it is too long. Use a shorter `ALAMINO_HOME`. The physical path counts: a symbolic link to a long directory does not help, because the push hook dials the resolved path.
+- Managed agent server PID records: `$ALAMINO_HOME/servers/`
+- Local evaluation cases and registry: `$ALAMINO_HOME/eval/` (created by automatic collection or an explicit `alamino eval` command)
+- Managed service names get a short stable suffix derived from `$ALAMINO_HOME` so multiple installs don't collide.
 
-A push is handled by the root that owns the gate it was pushed to, not by the root `NM_HOME` names. Git does not set `NM_HOME` for a hook, so the managed `pre-receive` and `post-receive` hooks would otherwise reach whichever daemon the pushing shell happened to point at - usually the default `~/.no-mistakes`, since the variable is normally unset. Instead the CLI resolves its root from the gate path the hook passes it: a gate always lives at `$NM_HOME/repos/<id>.git`, so the owning root is a property of where the gate sits. A push to a gate under one root therefore reaches that root's daemon even when `NM_HOME` is unset or names a different root. A path that is not a managed gate is refused rather than resolved against the default root, so `pre-receive` fails the push and `post-receive` stays non-blocking and records the skipped notification in the gate's `notify-push.log`. The daemon enforces the same ownership on its own side of both calls, refusing to admit or to start a run for a gate that does not sit under its root. Existing installs get this by updating the binary; the hook scripts are unchanged, so no gate needs regenerating.
+A push is handled by the root that owns the gate it was pushed to, not by the root `ALAMINO_HOME` names. Git does not set `ALAMINO_HOME` for a hook, so the managed `pre-receive` and `post-receive` hooks would otherwise reach whichever daemon the pushing shell happened to point at - usually the default `~/.alamino`, since the variable is normally unset. Instead the CLI resolves its root from the gate path the hook passes it: a gate always lives at `$ALAMINO_HOME/repos/<id>.git`, so the owning root is a property of where the gate sits. A push to a gate under one root therefore reaches that root's daemon even when `ALAMINO_HOME` is unset or names a different root. A path that is not a managed gate is refused rather than resolved against the default root, so `pre-receive` fails the push and `post-receive` stays non-blocking and records the skipped notification in the gate's `notify-push.log`. The daemon enforces the same ownership on its own side of both calls, refusing to admit or to start a run for a gate that does not sit under its root. Existing installs get this by updating the binary; the hook scripts are unchanged, so no gate needs regenerating.
 
-## `NM_DAEMON_CONNECT_TIMEOUT`
+## `ALAMINO_DAEMON_CONNECT_TIMEOUT`
 
 Override how long a CLI client waits for an existing daemon socket to accept a connection before failing instead of hanging.
 
@@ -36,7 +36,7 @@ Override how long a CLI client waits for an existing daemon socket to accept a c
 | Type    | `string` (Go duration)                                                                            |
 | Default | unset (falls back to the `daemon_connect_timeout` global config value, itself defaulting to `3s`) |
 
-Takes precedence over `daemon_connect_timeout` in `config.yaml`. An empty, unparsable, or non-positive value is ignored and the config value (or its default) is used instead. The config value is read from the root whose socket is being dialed, not from the root `NM_HOME` names, so a push handled by the root that owns the gate also waits for the timeout that root configured.
+Takes precedence over `daemon_connect_timeout` in `config.yaml`. An empty, unparsable, or non-positive value is ignored and the config value (or its default) is used instead. The config value is read from the root whose socket is being dialed, not from the root `ALAMINO_HOME` names, so a push handled by the root that owns the gate also waits for the timeout that root configured.
 
 ## `FORGEJO_BASE_URL`
 
@@ -47,7 +47,7 @@ Canonical Forgejo web base URL used for provider discovery and forgejo-axi comma
 | Type    | `URL`    |
 | Default | (none)   |
 
-Set this when the run's [integration remote](/no-mistakes/reference/cli/#other-run-options) uses SSH, because an SSH remote does not identify the canonical Forgejo web scheme, port, or path prefix. Also set it when an HTTPS integration remote uses a self-hosted hostname other than `codeberg.org` or one containing `forgejo`. Recognized HTTPS remotes are detected automatically, including non-default ports and path prefixes inferred from their URLs. When set, the host and prefix must match the integration repository's URL. Name the clone hostname with [`FORGEJO_SSH_DOMAIN`](#forgejo_ssh_domain) when the instance serves SSH from a different host; credentials, query strings, and fragments are rejected.
+Set this when the run's [integration remote](/alamino/reference/cli/#other-run-options) uses SSH, because an SSH remote does not identify the canonical Forgejo web scheme, port, or path prefix. Also set it when an HTTPS integration remote uses a self-hosted hostname other than `codeberg.org` or one containing `forgejo`. Recognized HTTPS remotes are detected automatically, including non-default ports and path prefixes inferred from their URLs. When set, the host and prefix must match the integration repository's URL. Name the clone hostname with [`FORGEJO_SSH_DOMAIN`](#forgejo_ssh_domain) when the instance serves SSH from a different host; credentials, query strings, and fragments are rejected.
 
 ## `FORGEJO_SSH_DOMAIN`
 
@@ -60,7 +60,7 @@ Hostname a Forgejo instance publishes in SSH clone URLs when it differs from the
 
 Set this to the instance's own `SSH_DOMAIN` value when Forgejo serves SSH from a hostname other than its web host, so an integration remote such as `git@ssh.forgejo.example:octo/widgets.git` is still recognized as that instance.
 
-Give a bare ASCII hostname or IP address, with an optional port that is ignored, because an instance's SSH clone port varies independently of its hostname. Hostname labels hold letters, digits, hyphens, and underscores, with a hyphen or underscore never first or last in a label, and an IPv6 address is bracketed (`[2001:db8::1]`). Any other value is treated as unset: a scheme, path, credentials, query string, or fragment, and also a name that could never match a remote hostname, such as a wildcard or a trailing dot. no-mistakes never echoes a rejected value back into a log or an error, because the setting can hold a pasted credential.
+Give a bare ASCII hostname or IP address, with an optional port that is ignored, because an instance's SSH clone port varies independently of its hostname. Hostname labels hold letters, digits, hyphens, and underscores, with a hyphen or underscore never first or last in a label, and an IPv6 address is bracketed (`[2001:db8::1]`). Any other value is treated as unset: a scheme, path, credentials, query string, or fragment, and also a name that could never match a remote hostname, such as a wildcard or a trailing dot. alamino never echoes a rejected value back into a log or an error, because the setting can hold a pasted credential.
 
 The variable only widens which SSH remotes belong to the instance `FORGEJO_BASE_URL` already names, so it does nothing while that variable is unset or invalid. The upstream path prefix must still match, and HTTPS remotes are unaffected. GitHub, GitLab, Bitbucket, and Azure DevOps hosts, plus any host configured in `glab`, `gh`, or `tea`, are all matched before the declared domain; against the remaining hostname guesses, the declared domain carries exactly the weight a `FORGEJO_BASE_URL` match already carries.
 
@@ -79,14 +79,14 @@ Preferred host-scoped token used by forgejo-axi for Forgejo PR and CI operations
 
 ## `FORGEJO_TOKEN`
 
-Generic Forgejo token fallback. When present, no-mistakes passes its name explicitly to forgejo-axi; prefer a host-scoped token when the daemon serves multiple Forgejo instances.
+Generic Forgejo token fallback. When present, alamino passes its name explicitly to forgejo-axi; prefer a host-scoped token when the daemon serves multiple Forgejo instances.
 
 |         |          |
 | ------- | -------- |
 | Type    | `string` |
 | Default | (none)   |
 
-Tokens remain in the subprocess environment: no-mistakes never puts a token value in command arguments and redacts Forgejo token values from surfaced provider errors.
+Tokens remain in the subprocess environment: alamino never puts a token value in command arguments and redacts Forgejo token values from surfaced provider errors.
 
 ## `FORGEJO_TIMEOUT_MS`
 
@@ -108,17 +108,17 @@ Path to a replacement CA trust bundle used by forgejo-axi for HTTPS requests.
 | Type    | `string` |
 | Default | (none)   |
 
-This replaces rather than appends to the platform trust store. See [Provider Integration](/no-mistakes/guides/provider-integration/#forgejo) for provider setup.
+This replaces rather than appends to the platform trust store. See [Provider Integration](/alamino/guides/provider-integration/#forgejo) for provider setup.
 
-## `NO_MISTAKES_FINDINGS_FILE`
+## `ALAMINO_FINDINGS_FILE`
 
-Absolute path to the empty JSON report file supplied to each repository [gate command](/no-mistakes/reference/repo-config/#structured-findings).
+Absolute path to the empty JSON report file supplied to each repository [gate command](/alamino/reference/repo-config/#structured-findings).
 
-This is a command-child variable, not a daemon setting. no-mistakes creates a fresh file outside the worktree before every gate command and removes it after reading the result. Commands can write `{"findings":[...]}` using the existing finding shape to report stable finding IDs and locations. Commands that leave it empty retain their exit-code-only behavior.
+This is a command-child variable, not a daemon setting. alamino creates a fresh file outside the worktree before every gate command and removes it after reading the result. Commands can write `{"findings":[...]}` using the existing finding shape to report stable finding IDs and locations. Commands that leave it empty retain their exit-code-only behavior.
 
-See the [gate contract](/no-mistakes/reference/repo-config/#structured-findings) for the report schema, limits, verdicts, and approval behavior.
+See the [gate contract](/alamino/reference/repo-config/#structured-findings) for the report schema, limits, verdicts, and approval behavior.
 
-## `NO_MISTAKES_BITBUCKET_EMAIL`
+## `ALAMINO_BITBUCKET_EMAIL`
 
 Bitbucket Cloud account email used for PR creation and CI monitoring.
 
@@ -127,9 +127,9 @@ Bitbucket Cloud account email used for PR creation and CI monitoring.
 | Type    | `string`                                      |
 | Default | (none; Bitbucket PR/CI steps skip when unset) |
 
-Used alongside `NO_MISTAKES_BITBUCKET_API_TOKEN`. See [Provider Integration](/no-mistakes/guides/provider-integration/#bitbucket-cloud).
+Used alongside `ALAMINO_BITBUCKET_API_TOKEN`. See [Provider Integration](/alamino/guides/provider-integration/#bitbucket-cloud).
 
-## `NO_MISTAKES_BITBUCKET_API_TOKEN`
+## `ALAMINO_BITBUCKET_API_TOKEN`
 
 Bitbucket Cloud API token.
 
@@ -140,7 +140,7 @@ Bitbucket Cloud API token.
 
 Get one from [Bitbucket account settings](https://bitbucket.org/account/settings/app-passwords/).
 
-## `NO_MISTAKES_BITBUCKET_API_BASE_URL`
+## `ALAMINO_BITBUCKET_API_BASE_URL`
 
 Override the Bitbucket Cloud API base URL.
 
@@ -161,7 +161,7 @@ Alternatively, authenticate the Azure DevOps extension with `az devops login`.
 | Type    | `string`                                           |
 | Default | (none)                                             |
 
-See [Provider Integration](/no-mistakes/guides/provider-integration/#azure-devops).
+See [Provider Integration](/alamino/guides/provider-integration/#azure-devops).
 
 ## `GITHUB_TOKEN`
 
@@ -176,7 +176,7 @@ When set, the updater sends the token as a Bearer authorization header for relea
 
 ## `GH_TOKEN`
 
-Fallback GitHub token used by `no-mistakes update` when `GITHUB_TOKEN` is unset or empty.
+Fallback GitHub token used by `alamino update` when `GITHUB_TOKEN` is unset or empty.
 
 |         |          |
 | ------- | -------- |
@@ -185,7 +185,7 @@ Fallback GitHub token used by `no-mistakes update` when `GITHUB_TOKEN` is unset 
 
 See [`GITHUB_TOKEN`](#github_token) for the updater's authentication behavior and precedence.
 
-## `NO_MISTAKES_NO_UPDATE_CHECK`
+## `ALAMINO_NO_UPDATE_CHECK`
 
 Disable background update checks.
 
@@ -194,7 +194,7 @@ Disable background update checks.
 | Type    | `1` to disable, anything else to leave enabled |
 | Default | unset (checks enabled)                         |
 
-Update checks run on every CLI invocation except `update` itself and version queries (`--version` / `-v`, which stay side-effect-free), fetch the GitHub release-asset channel manifest, cache the result in `$NM_HOME/update-check.json`, and print a one-line notification to stderr when a newer version is available. Dev builds (non-semver versions) and binaries that resolve into `/nix/store` suppress the check automatically.
+Update checks run on every CLI invocation except `update` itself and version queries (`--version` / `-v`, which stay side-effect-free), fetch the GitHub release-asset channel manifest, cache the result in `$ALAMINO_HOME/update-check.json`, and print a one-line notification to stderr when a newer version is available. Dev builds (non-semver versions) and binaries that resolve into `/nix/store` suppress the check automatically.
 
 ## `CLAUDE_CONFIG_DIR`
 
@@ -205,7 +205,7 @@ Claude Code account directory used for intent transcript discovery.
 | Type    | `string`    |
 | Default | `~/.claude` |
 
-no-mistakes reads Claude Code transcripts from `$CLAUDE_CONFIG_DIR/projects`.
+alamino reads Claude Code transcripts from `$CLAUDE_CONFIG_DIR/projects`.
 
 For both `CLAUDE_CONFIG_DIR` and [`CODEX_HOME`](#codex_home), CLI launches, push-hook notifications, and TUI reruns capture the caller's values, using the caller's home directory for defaults when a variable is unset or empty. The selected roots are stored with the run and survive daemon recovery, independently of the daemon's environment. A rerun captures the current caller's selection. A retry continuation retains the failed run's selection. Historical runs without recorded roots retain default-path discovery.
 
@@ -220,7 +220,7 @@ Codex account directory used for intent transcript discovery.
 | Type    | `string`   |
 | Default | `~/.codex` |
 
-no-mistakes reads Codex metadata from `$CODEX_HOME/state_*.sqlite` and transcripts from the referenced rollout files. Relative rollout paths resolve against the selected Codex home. The [caller-selection, persistence, and failure rules](#claude_config_dir) also apply to this variable.
+alamino reads Codex metadata from `$CODEX_HOME/state_*.sqlite` and transcripts from the referenced rollout files. Relative rollout paths resolve against the selected Codex home. The [caller-selection, persistence, and failure rules](#claude_config_dir) also apply to this variable.
 
 ## `XDG_DATA_HOME`
 
@@ -231,7 +231,7 @@ Data directory used to discover OpenCode transcripts for intent extraction.
 | Type    | `string`         |
 | Default | `~/.local/share` |
 
-When set, no-mistakes looks for OpenCode's intent transcript database at `$XDG_DATA_HOME/opencode/opencode.db`.
+When set, alamino looks for OpenCode's intent transcript database at `$XDG_DATA_HOME/opencode/opencode.db`.
 When unset, it falls back to `~/.local/share/opencode/opencode.db`.
 
 ## `GLAB_CONFIG_DIR`
@@ -243,7 +243,7 @@ Directory holding glab's `config.yml`, consulted when detecting self-hosted GitL
 | Type    | `string` |
 | Default | (none)   |
 
-When the upstream hostname carries no `gitlab` marker, no-mistakes reads glab's configured hosts from `$GLAB_CONFIG_DIR/config.yml` to decide whether the host is a GitLab instance. It takes precedence over `XDG_CONFIG_HOME`. A selected [`forge_profiles`](/no-mistakes/reference/global-config/#forge_profiles) entry overrides this variable for that run and removes `GITLAB_TOKEN`, `GITLAB_ACCESS_TOKEN`, `OAUTH_TOKEN`, `CI_JOB_TOKEN`, `GLAB_ENABLE_CI_AUTOLOGIN`, `GITLAB_HOST`, `GL_HOST`, `GITLAB_URI`, `GITLAB_API_HOST`, `GITLAB_REPO`, `GITLAB_GROUP`, `REMOTE_ALIAS`, and `GIT_REMOTE_URL_VAR` from all child processes. See [Provider Integration](/no-mistakes/guides/provider-integration/#self-hosted-githubgitlab).
+When the upstream hostname carries no `gitlab` marker, alamino reads glab's configured hosts from `$GLAB_CONFIG_DIR/config.yml` to decide whether the host is a GitLab instance. It takes precedence over `XDG_CONFIG_HOME`. A selected [`forge_profiles`](/alamino/reference/global-config/#forge_profiles) entry overrides this variable for that run and removes `GITLAB_TOKEN`, `GITLAB_ACCESS_TOKEN`, `OAUTH_TOKEN`, `CI_JOB_TOKEN`, `GLAB_ENABLE_CI_AUTOLOGIN`, `GITLAB_HOST`, `GL_HOST`, `GITLAB_URI`, `GITLAB_API_HOST`, `GITLAB_REPO`, `GITLAB_GROUP`, `REMOTE_ALIAS`, and `GIT_REMOTE_URL_VAR` from all child processes. See [Provider Integration](/alamino/guides/provider-integration/#self-hosted-githubgitlab).
 
 ## `GH_CONFIG_DIR`
 
@@ -254,7 +254,7 @@ Directory holding gh's `hosts.yml`, consulted when detecting self-hosted GitHub 
 | Type    | `string` |
 | Default | (none)   |
 
-When the upstream hostname is not `github.com`, no-mistakes reads gh's configured hosts from `$GH_CONFIG_DIR/hosts.yml` to decide whether the host is a GitHub Enterprise instance. It takes precedence over `XDG_CONFIG_HOME`. A selected [`forge_profiles`](/no-mistakes/reference/global-config/#forge_profiles) entry overrides this variable for that run (a `gh_user` profile leaves it as is) and removes `GH_TOKEN`, `GITHUB_TOKEN`, `GH_ENTERPRISE_TOKEN`, `GITHUB_ENTERPRISE_TOKEN`, `GH_HOST`, and `GH_REPO` from all child processes; a `gh_user` profile then sets `GH_TOKEN` (or `GH_ENTERPRISE_TOKEN` on a GitHub Enterprise Server host) to the selected login's token for that run. See [Provider Integration](/no-mistakes/guides/provider-integration/#self-hosted-githubgitlab).
+When the upstream hostname is not `github.com`, alamino reads gh's configured hosts from `$GH_CONFIG_DIR/hosts.yml` to decide whether the host is a GitHub Enterprise instance. It takes precedence over `XDG_CONFIG_HOME`. A selected [`forge_profiles`](/alamino/reference/global-config/#forge_profiles) entry overrides this variable for that run (a `gh_user` profile leaves it as is) and removes `GH_TOKEN`, `GITHUB_TOKEN`, `GH_ENTERPRISE_TOKEN`, `GITHUB_ENTERPRISE_TOKEN`, `GH_HOST`, and `GH_REPO` from all child processes; a `gh_user` profile then sets `GH_TOKEN` (or `GH_ENTERPRISE_TOKEN` on a GitHub Enterprise Server host) to the selected login's token for that run. See [Provider Integration](/alamino/guides/provider-integration/#self-hosted-githubgitlab).
 
 ## `TEA_CONFIG_DIR`
 
@@ -265,7 +265,7 @@ Directory holding tea 1.0's `hosts.yml`, consulted when detecting self-hosted Gi
 | Type    | `string` |
 | Default | (none)   |
 
-tea 1.0 ([gitea/tea#1126](https://gitea.com/gitea/tea/pulls/1126)) keeps its instances in `$TEA_CONFIG_DIR/hosts.yml`, and no-mistakes reads the same file to match the upstream host to an instance URL or `ssh_host`. It takes precedence over `XDG_CONFIG_HOME`. tea 0.x ignores it. See [Provider Integration](/no-mistakes/guides/provider-integration/#self-hosted-gitea).
+tea 1.0 ([gitea/tea#1126](https://gitea.com/gitea/tea/pulls/1126)) keeps its instances in `$TEA_CONFIG_DIR/hosts.yml`, and alamino reads the same file to match the upstream host to an instance URL or `ssh_host`. It takes precedence over `XDG_CONFIG_HOME`. tea 0.x ignores it. See [Provider Integration](/alamino/guides/provider-integration/#self-hosted-gitea).
 
 ## `XDG_CONFIG_HOME`
 
@@ -276,9 +276,9 @@ Config directory used to locate glab's `config.yml` for self-hosted GitLab detec
 | Type    | `string`    |
 | Default | `~/.config` |
 
-When `GLAB_CONFIG_DIR` is unset, no-mistakes looks for glab's configured hosts at `$XDG_CONFIG_HOME/glab-cli/config.yml`, falling back to `~/.config/glab-cli/config.yml` when `XDG_CONFIG_HOME` is unset.
-When `GH_CONFIG_DIR` is unset, no-mistakes looks for gh's configured hosts at `$XDG_CONFIG_HOME/gh/hosts.yml`, falling back to `~/.config/gh/hosts.yml` when `XDG_CONFIG_HOME` is unset.
-tea 0.x has no CLI-specific override env var (unlike `GLAB_CONFIG_DIR`/`GH_CONFIG_DIR`); no-mistakes always looks for its configured logins at `$XDG_CONFIG_HOME/tea/config.yml`, falling back to `~/.config/tea/config.yml` when `XDG_CONFIG_HOME` is unset. When `TEA_CONFIG_DIR` is unset, tea 1.0's configured instances are read from `hosts.yml` in that same directory. See [Provider Integration](/no-mistakes/guides/provider-integration/#self-hosted-gitea).
+When `GLAB_CONFIG_DIR` is unset, alamino looks for glab's configured hosts at `$XDG_CONFIG_HOME/glab-cli/config.yml`, falling back to `~/.config/glab-cli/config.yml` when `XDG_CONFIG_HOME` is unset.
+When `GH_CONFIG_DIR` is unset, alamino looks for gh's configured hosts at `$XDG_CONFIG_HOME/gh/hosts.yml`, falling back to `~/.config/gh/hosts.yml` when `XDG_CONFIG_HOME` is unset.
+tea 0.x has no CLI-specific override env var (unlike `GLAB_CONFIG_DIR`/`GH_CONFIG_DIR`); alamino always looks for its configured logins at `$XDG_CONFIG_HOME/tea/config.yml`, falling back to `~/.config/tea/config.yml` when `XDG_CONFIG_HOME` is unset. When `TEA_CONFIG_DIR` is unset, tea 1.0's configured instances are read from `hosts.yml` in that same directory. See [Provider Integration](/alamino/guides/provider-integration/#self-hosted-gitea).
 
 ## `COMPACT_ADVISER_DISABLE`
 
@@ -289,80 +289,36 @@ Kill-switch injected into every pipeline agent subprocess so compact-adviser sta
 | Type    | always `1` for agent subprocesses    |
 | Default | injected; not a daemon-wide setting  |
 
-no-mistakes stamps `COMPACT_ADVISER_DISABLE=1` onto every spawned gate agent, including ACP aliases and managed agent servers that can load host plugins. Forge and profile overlays cannot drop the flag. The daemon process itself is unchanged; this is agent-child policy only, not a user-facing knob for the service environment.
+alamino stamps `COMPACT_ADVISER_DISABLE=1` onto every spawned gate agent, including ACP aliases and managed agent servers that can load host plugins. Forge and profile overlays cannot drop the flag. The daemon process itself is unchanged; this is agent-child policy only, not a user-facing knob for the service environment.
 
-## `NO_MISTAKES_UMAMI_HOST`
+## Local performance records
 
-Override the telemetry collection host.
+`alamino` has no telemetry.
+The binary contains no analytics client and sends no usage data to any host.
+What it records about its own runs is described below, and all of it stays on the machine.
 
-|         |                             |
-| ------- | --------------------------- |
-| Type    | `URL`                       |
-| Default | `https://a.kunchenguid.com` |
+[Quota-aware routing](/alamino/reference/global-config/#quota_routing) records candidates, quota evidence, the chosen order, and mid-run switches in `runs.quota_routing` in the local state database (`<ALAMINO_HOME>/state.sqlite`). These records never leave the machine.
 
-When set, telemetry sends events to this host's `/api/send` endpoint. If it is unset in a dev build, `no-mistakes` also checks a repo-local `.env` file for `NO_MISTAKES_UMAMI_HOST`. If no runtime value is found, it falls back to any host embedded at build time and then the default self-hosted Umami instance.
-
-## `NO_MISTAKES_UMAMI_WEBSITE_ID`
-
-Override or enable the telemetry website ID.
-
-|         |                                                                                     |
-| ------- | ----------------------------------------------------------------------------------- |
-| Type    | `string`                                                                            |
-| Default | embedded in Makefile, Nix flake, and release builds; unset in unembedded dev builds |
-
-When set, telemetry uses this website ID at runtime. If it is unset in a dev build, `no-mistakes` also checks a repo-local `.env` file for `NO_MISTAKES_UMAMI_WEBSITE_ID`. If no runtime value is found, it falls back to any website ID embedded at build time.
-
-When telemetry is enabled, `no-mistakes` sends command, run, approval, fix, and wizard events, completed step events with `awaiting_approval`, `fix_review`, or `failed` status, and pageviews for the human surfaces `/wizard` and `/tui` and the state-changing agent surfaces `/axi/run`, `/axi/respond`, `/axi/abort`, `/axi/retry`, and `/axi/handoff` to Umami.
-Mutation pageviews are sent alongside command events, so command status and duration remain available.
-They include only flag-derived context: `/axi/run` records booleans such as whether `--yes` or `--skip` was supplied and whether explicit intent was supplied through any [intent input transport](/no-mistakes/reference/cli/#intent-input); `/axi/respond` records the sanitized action and whether `--yes` was present. The intent boolean does not distinguish text, file, and stdin input, and intent input rejected by the CLI resolver emits no `axi-run` command event or pageview.
-
-Read-only surfaces (`axi` home, `axi status`, `axi logs`, `axi rounds`, `status`, `runs`, `export`) emit no telemetry at all, so agent status polling cannot flood remote analytics. Mutation surfaces (`axi run`, `axi respond`, `axi abort`, `axi retry`, `axi handoff`, run lifecycle, approvals, and fixes) stay full-fidelity.
-Each explicit human CLI, AXI, or TUI branch-sync check/apply attempt emits one command event and no additional pageview.
-Its fields are bounded enums and booleans only: surface, mode, state, relation, target kind, pipeline phase, PR state, result, refusal reason, dirty state, and duration.
-It never sends a SHA, run ID, path, branch name, URL, remote name, or command argument.
-
-### What stays local and what leaves the machine
-
-Everything sent remotely is low-cardinality: command names, statuses, durations, counts, flag booleans, agent names, fixed step categories, and - on the single terminal `run finished` event - the bounded performance rollup `agent_invocations`, `resumed_invocations`, and `fallback_invocations` (small counts only).
-Run IDs, repository paths, branch names, session identities, prompts, model outputs, diffs, and per-invocation performance records are never sent.
-Repository-declared [gate](/no-mistakes/reference/repo-config/#gates) labels stay local. Remote step, approval, fix, and failed-step fields record them as the fixed token `gate`.
-
-[Quota-aware routing](/no-mistakes/reference/global-config/#quota_routing) records candidates, quota evidence, the chosen order, and mid-run switches in `runs.quota_routing` in the local state database (`<NM_HOME>/state.sqlite`). These records are never sent in remote telemetry.
-
-Detailed performance evidence stays on the machine in the local state database (`<NM_HOME>/state.sqlite`): one `agent_invocations` row per agent invocation, plus each run's accumulated parked-at-gate time.
+Detailed performance evidence stays on the machine in the local state database (`<ALAMINO_HOME>/state.sqlite`): one `agent_invocations` row per agent invocation, plus each run's accumulated parked-at-gate time.
 Each row records run and step identity, purpose (such as review/review-fix/housekeeping), the reported model and its provider, the cold/started/resumed/fallback session mode, a truncated session-identity hash, timestamps, duration, exit status, and failure category, alongside the session-fidelity metrics below.
-For an explicit [reviewer fallback chain](/no-mistakes/reference/global-config/#review_agents), each attempt also records `configured_model` when nonempty, including any configured provider prefix. This identifies the configured candidate separately from the adapter-reported model and provider, including on failed attempts. Native argument overrides can still take precedence, so this field does not prove which model served the request. Older rows and attempts without this metadata read back as NULL.
+For an explicit [reviewer fallback chain](/alamino/reference/global-config/#review_agents), each attempt also records `configured_model` when nonempty, including any configured provider prefix. This identifies the configured candidate separately from the adapter-reported model and provider, including on failed attempts. Native argument overrides can still take precedence, so this field does not prove which model served the request. Older rows and attempts without this metadata read back as NULL.
 It never stores prompts, model outputs, diffs, raw command arguments, secret values, or credentials.
 
 Token counts and the additive session-fidelity fields are nullable and read back as unknown (rendered `-`) rather than a fabricated zero when the adapter did not report them, so a failed or cancelled invocation, a row written before a field existed, and an adapter that does not surface a datum stay honest.
 A recorded `0` means the adapter reported zero; it is distinct from unknown.
 
-- Token detail: `input_tokens`/`output_tokens`/`cache_read_tokens` (adapter counters, cumulative across a resumed session for codex; per-invocation for pi; unknown when the adapter did not report usage). Claude, Pi, and OpenCode normalize their disjoint provider input buckets into total input, including cache reads and reported cache creation. Pipeline `fresh_input_tokens` remains input minus cache reads, including reported cache creation; [eval token accounting](/no-mistakes/reference/eval/#report-results) separates cache writes as well. Other fields are `cache_creation_tokens` (unknown when the provider does not surface it), `reasoning_tokens`, and `delta_input_tokens`/`delta_output_tokens`/`delta_cache_read_tokens` (the correct per-round amounts, so a resumed session's cumulative counter is never mistaken for one round's usage).
+- Token detail: `input_tokens`/`output_tokens`/`cache_read_tokens` (adapter counters, cumulative across a resumed session for codex; per-invocation for pi; unknown when the adapter did not report usage). Claude, Pi, and OpenCode normalize their disjoint provider input buckets into total input, including cache reads and reported cache creation. Pipeline `fresh_input_tokens` remains input minus cache reads, including reported cache creation; [eval token accounting](/alamino/reference/eval/#report-results) separates cache writes as well. Other fields are `cache_creation_tokens` (unknown when the provider does not surface it), `reasoning_tokens`, and `delta_input_tokens`/`delta_output_tokens`/`delta_cache_read_tokens` (the correct per-round amounts, so a resumed session's cumulative counter is never mistaken for one round's usage).
 - Activity: `model_roundtrips` (a proxy for productive model turns), `tool_calls`, and a bounded tool-category histogram (`tool_wait_calls`, `tool_test_lint_calls`, `tool_edit_calls`, `tool_read_calls`, `tool_git_calls`, `tool_other_calls`); a compound command counts once per sub-command, so the histogram can sum higher than `tool_calls`.
 - Timing split: `subprocess_wait_ms` is the wall-clock spent inside tool subprocesses; model/reasoning time is the invocation duration minus it, clamped at zero.
 - Context: `workload_files`/`workload_lines` (bounded change size), `finding_count` (findings in the structured output), and `fallback_reason` (why a failed resume forced a fresh session, one of transient/parse/exit/spawn/unsupported/other).
 
 The count and timing definitions live in one authoritative place (`internal/agent/invocationmetrics.go`).
-Inspect the evidence with `no-mistakes stats --agents` (per-purpose aggregates, including a `METRICS` coverage count so a real zero is distinguishable from missing instrumentation) or `no-mistakes stats --run <id>` (one run's invocations, the per-round-vs-cumulative token split, and parked time).
-For a versioned JSON snapshot of one run's stored delivery facts, use [`no-mistakes export --run <id> --json`](/no-mistakes/reference/cli/#no-mistakes-export).
-
-## `NO_MISTAKES_TELEMETRY`
-
-Disable telemetry collection.
-
-|         |                                                                   |
-| ------- | ----------------------------------------------------------------- |
-| Type    | `0`, `false`, or `off` to disable; anything else to leave enabled |
-| Default | unset                                                             |
-
-When set to a disabling value, telemetry stays off even if a runtime or embedded website ID is available.
-
-On macOS and Linux, set this variable before `no-mistakes init` to include it in the managed daemon's service definition. To change an existing installation, export the new value and run `no-mistakes daemon restart`. Service refreshes and binary upgrades preserve the stored value when the current shell has no nonempty value. To re-enable telemetry, explicitly set `NO_MISTAKES_TELEMETRY=1` and restart the daemon. Windows Task Scheduler inherits the user's logon environment, so set it there for the managed daemon.
+Inspect the evidence with `alamino stats --agents` (per-purpose aggregates, including a `METRICS` coverage count so a real zero is distinguishable from missing instrumentation) or `alamino stats --run <id>` (one run's invocations, the per-round-vs-cumulative token split, and parked time).
+For a versioned JSON snapshot of one run's stored delivery facts, use [`alamino export --run <id> --json`](/alamino/reference/cli/#alamino-export).
 
 ## Git commit environment
 
-Submission identity capture honors `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` from the submitting process. The [pipeline commit identity policy](/no-mistakes/reference/pipeline-steps/) owns how that identity is bound to a run and preserved during correction rewriting.
+Submission identity capture honors `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` from the submitting process. The [pipeline commit identity policy](/alamino/reference/pipeline-steps/) owns how that identity is bound to a run and preserved during correction rewriting.
 
 Pipeline-owned Git calls set those four variables to the run's saved identity and remove inherited `GIT_AUTHOR_DATE` and `GIT_COMMITTER_DATE`. New commit dates are not pinned. These calls retain inherited command-scope Git configuration, as do provider CLI and plugin calls.
 
@@ -370,6 +326,6 @@ Agent and configured-command environments exclude inherited author and committer
 
 ## Environment the daemon sees
 
-When the daemon runs through a managed service (launchd, systemd user service, Task Scheduler), the macOS and Linux service definitions include a default `PATH` with common user and system binary directories. They also bake in any proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `ALL_PROXY`) that were set when you installed or refreshed the service, so the daemon and the agents it spawns can reach the network through your proxy even when the login-shell probe is unavailable. Once baked in, the values are preserved across later service refreshes and restarts even when the proxy variables are not exported in that shell, so a routine `daemon restart` or a binary upgrade will not strip them; export the variables again only when you need to change or remove them. Both the upper- and lower-case spellings are forwarded exactly as you set them, because tooling is inconsistent about which it reads (curl, for example, honors only the lower-case `http_proxy` for plain-HTTP requests). Because a proxy URL can embed credentials (for example `http://user:pass@host`), the generated service file is restricted to owner-only `0600` permissions whenever proxy or telemetry values are forwarded into it. When neither is forwarded, the generated definition keeps the conventional `0644` mode. Windows Task Scheduler inherits your logon environment and needs no forwarding. At daemon startup, the daemon resolves environment once from your login shell on macOS and Linux (`$SHELL -l -i -c 'env -0'` for bash and zsh, run in its own session so an interactive shell never waits on a terminal), preserves your shell `PATH` order, and appends any missing well-known directories such as `~/.local/bin`, `~/go/bin`, `~/.cargo/bin`, `~/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`, and `/bin`. When the login shell binary itself does not exist yet, which happens on macOS with nix-darwin when the daemon starts at login before `/run/current-system` has been recreated, startup waits for it with backoff for up to a minute before giving up. If login-shell resolution still fails or returns no entries, the daemon logs a warning and uses an augmented process-environment fallback that may omit version-manager directories such as nvm, fnm, or volta. Restart the daemon to pick up a login shell that appeared or changed after startup. On Windows it reuses the current process environment.
+When the daemon runs through a managed service (launchd, systemd user service, Task Scheduler), the macOS and Linux service definitions include a default `PATH` with common user and system binary directories. They also bake in any proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `ALL_PROXY`) that were set when you installed or refreshed the service, so the daemon and the agents it spawns can reach the network through your proxy even when the login-shell probe is unavailable. Once baked in, the values are preserved across later service refreshes and restarts even when the proxy variables are not exported in that shell, so a routine `daemon restart` or a binary upgrade will not strip them; export the variables again only when you need to change or remove them. Both the upper- and lower-case spellings are forwarded exactly as you set them, because tooling is inconsistent about which it reads (curl, for example, honors only the lower-case `http_proxy` for plain-HTTP requests). Because a proxy URL can embed credentials (for example `http://user:pass@host`), the generated service file is restricted to owner-only `0600` permissions whenever proxy values are forwarded into it. When none is forwarded, the generated definition keeps the conventional `0644` mode. Windows Task Scheduler inherits your logon environment and needs no forwarding. At daemon startup, the daemon resolves environment once from your login shell on macOS and Linux (`$SHELL -l -i -c 'env -0'` for bash and zsh, run in its own session so an interactive shell never waits on a terminal), preserves your shell `PATH` order, and appends any missing well-known directories such as `~/.local/bin`, `~/go/bin`, `~/.cargo/bin`, `~/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`, and `/bin`. When the login shell binary itself does not exist yet, which happens on macOS with nix-darwin when the daemon starts at login before `/run/current-system` has been recreated, startup waits for it with backoff for up to a minute before giving up. If login-shell resolution still fails or returns no entries, the daemon logs a warning and uses an augmented process-environment fallback that may omit version-manager directories such as nvm, fnm, or volta. Restart the daemon to pick up a login shell that appeared or changed after startup. On Windows it reuses the current process environment.
 
-For variables inherited by the daemon and its child processes, apart from the proxy variables and `NO_MISTAKES_TELEMETRY` forwarded on macOS and Linux, use the login shell's rc files (`.zprofile`, `.zshrc`, `.profile`, `.bash_profile`, `.bashrc`, PowerShell profile) or, on Windows, the logon environment. Put them somewhere the daemon will inherit or load, then restart it to pick them up. Caller-selected [transcript homes](#claude_config_dir) follow their own capture rules above.
+For variables inherited by the daemon and its child processes, apart from the proxy variables forwarded on macOS and Linux, use the login shell's rc files (`.zprofile`, `.zshrc`, `.profile`, `.bash_profile`, `.bashrc`, PowerShell profile) or, on Windows, the logon environment. Put them somewhere the daemon will inherit or load, then restart it to pick them up. Caller-selected [transcript homes](#claude_config_dir) follow their own capture rules above.

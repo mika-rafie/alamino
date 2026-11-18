@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // The CI step tells a third-party review bot's check from the repository's own

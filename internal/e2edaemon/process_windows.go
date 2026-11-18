@@ -12,7 +12,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/winproc"
 	"golang.org/x/sys/windows"
 )
 
@@ -77,7 +77,7 @@ func FindDaemonsForRoot(nmHome string) ([]int, error) {
 	var pids []int
 	for {
 		exe := windows.UTF16ToString(entry.ExeFile[:])
-		if strings.EqualFold(exe, "no-mistakes.exe") || strings.EqualFold(exe, "no-mistakes") {
+		if strings.EqualFold(exe, "alamino.exe") || strings.EqualFold(exe, "alamino") {
 			pid := int(entry.ProcessID)
 			command, err := processCommandLine(pid)
 			if err != nil {

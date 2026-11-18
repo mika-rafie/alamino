@@ -14,14 +14,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func init() {
-	if os.Getenv("NM_FAKE_BIN") == "1" {
+	if os.Getenv("ALAMINO_FAKE_BIN") == "1" {
 		name := filepath.Base(os.Args[0])
 		if ext := filepath.Ext(name); ext != "" {
 			name = strings.TrimSuffix(name, ext)
@@ -39,31 +39,31 @@ func init() {
 			os.Exit(1)
 		}
 	}
-	if os.Getenv("NM_HOOK_HELPER") == "1" {
+	if os.Getenv("ALAMINO_HOOK_HELPER") == "1" {
 		if err := newRootCmd().Execute(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
-	if os.Getenv("NM_DAEMON_HELPER_PROCESS") == "bootstrap-sink" {
+	if os.Getenv("ALAMINO_DAEMON_HELPER_PROCESS") == "bootstrap-sink" {
 		root, ok := explicitDaemonLogSinkRootFromArgs(os.Args[1:])
 		if !ok {
 			os.Exit(1)
 		}
-		_ = os.Setenv("NM_HOME", root)
+		_ = os.Setenv("ALAMINO_HOME", root)
 		if err := daemon.RunBootstrapLogSink(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
-	if os.Getenv("NM_TEST_START_DAEMON") != "1" {
+	if os.Getenv("ALAMINO_TEST_START_DAEMON") != "1" {
 		return
 	}
 	if root, ok := explicitDaemonRunRootFromArgs(os.Args[1:]); ok && root != "" {
-		_ = os.Setenv("NM_HOME", root)
-	} else if os.Getenv("NM_DAEMON") != "1" {
+		_ = os.Setenv("ALAMINO_HOME", root)
+	} else if os.Getenv("ALAMINO_DAEMON") != "1" {
 		return
 	}
 	if err := daemon.Run(); err != nil {
@@ -78,22 +78,21 @@ func TestMain(m *testing.M) {
 	if runtime.GOOS != "windows" {
 		base = "/tmp"
 	}
-	root, err := os.MkdirTemp(base, "nm-cli-test-")
+	root, err := os.MkdirTemp(base, "alamino-cli-test-")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "create test NM_HOME: %v\n", err)
+		fmt.Fprintf(os.Stderr, "create test ALAMINO_HOME: %v\n", err)
 		os.Exit(1)
 	}
-	home, err := os.MkdirTemp(base, "nm-cli-home-")
+	home, err := os.MkdirTemp(base, "alamino-cli-home-")
 	if err != nil {
 		_ = os.RemoveAll(root)
 		fmt.Fprintf(os.Stderr, "create test HOME: %v\n", err)
 		os.Exit(1)
 	}
-	_ = os.Setenv("NM_HOME", root)
+	_ = os.Setenv("ALAMINO_HOME", root)
 	_ = os.Setenv("HOME", home)
 	_ = os.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, "gitconfig"))
-	_ = os.Setenv("NO_MISTAKES_TELEMETRY", "off")
-	_ = os.Setenv("NO_MISTAKES_NO_UPDATE_CHECK", "1")
+	_ = os.Setenv("ALAMINO_NO_UPDATE_CHECK", "1")
 
 	code := m.Run()
 
@@ -146,16 +145,16 @@ func explicitDaemonLogSinkRootFromArgs(args []string) (string, bool) {
 }
 
 // setupTestRepo creates a git repo with an origin remote in a temp dir and
-// sets NM_HOME to an isolated temp dir. Returns the repo path and a cleanup
-// function that restores the original working directory and NM_HOME.
+// sets ALAMINO_HOME to an isolated temp dir. Returns the repo path and a cleanup
+// function that restores the original working directory and ALAMINO_HOME.
 func setupTestRepo(t *testing.T) string {
 	t.Helper()
 
-	// Keep NM_HOME under a short temp root so the daemon socket path fits.
+	// Keep ALAMINO_HOME under a short temp root so the daemon socket path fits.
 	repoDir := t.TempDir()
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
-	t.Setenv("NM_TEST_START_DAEMON", "1")
+	t.Setenv("ALAMINO_HOME", nmHome)
+	t.Setenv("ALAMINO_TEST_START_DAEMON", "1")
 
 	// Create a bare "origin" to use as the upstream.
 	originDir := filepath.Join(t.TempDir(), "origin.git")
@@ -316,7 +315,7 @@ func cleanupWorktree(t *testing.T, repoDir, wtDir string) {
 
 	t.Cleanup(func() {
 		_ = os.Chdir(repoDir)
-		p := paths.WithRoot(os.Getenv("NM_HOME"))
+		p := paths.WithRoot(os.Getenv("ALAMINO_HOME"))
 		_ = daemon.Stop(p)
 		if runtime.GOOS == "windows" {
 			time.Sleep(500 * time.Millisecond)

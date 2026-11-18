@@ -11,22 +11,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/gitlab"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/gitlab"
 )
 
 // TestLiveGitLabEvidenceSectionOnThrowawayMR uploads a real image into the
-// project named by NM_LIVE_GITLAB_PROJECT and checks a throwaway merge request.
+// project named by ALAMINO_LIVE_GITLAB_PROJECT and checks a throwaway merge request.
 // CI does not set the variable.
 func TestLiveGitLabEvidenceSectionOnThrowawayMR(t *testing.T) {
-	project := strings.TrimSpace(os.Getenv("NM_LIVE_GITLAB_PROJECT"))
+	project := strings.TrimSpace(os.Getenv("ALAMINO_LIVE_GITLAB_PROJECT"))
 	if project == "" {
-		t.Skip("set NM_LIVE_GITLAB_PROJECT to run the live GitLab evidence check")
+		t.Skip("set ALAMINO_LIVE_GITLAB_PROJECT to run the live GitLab evidence check")
 	}
-	hostName := strings.TrimSpace(os.Getenv("NM_LIVE_GITLAB_HOST"))
+	hostName := strings.TrimSpace(os.Getenv("ALAMINO_LIVE_GITLAB_HOST"))
 	if hostName == "" {
 		hostName = "gitlab.com"
 	}
@@ -151,7 +151,7 @@ func liveGitlabUploadCount(t *testing.T, ctx context.Context, hostName, project 
 
 func liveCreateEvidenceMR(t *testing.T, ctx context.Context, hostName, project, body string) string {
 	t.Helper()
-	branch := fmt.Sprintf("nm-evidence-live-%d", time.Now().Unix())
+	branch := fmt.Sprintf("alamino-evidence-live-%d", time.Now().Unix())
 	commitPath := filepath.Join(t.TempDir(), "commit.json")
 	writeLiveJSON(t, commitPath, map[string]any{
 		"branch":         branch,

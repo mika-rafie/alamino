@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // Bitbucket's read shape is not its write shape: summary.raw is the text as

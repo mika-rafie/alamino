@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // Read the REST pull object through tea's authenticated transport, not the

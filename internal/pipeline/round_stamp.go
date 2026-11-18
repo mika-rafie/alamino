@@ -3,7 +3,7 @@ package pipeline
 import (
 	"context"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agent"
 )
 
 // roundStampingAgent records the round each invocation belongs to on the

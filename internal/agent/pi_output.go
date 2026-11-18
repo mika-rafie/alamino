@@ -13,13 +13,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 //go:embed pi_output.ts.tmpl
 var piOutputExtension string
 
-const piOutputTool = "no_mistakes_output"
+const piOutputTool = "alamino_output"
 
 // piLifecycleOutputPath is the adapter-control lifecycle phase that names, in
 // the step log, which structured-output path an invocation took.
@@ -218,12 +218,12 @@ func preparePiOutput(schema json.RawMessage) (string, func(), error) {
 	if err != nil {
 		return "", nil, fmt.Errorf("pi output schema: %w", err)
 	}
-	f, err := os.CreateTemp("", "no-mistakes-pi-output-*.ts")
+	f, err := os.CreateTemp("", "alamino-pi-output-*.ts")
 	if err != nil {
 		return "", nil, fmt.Errorf("pi output extension: %w", err)
 	}
 	cleanup := func() { _ = os.Remove(f.Name()) }
-	source := strings.Replace(piOutputExtension, "__NO_MISTAKES_SCHEMA__", string(parameters), 1)
+	source := strings.Replace(piOutputExtension, "__ALAMINO_SCHEMA__", string(parameters), 1)
 	_, writeErr := f.WriteString(source)
 	closeErr := f.Close()
 	if writeErr != nil || closeErr != nil {

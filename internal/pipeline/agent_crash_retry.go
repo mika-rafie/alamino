@@ -12,9 +12,9 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func retryableAgentCrash(ctx context.Context, err error, configuredTimeouts bool) bool {

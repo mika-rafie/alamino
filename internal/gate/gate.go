@@ -9,16 +9,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gatecontext"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/procreap"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/github"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gatecontext"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/procreap"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/github"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 )
 
 var ensureGateHooksPathIsolation = git.EnsureHooksPathIsolation
@@ -26,7 +26,7 @@ var ensureGateHooksPathIsolation = git.EnsureHooksPathIsolation
 var sweepRunWorktrees = procreap.SweepRunWorktrees
 
 // RemoteName is the name of the git remote that points to the local gate.
-const RemoteName = "no-mistakes"
+const RemoteName = "alamino"
 
 // repoID generates a deterministic 12-char hex ID from an absolute path.
 func repoID(absPath string) string {
@@ -34,17 +34,17 @@ func repoID(absPath string) string {
 	return fmt.Sprintf("%x", h[:6])
 }
 
-// Init sets up a no-mistakes gate for the git repo at workDir.
+// Init sets up an alamino gate for the git repo at workDir.
 // It creates a bare repo, installs the post-receive hook, best-effort
 // isolates the bare repo's hooks path from shared local config writes when
-// Git supports config --worktree, adds the no-mistakes remote, and records
+// Git supports config --worktree, adds the alamino remote, and records
 // the repo in the database.
 //
 // Init is idempotent: re-running it on an already-initialized repo repairs and
 // refreshes the gate (for example installing a newer hook, picking up hook-path
 // isolation, or restoring a missing remote) instead of failing. This includes
 // a working directory that was renamed or moved since the gate was created:
-// the gate identified by the leftover no-mistakes remote is reattached at the
+// the gate identified by the leftover alamino remote is reattached at the
 // new path, preserving its run history. The returned bool reports whether a
 // new gate was created (true) or an existing one was refreshed (false).
 func Init(ctx context.Context, d *db.DB, p *paths.Paths, workDir string) (*db.Repo, bool, error) {
@@ -102,7 +102,7 @@ func InitWithFork(ctx context.Context, d *db.DB, p *paths.Paths, workDir, forkUR
 		if listErr == nil && !hasOrigin {
 			return nil, false, fmt.Errorf(
 				"no 'origin' remote in %s\n\n"+
-					"no-mistakes pushes your branch and opens a pull request, so it needs a remote to push to.\n"+
+					"alamino pushes your branch and opens a pull request, so it needs a remote to push to.\n"+
 					"Add one, then re-run:\n\n"+
 					"  git remote add origin <url>",
 				absRoot)
@@ -230,12 +230,12 @@ func provisionGate(ctx context.Context, bareDir, absRoot, upstreamURL, reposDir 
 	return nil
 }
 
-// ensureWorkingRemote points the working repo's no-mistakes remote at bareDir,
+// ensureWorkingRemote points the working repo's alamino remote at bareDir,
 // on a fresh init and on a refresh alike. It decides from the literal
 // configured URL, before any url.<base>.insteadOf rewrite, because that is
 // what it would overwrite: the remote lives in .git/config, which every linked
-// worktree of the checkout shares, including one gated by another no-mistakes
-// home (another NM_HOME, typically another OS account). A literal URL outside
+// worktree of the checkout shares, including one gated by another alamino
+// home (another ALAMINO_HOME, typically another OS account). A literal URL outside
 // this home's repos dir is never rewritten (issue #1555).
 func ensureWorkingRemote(ctx context.Context, absRoot, bareDir, reposDir string) error {
 	literalURLs, err := git.GetConfiguredRemoteURLs(ctx, absRoot, RemoteName)
@@ -269,7 +269,7 @@ func ensureWorkingRemote(ctx context.Context, absRoot, bareDir, reposDir string)
 		return fmt.Errorf("%s", refusal)
 	}
 	return fmt.Errorf("%s\n\n"+
-		"That looks like this repository's gate in another no-mistakes home: this .git is shared with another NM_HOME\n"+
+		"That looks like this repository's gate in another alamino home: this .git is shared with another ALAMINO_HOME\n"+
 		"(for example a linked worktree used by another OS account), and this home's gate is %s.\n"+
 		"init leaves the remote alone, because rewriting it would send the other home's pushes to this gate.\n"+
 		"To push through this home's gate, map the other gate onto it in your own global git config, then re-run init:\n\n"+
@@ -284,7 +284,7 @@ func shellQuote(s string) string {
 }
 
 // remoteResolvesTo reports whether every URL git resolves for the working
-// repo's no-mistakes remote, for fetch and for push and after any insteadOf or
+// repo's alamino remote, for fetch and for push and after any insteadOf or
 // pushInsteadOf rewrite, is bareDir.
 func remoteResolvesTo(ctx context.Context, absRoot, bareDir string) bool {
 	for _, args := range [][]string{
@@ -304,7 +304,7 @@ func remoteResolvesTo(ctx context.Context, absRoot, bareDir string) bool {
 	return true
 }
 
-// removeOwnWorkingRemote removes the working repo's no-mistakes remote only
+// removeOwnWorkingRemote removes the working repo's alamino remote only
 // when its literal URL points into this home's repos dir. Under a shared .git
 // the remote can be another home's gate that this home merely reaches through
 // url.insteadOf, and that wiring is not ours to remove.
@@ -316,7 +316,7 @@ func removeOwnWorkingRemote(ctx context.Context, absRoot, reposDir string) {
 }
 
 // isSameRepoGateOfAnotherHome reports whether url has the shape of this
-// repository's gate under some other no-mistakes home: <NM_HOME>/repos/<id>.git
+// repository's gate under some other alamino home: <ALAMINO_HOME>/repos/<id>.git
 // with the same id as bareDir. A fresh init derives the id from the main
 // checkout's path, so homes sharing one .git usually name the same id; one
 // that kept an older id gets the plain refusal without this guidance.
@@ -327,7 +327,7 @@ func isSameRepoGateOfAnotherHome(url, bareDir string) bool {
 }
 
 // reattachRelocatedRepo detects a working directory that was renamed or moved
-// after init: it carries a no-mistakes remote pointing at a gate in our repos
+// after init: it carries an alamino remote pointing at a gate in our repos
 // dir, but its repo record references the old path. When the old path no
 // longer exists, the record is migrated to the new path so the existing gate
 // and its run history are reattached. It returns nil when the repo should be
@@ -363,7 +363,7 @@ func reattachRelocatedRepo(ctx context.Context, d *db.DB, p *paths.Paths, absRoo
 	return migrated, nil
 }
 
-// Eject removes the no-mistakes gate from the repo at workDir.
+// Eject removes the alamino gate from the repo at workDir.
 // It removes the remote, deletes the bare repo and worktrees,
 // and deletes the repo record from the database.
 func Eject(ctx context.Context, d *db.DB, p *paths.Paths, workDir string) (*db.Repo, error) {
@@ -413,7 +413,7 @@ func Eject(ctx context.Context, d *db.DB, p *paths.Paths, workDir string) (*db.R
 
 // removeRepoWorktrees deletes the ejected repository's run worktrees.
 //
-// Under the default placement no-mistakes owns <NM_HOME>/worktrees/<repoID>
+// Under the default placement alamino owns <ALAMINO_HOME>/worktrees/<repoID>
 // outright, so the whole directory goes. Everything a run recorded outside it
 // is removed one directory at a time (see worktree_roots and
 // internal/worktrees): such a directory sits in a directory of the operator's

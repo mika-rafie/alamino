@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/runenv"
 )
 
 func TestProofRunCarriesTranscriptHomesWithCapableDaemon(t *testing.T) {
@@ -165,7 +165,7 @@ func TestTranscriptHomesRefuseOlderDaemonBeforeLaunch(t *testing.T) {
 			case "rerun":
 				_, err = executeCmd("rerun")
 			}
-			if err == nil || !strings.Contains(err.Error(), "transcript-home selection") || !strings.Contains(err.Error(), "no-mistakes daemon restart") {
+			if err == nil || !strings.Contains(err.Error(), "transcript-home selection") || !strings.Contains(err.Error(), "alamino daemon restart") {
 				t.Fatalf("missing capability must refuse with restart guidance: %v", err)
 			}
 			if len(*launched) != 0 {

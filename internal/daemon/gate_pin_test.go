@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const (
@@ -89,10 +89,10 @@ func gatePinFixture(t *testing.T, defaultBranchYAML string, pinnedGates []config
 }
 
 // commitDefaultBranchConfig publishes yaml as the repository's default-branch
-// .no-mistakes.yaml and returns the new commit.
+// .alamino.yaml and returns the new commit.
 func commitDefaultBranchConfig(t *testing.T, workDir, yaml string) string {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(workDir, ".no-mistakes.yaml"), []byte(yaml), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".alamino.yaml"), []byte(yaml), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	gitCmd(t, workDir, "add", ".")

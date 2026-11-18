@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // RunRetry links a run that continues a failed run to that failure: which

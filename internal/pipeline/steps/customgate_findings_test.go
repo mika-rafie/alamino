@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func gateTestCommand(t *testing.T, dir, unixCommand, windowsCommand string) string {
@@ -34,8 +34,8 @@ func gateReportCommand(t *testing.T, dir string, exitCode int) string {
 	return gateTestCommand(
 		t,
 		dir,
-		fmt.Sprintf(`printf '%%s' "$NO_MISTAKES_FINDINGS_FILE" > gate-path.txt; cat gate-report.json > "$NO_MISTAKES_FINDINGS_FILE"; echo 'gate output'; exit %d`, exitCode),
-		fmt.Sprintf("echo %%NO_MISTAKES_FINDINGS_FILE%%>gate-path.txt\r\ncopy /y gate-report.json \"%%NO_MISTAKES_FINDINGS_FILE%%\" >nul\r\necho gate output\r\nexit /b %d", exitCode),
+		fmt.Sprintf(`printf '%%s' "$ALAMINO_FINDINGS_FILE" > gate-path.txt; cat gate-report.json > "$ALAMINO_FINDINGS_FILE"; echo 'gate output'; exit %d`, exitCode),
+		fmt.Sprintf("echo %%ALAMINO_FINDINGS_FILE%%>gate-path.txt\r\ncopy /y gate-report.json \"%%ALAMINO_FINDINGS_FILE%%\" >nul\r\necho gate output\r\nexit /b %d", exitCode),
 	)
 }
 
@@ -81,7 +81,7 @@ func TestCustomGateStep_StructuredFindings(t *testing.T) {
 			}
 			sctx := newTestContext(t, &mockAgent{name: "mock"}, dir, baseSHA, headSHA, config.Commands{})
 			// A command must receive its own fresh file, not an inherited path.
-			sctx.Env = []string{"NO_MISTAKES_FINDINGS_FILE=do-not-use"}
+			sctx.Env = []string{"ALAMINO_FINDINGS_FILE=do-not-use"}
 			step := &CustomGateStep{Gate: config.Gate{Name: "budget", After: types.StepTest, Command: gateReportCommand(t, dir, tc.exitCode)}}
 			outcome, err := step.Execute(sctx)
 			if err != nil {
@@ -120,7 +120,7 @@ func TestCustomGateStep_StructuredFindings(t *testing.T) {
 			if _, err := os.Stat(path); !os.IsNotExist(err) {
 				t.Fatalf("findings file was not cleaned up: %v", err)
 			}
-			if len(sctx.Env) != 1 || sctx.Env[0] != "NO_MISTAKES_FINDINGS_FILE=do-not-use" {
+			if len(sctx.Env) != 1 || sctx.Env[0] != "ALAMINO_FINDINGS_FILE=do-not-use" {
 				t.Fatalf("step environment mutated: %v", sctx.Env)
 			}
 		})
@@ -427,11 +427,11 @@ func TestCustomGateStep_MissingOrNonRegularFindingsFailClosed(t *testing.T) {
 			t.Parallel()
 			dir, baseSHA, headSHA := setupGitRepo(t)
 			sctx := newTestContext(t, &mockAgent{name: "mock"}, dir, baseSHA, headSHA, config.Commands{})
-			unixCommand := `rm "$NO_MISTAKES_FINDINGS_FILE"; `
-			windowsCommand := `del "%NO_MISTAKES_FINDINGS_FILE%"` + "\r\n"
+			unixCommand := `rm "$ALAMINO_FINDINGS_FILE"; `
+			windowsCommand := `del "%ALAMINO_FINDINGS_FILE%"` + "\r\n"
 			if directory {
-				unixCommand += `mkdir "$NO_MISTAKES_FINDINGS_FILE"; `
-				windowsCommand += `mkdir "%NO_MISTAKES_FINDINGS_FILE%"` + "\r\n"
+				unixCommand += `mkdir "$ALAMINO_FINDINGS_FILE"; `
+				windowsCommand += `mkdir "%ALAMINO_FINDINGS_FILE%"` + "\r\n"
 			}
 			command := gateTestCommand(t, dir, unixCommand+"exit 0", windowsCommand+"exit /b 0")
 			step := &CustomGateStep{Gate: config.Gate{Name: "budget", After: types.StepTest, Command: command}}

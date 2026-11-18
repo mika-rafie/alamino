@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // The fixtures below are the three run shapes the live-validation contract has
@@ -88,7 +88,7 @@ func TestBuildTestingSummary_NoGoVerdictIsVisible(t *testing.T) {
 func TestBuildTestingSummary_NoSurfaceVerdictIsVisible(t *testing.T) {
 	t.Parallel()
 	findingsJSON := liveValidatedFindingsJSON(t, []types.TestScenario{
-		{Name: "Windows git-heavy shard runs the git-backed packages", Result: types.ScenarioResultUntested, Reason: "CI workflow YAML has no running product no-mistakes can drive"},
+		{Name: "Windows git-heavy shard runs the git-backed packages", Result: types.ScenarioResultUntested, Reason: "CI workflow YAML has no running product alamino can drive"},
 	}, types.TestVerdictNoSurface)
 	steps, rounds := testStepWithFindings(t, findingsJSON)
 
@@ -96,7 +96,7 @@ func TestBuildTestingSummary_NoSurfaceVerdictIsVisible(t *testing.T) {
 	if !strings.Contains(md, "Live validation: ⚠️ no-surface - 0 of 1 scenarios driven live against the product") {
 		t.Errorf("expected the no-surface verdict rendered, got:\n%s", md)
 	}
-	if !strings.Contains(md, "| Windows git-heavy shard runs the git-backed packages | ⏸️ untested | no | CI workflow YAML has no running product no-mistakes can drive |") {
+	if !strings.Contains(md, "| Windows git-heavy shard runs the git-backed packages | ⏸️ untested | no | CI workflow YAML has no running product alamino can drive |") {
 		t.Errorf("expected the untested no-surface row, got:\n%s", md)
 	}
 }

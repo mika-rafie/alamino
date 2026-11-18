@@ -12,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // cleanReviewFindings is a clean structured response. It also carries the
@@ -653,7 +653,7 @@ func TestReviewStep_FixMode(t *testing.T) {
 	if status := gitStatusPorcelain(t, dir); status != "" {
 		t.Fatalf("expected clean worktree after fix commit, got %q", status)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(review): address review findings" {
+	if got := lastCommitMessage(t, dir); got != "alamino(review): address review findings" {
 		t.Fatalf("last commit message = %q", got)
 	}
 	if branchSHA := gitCmd(t, dir, "rev-parse", "refs/heads/feature"); branchSHA != sctx.Run.HeadSHA {

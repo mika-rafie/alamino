@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const syntheticPiAuth = `{"xai":{"type":"oauth","access":"SYNTHETIC_OAUTH_MARKER_NOT_A_SECRET"}}` + "\n"
@@ -21,12 +21,12 @@ const claudeHOMEProbeReply = `{"type":"assistant","message":{"usage":{"input_tok
 {"type":"result","subtype":"success","is_error":false,"structured_output":{"findings":[],"risk_level":"low","risk_rationale":"clean","risk_scope":"source-or-external"},"usage":{"input_tokens":12,"output_tokens":3}}
 `
 
-const piHOMEProbeReply = `{"type":"agent_end","messages":[{"role":"assistant","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"no_mistakes_output","arguments":` + piReviewOutput + `}]}]}` + "\n" + piReviewToolResult
+const piHOMEProbeReply = `{"type":"agent_end","messages":[{"role":"assistant","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"alamino_output","arguments":` + piReviewOutput + `}]}]}` + "\n" + piReviewToolResult
 
 // TestReplayUsesCallerHOMEAndKeepsIsolatedNMHOME is the behavioral half of
 // dropping eval's empty-HOME rewrite: candidates inherit the caller's HOME
 // (so Pi's ordinary ~/.pi/agent auth discovery works without an injected API
-// key) while NM_HOME stays a nested sandbox that cannot see production state.
+// key) while ALAMINO_HOME stays a nested sandbox that cannot see production state.
 func TestReplayUsesCallerHOMEAndKeepsIsolatedNMHOME(t *testing.T) {
 	ctx := context.Background()
 	hideHarnessDirOverrides(t)
@@ -85,14 +85,14 @@ func TestReplayUsesCallerHOMEAndKeepsIsolatedNMHOME(t *testing.T) {
 		if obs["home"] != sentinel {
 			t.Fatalf("%s HOME=%q, want caller sentinel %q", name, obs["home"], sentinel)
 		}
-		if obs["nm_home"] == "" || obs["nm_home"] == p.Root() {
-			t.Fatalf("%s NM_HOME=%q leaked production NM_HOME %q", name, obs["nm_home"], p.Root())
+		if obs["alamino_home"] == "" || obs["alamino_home"] == p.Root() {
+			t.Fatalf("%s ALAMINO_HOME=%q leaked production ALAMINO_HOME %q", name, obs["alamino_home"], p.Root())
 		}
 		if obs["xai_api_key"] != "" {
 			t.Fatalf("%s XAI_API_KEY=%q, want unset (eval must not inject an API key)", name, obs["xai_api_key"])
 		}
 		if _, err := os.Stat(filepath.Join(p.Root(), "shared-home-used")); !os.IsNotExist(err) {
-			t.Fatalf("%s candidate used production NM_HOME", name)
+			t.Fatalf("%s candidate used production ALAMINO_HOME", name)
 		}
 		if name == "pi" {
 			if obs["home_auth_readable"] != "1" {
@@ -184,7 +184,7 @@ func installNamedHOMEProbeHarness(t *testing.T, path, probePath, reply string) {
 			"if \"%1\"==\"--version\" (echo 0.99.1& exit /b 0)\r\n" +
 			"more >nul\r\n" +
 			">\"" + probePath + "\" echo home=%HOME%\r\n" +
-			">>\"" + probePath + "\" echo nm_home=%NM_HOME%\r\n" +
+			">>\"" + probePath + "\" echo alamino_home=%ALAMINO_HOME%\r\n" +
 			">>\"" + probePath + "\" echo xai_api_key=%XAI_API_KEY%\r\n" +
 			"if exist \"%HOME%\\.pi\\agent\\auth.json\" (>>\"" + probePath + "\" echo home_auth_readable=1) else (>>\"" + probePath + "\" echo home_auth_readable=0)\r\n" +
 			">>\"" + probePath + "\" echo argv=%*\r\n" +
@@ -197,7 +197,7 @@ func installNamedHOMEProbeHarness(t *testing.T, path, probePath, reply string) {
 			"[ -f \"$HOME/.pi/agent/auth.json\" ] && HOME_AUTH=1\n" +
 			"{\n" +
 			"  printf 'home=%s\\n' \"$HOME\"\n" +
-			"  printf 'nm_home=%s\\n' \"$NM_HOME\"\n" +
+			"  printf 'alamino_home=%s\\n' \"$ALAMINO_HOME\"\n" +
 			"  printf 'xai_api_key=%s\\n' \"$XAI_API_KEY\"\n" +
 			"  printf 'home_auth_readable=%s\\n' \"$HOME_AUTH\"\n" +
 			"  printf 'argv=%s\\n' \"$*\"\n" +

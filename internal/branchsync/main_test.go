@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	// Fixtures must not inherit the developer's global git config: a
 	// commit.gpgsign=true there makes every fixture commit ask gpg to sign.
-	globalConfigDir, err := os.MkdirTemp("", "no-mistakes-branchsync-tests-")
+	globalConfigDir, err := os.MkdirTemp("", "alamino-branchsync-tests-")
 	if err != nil {
 		panic(err)
 	}

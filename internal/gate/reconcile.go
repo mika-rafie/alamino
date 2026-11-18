@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
+	"github.com/mika-rafie/alamino/internal/git"
 )
 
 // StaleBranchReconciliation reports a private gate branch that was archived
@@ -115,7 +115,7 @@ func planStaleBranchReconciliation(ctx context.Context, gateDir, workDir, branch
 	if !exists {
 		return plan, nil
 	}
-	archiveTag := "refs/tags/no-mistakes-abandoned/" + branch + "/" + gateHead
+	archiveTag := "refs/tags/alamino-abandoned/" + branch + "/" + gateHead
 	archivedHead, archived, err := git.DirectRefTarget(ctx, gateDir, archiveTag)
 	if err != nil {
 		return plan, fmt.Errorf("inspect private mirror archive tag %s: %w", archiveTag, err)
@@ -314,7 +314,7 @@ func ArchivedHeadRecorded(ctx context.Context, gateDir, branch, head string) boo
 	if _, err := git.Run(ctx, gateDir, "check-ref-format", "--branch", branch); err != nil {
 		return false
 	}
-	tag := "refs/tags/no-mistakes-abandoned/" + branch + "/" + head
+	tag := "refs/tags/alamino-abandoned/" + branch + "/" + head
 	archivedHead, archived, err := git.DirectRefTarget(ctx, gateDir, tag)
 	if err != nil || !archived || archivedHead != head {
 		return false
@@ -329,11 +329,11 @@ func ArchivedHeadRecorded(ctx context.Context, gateDir, branch, head string) boo
 // creates it with an expected-old-value of the zero ID and fails closed on any
 // conflicting existing ref, so a commit reachable from one is held by
 // deliberate, immutable preservation evidence rather than by accident.
-const recoveryAnchorPrefix = "refs/no-mistakes/recover/"
+const recoveryAnchorPrefix = "refs/alamino/recover/"
 
 // Rewritten-remote recovery uses a separate, generation-scoped namespace to
 // preserve each superseded push without replacing earlier custody evidence.
-const rewrittenRecoveryAnchorPrefix = "refs/no-mistakes/recover-rewritten/"
+const rewrittenRecoveryAnchorPrefix = "refs/alamino/recover-rewritten/"
 
 type recoveryAnchor struct {
 	ref  string
@@ -341,7 +341,7 @@ type recoveryAnchor struct {
 }
 
 // listRecoveryAnchors returns the direct commit targets under
-// refs/no-mistakes/recover/ and recover-rewritten/ by default. for-each-ref
+// refs/alamino/recover/ and recover-rewritten/ by default. for-each-ref
 // reports a direct commit ref as
 // exactly three fields and a symbolic ref with a fourth %(symref) field, so a
 // symbolic, zero, or non-commit target is skipped rather than dereferenced:
@@ -382,7 +382,7 @@ func reconcileSatisfiers(runOwnedHeads []string) []string {
 	if hasRunOwnedHead(runOwnedHeads) {
 		satisfiers = append(satisfiers, "the private head being exactly the publishing run's Run.SubmittedHeadSHA or Run.LastPushedSHA (Decision 41-A)")
 	}
-	return append(satisfiers, "a refs/no-mistakes/recover/<run> or refs/no-mistakes/recover-rewritten/<run>/<generation> recovery anchor reaching the commit")
+	return append(satisfiers, "a refs/alamino/recover/<run> or refs/alamino/recover-rewritten/<run>/<generation> recovery anchor reaching the commit")
 }
 
 func joinSatisfiers(satisfiers []string) string {
@@ -580,7 +580,7 @@ func privateTreeSurvivesBaseDeletion(ctx context.Context, repoDir, liveHead, pri
 	if removed.Len() == 0 {
 		return false, nil
 	}
-	indexDir, err := os.MkdirTemp("", "no-mistakes-deletion-proof-")
+	indexDir, err := os.MkdirTemp("", "alamino-deletion-proof-")
 	if err != nil {
 		return false, err
 	}
@@ -598,8 +598,8 @@ func privateTreeSurvivesBaseDeletion(ctx context.Context, repoDir, liveHead, pri
 	if err != nil {
 		return false, err
 	}
-	env = append(env, "GIT_AUTHOR_NAME=no-mistakes", "GIT_AUTHOR_EMAIL=no-mistakes@localhost",
-		"GIT_COMMITTER_NAME=no-mistakes", "GIT_COMMITTER_EMAIL=no-mistakes@localhost",
+	env = append(env, "GIT_AUTHOR_NAME=alamino", "GIT_AUTHOR_EMAIL=alamino@localhost",
+		"GIT_COMMITTER_NAME=alamino", "GIT_COMMITTER_EMAIL=alamino@localhost",
 		"GIT_AUTHOR_DATE=2000-01-01T00:00:00Z", "GIT_COMMITTER_DATE=2000-01-01T00:00:00Z")
 	projected, err := git.RunWithEnv(ctx, repoDir, env, "-c", "commit.gpgsign=false", "commit-tree", tree, "-p", privateHead, "-m", "private mirror proof with upstream deletions")
 	if err != nil {

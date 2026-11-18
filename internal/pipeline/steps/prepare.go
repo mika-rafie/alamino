@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 var (
@@ -96,7 +96,7 @@ func ensurePrepared(sctx *pipeline.StepContext, logStep types.StepName) error {
 }
 
 func preparationMarkerPath(ctx context.Context, workDir string) (string, error) {
-	path, err := git.Run(ctx, workDir, "rev-parse", "--git-path", "no-mistakes-prepared")
+	path, err := git.Run(ctx, workDir, "rev-parse", "--git-path", "alamino-prepared")
 	if err != nil {
 		return "", fmt.Errorf("resolve preparation marker: %w", err)
 	}
@@ -216,7 +216,7 @@ func preparationSnapshotParent(ctx context.Context, workDir, gateDir string) (st
 	if preparationGateInsideWorktree(workDir, gateDir) {
 		return "", fmt.Errorf("preparation gate directory %q must be outside worktree %q", gateDir, workDir)
 	}
-	parent := filepath.Join(gateDir, "no-mistakes-preparation")
+	parent := filepath.Join(gateDir, "alamino-preparation")
 	if err := os.MkdirAll(parent, 0o700); err != nil {
 		return "", fmt.Errorf("create preparation snapshot directory: %w", err)
 	}

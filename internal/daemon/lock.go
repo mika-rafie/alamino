@@ -7,16 +7,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // ErrSingletonLockHeld is returned by acquireSingletonLock when another live
-// process already holds the lock for the same NM_HOME.
-var ErrSingletonLockHeld = errors.New("a no-mistakes daemon is already running for this NM_HOME")
+// process already holds the lock for the same ALAMINO_HOME.
+var ErrSingletonLockHeld = errors.New("an alamino daemon is already running for this ALAMINO_HOME")
 
 const singletonLockRetry = 250 * time.Millisecond
 
-// singletonLock guards NM_HOME against more than one live daemon process.
+// singletonLock guards ALAMINO_HOME against more than one live daemon process.
 // It must be acquired before any global, destructive startup operation
 // (stale-run recovery, orphan worktree cleanup) and before the IPC socket is
 // bound, and held for the lifetime of the process.

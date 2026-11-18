@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // PreviousReviewRounds is the review step of the most recent OTHER run on a

@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // SwitchStore is the persistence seam for mid-run switch records. *db.DB

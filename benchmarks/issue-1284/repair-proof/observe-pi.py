@@ -6,10 +6,10 @@ import subprocess
 import sys
 import threading
 
-real_pi = os.environ['NM_PROOF_REAL_PI']
+real_pi = os.environ['ALAMINO_PROOF_REAL_PI']
 if sys.argv[1:] == ['--version']:
     os.execv(real_pi, [real_pi, '--version'])
-prefix = os.environ['NM_PROOF_PREFIX'] + '.' + str(os.getpid())
+prefix = os.environ['ALAMINO_PROOF_PREFIX'] + '.' + str(os.getpid())
 Path(prefix + '.argv.json').write_text(json.dumps([real_pi] + sys.argv[1:]) + '\n')
 with open(prefix + '.events.jsonl', 'xb') as capture, open(prefix + '.stderr.txt', 'xb') as errors:
     child = subprocess.Popen([real_pi] + sys.argv[1:], stdin=sys.stdin.buffer,

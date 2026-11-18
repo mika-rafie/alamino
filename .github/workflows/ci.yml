@@ -49,7 +49,7 @@ jobs:
           - os: windows-latest
             name: test (windows-git)
             shard: git
-          # pipeline/steps, daemon, and gate are each split by test name. The
+          # pipeline/steps, daemon, gate, and cli are each split by test name. The
           # last row of a group skips the union of the other rows' patterns, so
           # a new test always lands in exactly one shard; rebalance the ranges
           # against the shards' -v timings (issue #1580, #1682).
@@ -93,6 +93,20 @@ jobs:
             name: test (windows-gate-3)
             shard: gate
             gate_skip: '^Test([A-I]|ReconcileStale)'
+          # Over half of internal/cli's wall is its TestAxi* tests, so that
+          # prefix is split on the letter that follows it.
+          - os: windows-latest
+            name: test (windows-cli-1)
+            shard: cli
+            cli_run: '^TestAxi[A-R]'
+          - os: windows-latest
+            name: test (windows-cli-2)
+            shard: cli
+            cli_run: '^Test(Axi[S-Z]|[B-D])'
+          - os: windows-latest
+            name: test (windows-cli-3)
+            shard: cli
+            cli_skip: '^Test(Axi[A-Z]|[B-D])'
     runs-on: ${{ matrix.os }}
     # Sized for each Windows shard, which still sets the floor: git.exe plus
     # Defender tax makes git-backed packages ~10x their Linux time (see the
@@ -100,8 +114,8 @@ jobs:
     # and then ran those packages sequentially, so total wall could exceed
     # timeout-minutes with no package hitting go test -timeout - an
     # evidence-free cancellation. Git-heavy packages are split from the core
-    # remainder; pipeline/steps, daemon, and gate are their own shards, each
-    # also split by test name, so a 15m per-package hang still dumps
+    # remainder; pipeline/steps, daemon, gate, and cli are their own shards,
+    # each also split by test name, so a 15m per-package hang still dumps
     # goroutines instead of cancelling the job. 40 is a runaway guard, not a
     # target - Linux and macOS finish far inside it, and it still keeps a
     # wedged runner well short of the six-hour default.
@@ -142,17 +156,24 @@ jobs:
             Write-Host "::warning::Defender exclusions unavailable, Windows tests run untuned: $_"
           }
 
+      # The race-instrumented daemon and pipeline/steps packages need about ten
+      # minutes each on a cold macOS runner, which is Go's default per-package
+      # limit, so a healthy run could fail on the clock alone. The explicit
+      # limit stays well under timeout-minutes so a real hang still ends in a
+      # goroutine dump instead of an evidence-free job cancellation.
       - name: Test on Unix
         if: runner.os != 'Windows'
-        run: go test -race ./...
+        run: go test -race -timeout=20m ./...
 
-      # Git-heavy packages are the Windows wall floor. NM_CI_WINDOWS_GIT_EXCLUDE
-      # on the core shard is the union of the git, steps, daemon, and gate
+      # Git-heavy packages are the Windows wall floor. ALAMINO_CI_WINDOWS_GIT_EXCLUDE
+      # on the core shard is the union of the git, steps, daemon, gate, and cli
       # shards; the workflow tests resolve every shard through `go list` and
-      # fail if they drift or overlap. pipeline/steps, daemon, and gate are
-      # their own shards (daemon and gate also split by test name) so they run
-      # in parallel with the remaining git-heavy packages instead of setting a
-      # serial floor that hits go test -timeout (issue #1682).
+      # fail if they drift or overlap. pipeline/steps, daemon, gate, and cli
+      # are their own shards (each also split by test name) so they run in
+      # parallel with the remaining git-heavy packages instead of setting a
+      # serial floor that hits go test -timeout (issue #1682). internal/cli
+      # runs its tests serially and needed 880s on a quiet runner, so on the
+      # core shard it reached the 15m limit whenever the runner was slower.
       - name: Test on Windows (git-heavy)
         if: runner.os == 'Windows' && matrix.shard == 'git'
         run: go test -v -timeout=15m ./internal/git ./internal/branchsync ./internal/evidence ./internal/eval
@@ -161,37 +182,45 @@ jobs:
         if: runner.os == 'Windows' && matrix.shard == 'steps'
         shell: pwsh
         env:
-          NM_CI_WINDOWS_STEPS_RUN: ${{ matrix.steps_run }}
-          NM_CI_WINDOWS_STEPS_SKIP: ${{ matrix.steps_skip }}
-        run: go test -v -timeout=15m "-run=$env:NM_CI_WINDOWS_STEPS_RUN" "-skip=$env:NM_CI_WINDOWS_STEPS_SKIP" ./internal/pipeline/steps/...
+          ALAMINO_CI_WINDOWS_STEPS_RUN: ${{ matrix.steps_run }}
+          ALAMINO_CI_WINDOWS_STEPS_SKIP: ${{ matrix.steps_skip }}
+        run: go test -v -timeout=15m "-run=$env:ALAMINO_CI_WINDOWS_STEPS_RUN" "-skip=$env:ALAMINO_CI_WINDOWS_STEPS_SKIP" ./internal/pipeline/steps/...
 
       - name: Test on Windows (daemon)
         if: runner.os == 'Windows' && matrix.shard == 'daemon'
         shell: pwsh
         env:
-          NM_CI_WINDOWS_DAEMON_RUN: ${{ matrix.daemon_run }}
-          NM_CI_WINDOWS_DAEMON_SKIP: ${{ matrix.daemon_skip }}
-        run: go test -v -timeout=15m "-run=$env:NM_CI_WINDOWS_DAEMON_RUN" "-skip=$env:NM_CI_WINDOWS_DAEMON_SKIP" ./internal/daemon
+          ALAMINO_CI_WINDOWS_DAEMON_RUN: ${{ matrix.daemon_run }}
+          ALAMINO_CI_WINDOWS_DAEMON_SKIP: ${{ matrix.daemon_skip }}
+        run: go test -v -timeout=15m "-run=$env:ALAMINO_CI_WINDOWS_DAEMON_RUN" "-skip=$env:ALAMINO_CI_WINDOWS_DAEMON_SKIP" ./internal/daemon
 
       - name: Test on Windows (gate)
         if: runner.os == 'Windows' && matrix.shard == 'gate'
         shell: pwsh
         env:
-          NM_CI_WINDOWS_GATE_RUN: ${{ matrix.gate_run }}
-          NM_CI_WINDOWS_GATE_SKIP: ${{ matrix.gate_skip }}
-        run: go test -v -timeout=15m "-run=$env:NM_CI_WINDOWS_GATE_RUN" "-skip=$env:NM_CI_WINDOWS_GATE_SKIP" ./internal/gate
+          ALAMINO_CI_WINDOWS_GATE_RUN: ${{ matrix.gate_run }}
+          ALAMINO_CI_WINDOWS_GATE_SKIP: ${{ matrix.gate_skip }}
+        run: go test -v -timeout=15m "-run=$env:ALAMINO_CI_WINDOWS_GATE_RUN" "-skip=$env:ALAMINO_CI_WINDOWS_GATE_SKIP" ./internal/gate
+
+      - name: Test on Windows (cli)
+        if: runner.os == 'Windows' && matrix.shard == 'cli'
+        shell: pwsh
+        env:
+          ALAMINO_CI_WINDOWS_CLI_RUN: ${{ matrix.cli_run }}
+          ALAMINO_CI_WINDOWS_CLI_SKIP: ${{ matrix.cli_skip }}
+        run: go test -v -timeout=15m "-run=$env:ALAMINO_CI_WINDOWS_CLI_RUN" "-skip=$env:ALAMINO_CI_WINDOWS_CLI_SKIP" ./internal/cli
 
       - name: Test on Windows (core)
         if: runner.os == 'Windows' && matrix.shard == 'core'
         shell: pwsh
         env:
-          NM_CI_WINDOWS_GIT_EXCLUDE: '/internal/(git|branchsync|gate|evidence|pipeline/steps(/.*)?|daemon|eval)$'
+          ALAMINO_CI_WINDOWS_GIT_EXCLUDE: '/internal/(git|branchsync|gate|evidence|pipeline/steps(/.*)?|daemon|eval|cli)$'
         run: |
-          $pkgs = go list ./... | Where-Object { $_ -notmatch $env:NM_CI_WINDOWS_GIT_EXCLUDE }
+          $pkgs = go list ./... | Where-Object { $_ -notmatch $env:ALAMINO_CI_WINDOWS_GIT_EXCLUDE }
           go test -v -timeout=15m @pkgs
 
       - name: Build
-        run: go build ./cmd/no-mistakes
+        run: go build ./cmd/alamino
 
   e2e:
     runs-on: ubuntu-latest
@@ -202,7 +231,7 @@ jobs:
         with:
           go-version-file: go.mod
 
-      # The e2e suite drives the real no-mistakes binary against a fake
+      # The e2e suite drives the real alamino binary against a fake
       # agent through `git push -> daemon -> pipeline -> push to upstream`
       # for claude, codex, grok, and opencode. It builds the binary itself, so
       # no separate build step is needed. Linux-only for now: opencode's

@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // errAgentCommitsNotLinear marks agent commits that are not a plain chain of
@@ -107,7 +107,7 @@ func conformAgentCommits(sctx *pipeline.StepContext, stepName types.StepName, re
 	if !changed {
 		return nil
 	}
-	if _, err := stepGitRun(sctx, "update-ref", "-m", "no-mistakes: apply commit settings to agent commits", "HEAD", parent, head); err != nil {
+	if _, err := stepGitRun(sctx, "update-ref", "-m", "alamino: apply commit settings to agent commits", "HEAD", parent, head); err != nil {
 		return fmt.Errorf("move head to rewritten %s agent commits: %w", stepName, err)
 	}
 	sctx.Log(fmt.Sprintf("applied commit settings to %d agent commit(s)", len(chain)))

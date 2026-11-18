@@ -14,7 +14,7 @@ func TestReadSnapshotWindowsBatchShims(t *testing.T) {
 		for _, lookup := range []bool{false, true} {
 			for _, fails := range []bool{false, true} {
 				t.Run(ext+"/"+map[bool]string{false: "explicit", true: "PATH"}[lookup]+"/"+map[bool]string{false: "success", true: "error"}[fails], func(t *testing.T) {
-					dir := filepath.Join(t.TempDir(), "quota %NM_QUOTA_TEST_EXPANSION% ! (space) & fixtures")
+					dir := filepath.Join(t.TempDir(), "quota %ALAMINO_QUOTA_TEST_EXPANSION% ! (space) & fixtures")
 					if err := os.Mkdir(dir, 0o755); err != nil {
 						t.Fatal(err)
 					}
@@ -28,7 +28,7 @@ func TestReadSnapshotWindowsBatchShims(t *testing.T) {
 					if err := os.WriteFile(exe, []byte(script), 0o600); err != nil {
 						t.Fatal(err)
 					}
-					t.Setenv("NM_QUOTA_TEST_EXPANSION", "unexpected-expanded-path")
+					t.Setenv("ALAMINO_QUOTA_TEST_EXPANSION", "unexpected-expanded-path")
 					t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 					t.Setenv("PATHEXT", ".COM;.EXE;.BAT;.CMD")
 					if lookup {

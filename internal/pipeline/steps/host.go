@@ -9,17 +9,17 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/bitbucket"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/azuredevops"
-	"github.com/kunchenguid/no-mistakes/internal/scm/forgejo"
-	"github.com/kunchenguid/no-mistakes/internal/scm/gitea"
-	"github.com/kunchenguid/no-mistakes/internal/scm/github"
-	"github.com/kunchenguid/no-mistakes/internal/scm/gitlab"
-	"github.com/kunchenguid/no-mistakes/internal/scm/origin"
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin"
+	"github.com/mika-rafie/alamino/internal/bitbucket"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/azuredevops"
+	"github.com/mika-rafie/alamino/internal/scm/forgejo"
+	"github.com/mika-rafie/alamino/internal/scm/gitea"
+	"github.com/mika-rafie/alamino/internal/scm/github"
+	"github.com/mika-rafie/alamino/internal/scm/gitlab"
+	"github.com/mika-rafie/alamino/internal/scm/origin"
+	"github.com/mika-rafie/alamino/internal/scm/plugin"
 )
 
 // resolvedProvider returns the run-scoped provider selected by forge profile

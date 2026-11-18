@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func TestPRAppendixVerifyGitLabDefaultReadArgv(t *testing.T) {

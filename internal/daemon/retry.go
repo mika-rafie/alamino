@@ -11,19 +11,19 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -89,7 +89,7 @@ type retryRefusal struct {
 }
 
 func (r *retryRefusal) Error() string {
-	return fmt.Sprintf("refusing retry of run %s: %s proof failed: %s; `no-mistakes rerun` validates the branch from the start instead", r.runID, r.proof, r.detail)
+	return fmt.Sprintf("refusing retry of run %s: %s proof failed: %s; `alamino rerun` validates the branch from the start instead", r.runID, r.proof, r.detail)
 }
 
 func refuseRetry(runID, proof, format string, args ...any) error {
@@ -216,7 +216,7 @@ func (m *RunManager) proveRetry(ctx context.Context, repo *db.Repo, branch, runI
 		return nil, refuseRetry(runID, "clean branch", "the working tree has uncommitted changes, so its head is not a proof")
 	case source.HeadSHA:
 	default:
-		return nil, refuseRetry(runID, "matching head", "the clean local head %s is not the run's preserved head %s; inspect `no-mistakes axi status` and follow `branch_sync.next_action.command` (`no-mistakes axi sync --recover` adopts the preserved head) before retrying", callerHeadSHA, source.HeadSHA)
+		return nil, refuseRetry(runID, "matching head", "the clean local head %s is not the run's preserved head %s; inspect `alamino axi status` and follow `branch_sync.next_action.command` (`alamino axi sync --recover` adopts the preserved head) before retrying", callerHeadSHA, source.HeadSHA)
 	}
 	intentCheck, err := m.proveRetryConfiguration(ctx, repo, source, gates, checkpoint)
 	if err != nil {

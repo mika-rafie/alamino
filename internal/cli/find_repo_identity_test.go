@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func swapCaseForTest(s string) string {
@@ -63,7 +63,7 @@ func TestFindRepoResolvesOneRepositoryFromMainCheckoutAndLinkedWorktree(t *testi
 			if err != nil {
 				t.Fatal(err)
 			}
-			p := paths.WithRoot(os.Getenv("NM_HOME"))
+			p := paths.WithRoot(os.Getenv("ALAMINO_HOME"))
 			d, err := db.Open(p.DB())
 			if err != nil {
 				t.Fatal(err)

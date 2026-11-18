@@ -14,7 +14,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // The shared composite action lives in this repository and every enforcing
@@ -23,7 +23,7 @@ import (
 // and operator copy out - rather than reading its source text.
 
 const (
-	requireActionDir    = ".github/actions/require-no-mistakes"
+	requireActionDir    = ".github/actions/require-alamino"
 	requireActionScript = requireActionDir + "/verify.py"
 )
 
@@ -152,9 +152,9 @@ func runRequireAction(t *testing.T, run actionRun) actionResult {
 		"PR_HEAD_REF="+run.headRef,
 		"PR_AUTHOR="+run.author,
 		"PR_NUMBER="+run.number,
-		"NM_EXEMPT_AUTHORS="+run.exemptUsers,
-		"NM_EXEMPT_BOT_AUTHORS="+run.exemptBots,
-		"NM_EXEMPT_HEAD_BRANCHES="+run.exemptRefs,
+		"ALAMINO_EXEMPT_AUTHORS="+run.exemptUsers,
+		"ALAMINO_EXEMPT_BOT_AUTHORS="+run.exemptBots,
+		"ALAMINO_EXEMPT_HEAD_BRANCHES="+run.exemptRefs,
 		"GITHUB_EVENT_PATH="+run.eventPath,
 		"GITHUB_OUTPUT="+outputFile,
 		"GITHUB_TOKEN="+run.githubToken,
@@ -224,7 +224,7 @@ func TestRequireActionIsAComposite(t *testing.T) {
 	// Every PR fact the script reads must be forwarded by the composite step,
 	// otherwise the runner would silently judge an empty body.
 	env := action.Runs.Steps[0].Env
-	for _, key := range []string{"PR_BODY", "PR_HEAD_SHA", "PR_HEAD_REF", "PR_AUTHOR", "NM_EXEMPT_AUTHORS", "NM_EXEMPT_BOT_AUTHORS", "NM_EXEMPT_HEAD_BRANCHES"} {
+	for _, key := range []string{"PR_BODY", "PR_HEAD_SHA", "PR_HEAD_REF", "PR_AUTHOR", "ALAMINO_EXEMPT_AUTHORS", "ALAMINO_EXEMPT_BOT_AUTHORS", "ALAMINO_EXEMPT_HEAD_BRANCHES"} {
 		if _, ok := env[key]; !ok {
 			t.Errorf("composite step must forward %q to the verification script", key)
 		}
@@ -234,7 +234,7 @@ func TestRequireActionIsAComposite(t *testing.T) {
 // TestRequireActionEnforcesTheGate is the behavioral contract: it runs the real
 // entrypoint over PR bodies the pipeline itself generates.
 func TestRequireActionEnforcesTheGate(t *testing.T) {
-	signature := "Updates from [git push no-mistakes](https://github.com/kunchenguid/no-mistakes)"
+	signature := "Updates from [git push alamino](https://github.com/mika-rafie/alamino)"
 	compliant := pipelineSummaryWithStatuses(t, types.StepStatusCompleted, types.StepStatusCompleted, types.StepStatusCompleted)
 
 	tests := []struct {
@@ -249,7 +249,7 @@ func TestRequireActionEnforcesTheGate(t *testing.T) {
 			run:  actionRun{body: compliant, headSHA: requiredWorkflowTestHeadSHA, number: "549"},
 			want: "success",
 			wantOut: []string{
-				"Found no-mistakes signature in PR #549 body.",
+				"Found alamino signature in PR #549 body.",
 				"Found structurally compliant pipeline step attestation.",
 				"PR-body attestation is author-editable and is not cryptographic proof",
 			},
@@ -258,7 +258,7 @@ func TestRequireActionEnforcesTheGate(t *testing.T) {
 			name:       "missing signature fails without naming the version floor",
 			run:        actionRun{body: "a regular pull request", headSHA: requiredWorkflowTestHeadSHA},
 			want:       "failure",
-			wantOut:    []string{"This PR was not raised through no-mistakes.", "git push no-mistakes", "CONTRIBUTING.md"},
+			wantOut:    []string{"This PR was not raised through alamino.", "git push alamino", "CONTRIBUTING.md"},
 			notWantOut: []string{">= 1.46.0"},
 		},
 		{
@@ -269,13 +269,13 @@ func TestRequireActionEnforcesTheGate(t *testing.T) {
 		},
 		{
 			name:    "unparseable attestation names the version floor",
-			run:     actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- no-mistakes-pipeline-attestation:v1 {not-json} -->\n", headSHA: requiredWorkflowTestHeadSHA},
+			run:     actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- alamino-pipeline-attestation:v1 {not-json} -->\n", headSHA: requiredWorkflowTestHeadSHA},
 			want:    "failure",
 			wantOut: []string{">= 1.46.0", "https://github.com/kunchenguid/no-mistakes/pull/670", "only writes the signature"},
 		},
 		{
 			name:    "attestation missing required JSON fields names the version floor",
-			run:     actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- no-mistakes-pipeline-attestation:v1 {\"steps\":[]} -->\n", headSHA: requiredWorkflowTestHeadSHA},
+			run:     actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- alamino-pipeline-attestation:v1 {\"steps\":[]} -->\n", headSHA: requiredWorkflowTestHeadSHA},
 			want:    "failure",
 			wantOut: []string{">= 1.46.0", "https://github.com/kunchenguid/no-mistakes/pull/670"},
 		},
@@ -288,7 +288,7 @@ func TestRequireActionEnforcesTheGate(t *testing.T) {
 		},
 		{
 			name:       "empty attestation head_sha fails",
-			run:        actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- no-mistakes-pipeline-attestation:v1 {\"head_sha\":\"\",\"steps\":[{\"step\":\"review\",\"status\":\"completed\"},{\"step\":\"test\",\"status\":\"completed\"},{\"step\":\"document\",\"status\":\"completed\"}]} -->\n", headSHA: requiredWorkflowTestHeadSHA},
+			run:        actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- alamino-pipeline-attestation:v1 {\"head_sha\":\"\",\"steps\":[{\"step\":\"review\",\"status\":\"completed\"},{\"step\":\"test\",\"status\":\"completed\"},{\"step\":\"document\",\"status\":\"completed\"}]} -->\n", headSHA: requiredWorkflowTestHeadSHA},
 			want:       "failure",
 			wantOut:    []string{"head_sha", "does not match"},
 			notWantOut: []string{">= 1.46.0"},
@@ -309,7 +309,7 @@ func TestRequireActionEnforcesTheGate(t *testing.T) {
 		},
 		{
 			name:    "missing review step fails",
-			run:     actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- no-mistakes-pipeline-attestation:v1 {\"head_sha\":\"abc\",\"steps\":[{\"step\":\"test\",\"status\":\"completed\"},{\"step\":\"document\",\"status\":\"completed\"}]} -->\n", headSHA: "abc"},
+			run:     actionRun{body: "## Pipeline\n\n" + signature + "\n\n<!-- alamino-pipeline-attestation:v1 {\"head_sha\":\"abc\",\"steps\":[{\"step\":\"test\",\"status\":\"completed\"},{\"step\":\"document\",\"status\":\"completed\"}]} -->\n", headSHA: "abc"},
 			want:    "failure",
 			wantOut: []string{"review", "missing"},
 		},
@@ -400,7 +400,7 @@ func TestRequireActionExemptions(t *testing.T) {
 		},
 		{
 			name: "human author matching no exemption is judged",
-			run:  actionRun{body: nonCompliant, author: "kunchenguid", headRef: "feature", exemptUsers: "dependabot[bot]", exemptBots: "true", exemptRefs: "release-please--*"},
+			run:  actionRun{body: nonCompliant, author: "mika-rafie", headRef: "feature", exemptUsers: "dependabot[bot]", exemptBots: "true", exemptRefs: "release-please--*"},
 			want: "failure",
 		},
 		{
@@ -445,7 +445,7 @@ func TestRequireActionReadsTheEventPayloadWhenInputsAreOmitted(t *testing.T) {
 	compliant := pipelineSummaryWithStatuses(t, types.StepStatusCompleted, types.StepStatusCompleted, types.StepStatusCompleted)
 	eventPath := filepath.Join(t.TempDir(), "event.json")
 	payload := `{"pull_request":{"number":812,"body":` + mustJSONString(t, compliant) +
-		`,"head":{"sha":"` + requiredWorkflowTestHeadSHA + `","ref":"fm/example"},"user":{"login":"kunchenguid"}}}`
+		`,"head":{"sha":"` + requiredWorkflowTestHeadSHA + `","ref":"fm/example"},"user":{"login":"mika-rafie"}}}`
 	if err := os.WriteFile(eventPath, []byte(payload), 0o644); err != nil {
 		t.Fatalf("write event payload: %v", err)
 	}
@@ -455,13 +455,13 @@ func TestRequireActionReadsTheEventPayloadWhenInputsAreOmitted(t *testing.T) {
 	// the event payload's OWN current values back from the stub live API,
 	// proving the compliant read and the head-bind check both still apply on
 	// the live path exactly as they did on the payload path before this fix.
-	server := stubPullsAPI(t, "kunchenguid/no-mistakes", "812", http.StatusOK, compliant, requiredWorkflowTestHeadSHA)
+	server := stubPullsAPI(t, "mika-rafie/alamino", "812", http.StatusOK, compliant, requiredWorkflowTestHeadSHA)
 
 	got := runRequireAction(t, actionRun{
 		eventPath:   eventPath,
 		githubToken: "test-token",
 		githubAPI:   server.URL,
-		githubRepo:  "kunchenguid/no-mistakes",
+		githubRepo:  "mika-rafie/alamino",
 	})
 	if got.conclusion != "success" {
 		t.Fatalf("conclusion = %q, want success\n%s", got.conclusion, got.output)
@@ -481,13 +481,13 @@ func TestRequireActionLiveLookupHeadBindStillApplies(t *testing.T) {
 	compliant := pipelineSummaryWithStatuses(t, types.StepStatusCompleted, types.StepStatusCompleted, types.StepStatusCompleted)
 	eventPath := writeEventPayload(t, 812, compliant, requiredWorkflowTestHeadSHA)
 	movedHead := "ffffffffffffffffffffffffffffffffffffffff"
-	server := stubPullsAPI(t, "kunchenguid/no-mistakes", "812", http.StatusOK, compliant, movedHead)
+	server := stubPullsAPI(t, "mika-rafie/alamino", "812", http.StatusOK, compliant, movedHead)
 
 	got := runRequireAction(t, actionRun{
 		eventPath:   eventPath,
 		githubToken: "test-token",
 		githubAPI:   server.URL,
-		githubRepo:  "kunchenguid/no-mistakes",
+		githubRepo:  "mika-rafie/alamino",
 	})
 	if got.conclusion != "failure" {
 		t.Fatalf("conclusion = %q, want failure after the live head moved past the attestation\n%s", got.conclusion, got.output)
@@ -539,7 +539,7 @@ func writeEventPayload(t *testing.T, number int, body, headSHA string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "event.json")
 	payload := fmt.Sprintf(
-		`{"pull_request":{"number":%d,"body":%s,"head":{"sha":%q,"ref":"fm/example"},"user":{"login":"kunchenguid"}}}`,
+		`{"pull_request":{"number":%d,"body":%s,"head":{"sha":%q,"ref":"fm/example"},"user":{"login":"mika-rafie"}}}`,
 		number, mustJSONString(t, body), headSHA,
 	)
 	if err := os.WriteFile(path, []byte(payload), 0o644); err != nil {
@@ -562,13 +562,13 @@ func TestRequireActionLiveLookupOverridesStaleArchivedEvent(t *testing.T) {
 	currentBody := pipelineSummaryWithStatuses(t, types.StepStatusCompleted, types.StepStatusCompleted, types.StepStatusCompleted)
 
 	eventPath := writeEventPayload(t, 812, staleBody, currentHead)
-	server := stubPullsAPI(t, "kunchenguid/no-mistakes", "812", http.StatusOK, currentBody, currentHead)
+	server := stubPullsAPI(t, "mika-rafie/alamino", "812", http.StatusOK, currentBody, currentHead)
 
 	got := runRequireAction(t, actionRun{
 		eventPath:   eventPath,
 		githubToken: "test-token",
 		githubAPI:   server.URL,
-		githubRepo:  "kunchenguid/no-mistakes",
+		githubRepo:  "mika-rafie/alamino",
 	})
 	if got.conclusion != "success" {
 		t.Fatalf("conclusion = %q, want success (live data is current, only the archived event is stale)\n%s", got.conclusion, got.output)
@@ -585,24 +585,24 @@ func TestRequireActionLiveLookupOverridesStaleArchivedEvent(t *testing.T) {
 // governs the verdict in the failing direction as well, not merely when it
 // happens to agree with a compliant archived payload: the archived event
 // shows a fully compliant PR, but the PR's live body no longer carries the
-// no-mistakes signature at all (e.g. edited between the original event and a
+// alamino signature at all (e.g. edited between the original event and a
 // later rerun). The live state must win and the check must fail.
 func TestRequireActionLiveLookupGovernsFailureToo(t *testing.T) {
 	currentHead := requiredWorkflowTestHeadSHA
 	compliant := pipelineSummaryWithStatuses(t, types.StepStatusCompleted, types.StepStatusCompleted, types.StepStatusCompleted)
 	eventPath := writeEventPayload(t, 812, compliant, currentHead)
-	server := stubPullsAPI(t, "kunchenguid/no-mistakes", "812", http.StatusOK, "an edited, non-compliant body", currentHead)
+	server := stubPullsAPI(t, "mika-rafie/alamino", "812", http.StatusOK, "an edited, non-compliant body", currentHead)
 
 	got := runRequireAction(t, actionRun{
 		eventPath:   eventPath,
 		githubToken: "test-token",
 		githubAPI:   server.URL,
-		githubRepo:  "kunchenguid/no-mistakes",
+		githubRepo:  "mika-rafie/alamino",
 	})
 	if got.conclusion != "failure" {
 		t.Fatalf("conclusion = %q, want failure (live body is non-compliant even though the archived event looked fine)\n%s", got.conclusion, got.output)
 	}
-	if !strings.Contains(got.output, "This PR was not raised through no-mistakes.") {
+	if !strings.Contains(got.output, "This PR was not raised through alamino.") {
 		t.Errorf("output does not report the live non-compliant body:\n%s", got.output)
 	}
 }
@@ -624,7 +624,7 @@ func TestRequireActionFailsClosedWhenLiveLookupUnavailable(t *testing.T) {
 		name string
 		run  actionRun
 	}{
-		{"no token", actionRun{eventPath: eventPath, githubRepo: "kunchenguid/no-mistakes"}},
+		{"no token", actionRun{eventPath: eventPath, githubRepo: "mika-rafie/alamino"}},
 		{"no repo", actionRun{eventPath: eventPath, githubToken: "test-token"}},
 	}
 	for _, tc := range cases {
@@ -647,7 +647,7 @@ func TestRequireActionFailsClosedWhenLiveLookupUnavailable(t *testing.T) {
 			}
 			// The compliant-looking event payload must never be evaluated:
 			// none of the checks it would have passed appear in the output.
-			if strings.Contains(got.output, "Found no-mistakes signature") {
+			if strings.Contains(got.output, "Found alamino signature") {
 				t.Errorf("output evaluated the cached event payload instead of failing closed:\n%s", got.output)
 			}
 		})
@@ -661,13 +661,13 @@ func TestRequireActionFailsClosedWhenLiveLookupUnavailable(t *testing.T) {
 func TestRequireActionFailsClosedWhenLiveAPICallFails(t *testing.T) {
 	compliant := pipelineSummaryWithStatuses(t, types.StepStatusCompleted, types.StepStatusCompleted, types.StepStatusCompleted)
 	eventPath := writeEventPayload(t, 812, compliant, requiredWorkflowTestHeadSHA)
-	server := stubPullsAPI(t, "kunchenguid/no-mistakes", "812", http.StatusForbidden, "", "")
+	server := stubPullsAPI(t, "mika-rafie/alamino", "812", http.StatusForbidden, "", "")
 
 	got := runRequireAction(t, actionRun{
 		eventPath:   eventPath,
 		githubToken: "test-token",
 		githubAPI:   server.URL,
-		githubRepo:  "kunchenguid/no-mistakes",
+		githubRepo:  "mika-rafie/alamino",
 	})
 	if got.conclusion != "failure" {
 		t.Fatalf("conclusion = %q, want failure after a 403 (fail closed, never certify from the cached event payload)\n%s", got.conclusion, got.output)
@@ -698,7 +698,7 @@ func TestRequireActionExplicitInputsSkipLiveLookup(t *testing.T) {
 		number:      "812",
 		githubToken: "test-token",
 		githubAPI:   server.URL,
-		githubRepo:  "kunchenguid/no-mistakes",
+		githubRepo:  "mika-rafie/alamino",
 	})
 	if got.conclusion != "success" {
 		t.Fatalf("conclusion = %q, want success from the explicit inputs\n%s", got.conclusion, got.output)

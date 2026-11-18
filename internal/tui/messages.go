@@ -1,9 +1,9 @@
 package tui
 
 import (
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // eventMsg wraps an IPC event received from the daemon.

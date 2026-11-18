@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestTestNativeEarlyResultChildCompletion(t *testing.T) {
@@ -147,7 +147,7 @@ func TestTestNativeEarlyResultChildCompletion(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if proof := os.Getenv("NM_RETRO_PROOF_DIR"); proof != "" {
+			if proof := os.Getenv("ALAMINO_RETRO_PROOF_DIR"); proof != "" {
 				if err := os.WriteFile(filepath.Join(proof, "test-"+mode+"-prompt.txt"), raw, 0o600); err != nil {
 					t.Fatal(err)
 				}

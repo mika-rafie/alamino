@@ -15,11 +15,11 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestOpenBrowserCmd_WaitsForBrowserCommand(t *testing.T) {
@@ -263,7 +263,7 @@ func TestModel_RerunRefusesOlderDaemonTranscriptDiscovery(t *testing.T) {
 			}
 			msg := cmd()
 			failure, ok := msg.(rerunErrMsg)
-			if !ok || failure.requestID != 42 || !strings.Contains(failure.err.Error(), "no-mistakes daemon restart") {
+			if !ok || failure.requestID != 42 || !strings.Contains(failure.err.Error(), "alamino daemon restart") {
 				t.Fatalf("expected restart guidance for the rerun request, got %#v", msg)
 			}
 			select {
@@ -610,7 +610,7 @@ func tuiIdentityCheckout(t *testing.T) string {
 		t.Fatalf("git init: %v: %s", err, out)
 	}
 	appRoot := t.TempDir()
-	t.Setenv("NM_HOME", appRoot)
+	t.Setenv("ALAMINO_HOME", appRoot)
 	database, err := db.Open(paths.WithRoot(appRoot).DB())
 	if err != nil {
 		t.Fatal(err)

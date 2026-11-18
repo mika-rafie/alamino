@@ -14,9 +14,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 type prBodyFlavor int
@@ -36,14 +36,14 @@ func prBodyFlavorFor(provider scm.Provider) prBodyFlavor {
 const (
 	maxEmbeddedArtifactBytes               = 16 * 1024
 	maxEmbeddedArtifactsTotalBytes         = 32 * 1024
-	noMistakesPRSignature                  = "Updates from [git push no-mistakes](https://github.com/kunchenguid/no-mistakes)"
-	pipelineAttestationCommentPrefix       = "<!-- no-mistakes-pipeline-attestation:v1 "
+	alaminoPRSignature                     = "Updates from [git push alamino](https://github.com/mika-rafie/alamino)"
+	pipelineAttestationCommentPrefix       = "<!-- alamino-pipeline-attestation:v1 "
 	pipelineAttestationCommentClosingToken = " -->"
 	// escapedPipelineAttestationCommentPrefix keeps an embedded copy readable
 	// while breaking the literal prefix a consumer scans for. Only the marker
 	// is altered; the payload after it is left exactly as the agent captured
 	// it, so evidence stays faithful.
-	escapedPipelineAttestationCommentPrefix = "<!-- no-mistakes-pipeline-attestation\\:v1 "
+	escapedPipelineAttestationCommentPrefix = "<!-- alamino-pipeline-attestation\\:v1 "
 )
 
 type pipelineAttestation struct {
@@ -56,7 +56,7 @@ type pipelineAttestation struct {
 	// run from before the contract), which is itself the answer: unknown.
 	LiveValidation *pipelineAttestationLiveValidation `json:"live_validation,omitempty"`
 	// AllowTestCommandOverride is the trusted repo-config reason that opts
-	// this repository into letting require-no-mistakes accept a Test step
+	// this repository into letting require-alamino accept a Test step
 	// approved over a failing configured commands.test. Omitted when the repo
 	// has not opted in. Additive: older attestations without the field are
 	// read as not opted in.
@@ -160,7 +160,7 @@ func buildPipelineSummaryFor(steps []*db.StepResult, rounds map[string][]*db.Ste
 
 	var b strings.Builder
 	b.WriteString("## Pipeline\n\n")
-	b.WriteString(noMistakesPRSignature)
+	b.WriteString(alaminoPRSignature)
 	b.WriteString("\n\n")
 	if flavor == prBodyHTML {
 		b.WriteString(buildPipelineAttestationWithPolicy(steps, rounds, headSHA, policy))
@@ -178,7 +178,7 @@ func buildPipelineSummaryFor(steps []*db.StepResult, rounds map[string][]*db.Ste
 }
 
 // buildPipelineAttestation records the exact step lifecycle snapshot available
-// when no-mistakes writes the PR body. Its compact JSON is deliberately data
+// when alamino writes the PR body. Its compact JSON is deliberately data
 // only: consumers decide their own policy from the step names and statuses.
 func buildPipelineAttestation(steps []*db.StepResult, rounds map[string][]*db.StepRound, headSHA string) string {
 	return buildPipelineAttestationWithPolicy(steps, rounds, headSHA, pipelineAttestationPolicy{})
@@ -269,7 +269,7 @@ func attestedLiveValidation(steps []*db.StepResult, rounds map[string][]*db.Step
 // (buildPipelineAttestation). Existing step statuses are kept; only the bound
 // head changes. It returns the original body and false when no live
 // attestation is present, so callers cannot mint one for a PR that was not
-// raised through no-mistakes.
+// raised through alamino.
 //
 // This is the CI-repair-without-revalidation shape: review/test/document are
 // deliberately not re-run for that repair commit (see ciRepairContinuityGap),
@@ -290,7 +290,7 @@ func rebindPipelineAttestationHead(body, newHeadSHA string) (string, bool) {
 // borrowing whatever an older, possibly different, attestation claimed. It
 // still returns the original body and false when no live attestation is
 // present, so a caller cannot mint one for a PR that was not raised through
-// no-mistakes.
+// alamino.
 func rebindPipelineAttestationWithSteps(body, newHeadSHA string, steps []*db.StepResult, policy pipelineAttestationPolicy) (string, bool) {
 	newHeadSHA = strings.TrimSpace(newHeadSHA)
 	if newHeadSHA == "" {
@@ -1639,14 +1639,14 @@ func escapePRText(s string, flavor prBodyFlavor) string {
 //   - The PR-body truncation parser (parsePipelineUpdateGroups /
 //     nextPipelineFoldStart) treats "### " and "<details>" at the start of a
 //     line as step-fold boundaries.
-//   - The require-no-mistakes compliance check
-//     (.github/actions/require-no-mistakes/verify.py) takes the FIRST
+//   - The require-alamino compliance check
+//     (.github/actions/require-alamino/verify.py) takes the FIRST
 //     attestation comment in the body and binds its head_sha to the PR head.
 //     A step agent that captures a generated PR body as evidence embeds a
 //     second attestation comment carrying that evidence run's head_sha; left
 //     intact it precedes and therefore shadows the real one, and the check
 //     fails on a head_sha mismatch for a PR the pipeline did produce. Observed
-//     on kunchenguid/no-mistakes#831, whose test evidence embedded three.
+//     on mika-rafie/alamino#831, whose test evidence embedded three.
 func escapePipelineFoldMarkers(s string) string {
 	if s == "" {
 		return s

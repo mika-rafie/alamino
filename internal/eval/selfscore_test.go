@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // The sets inspection carries an instant self-score: the recorded source

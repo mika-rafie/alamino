@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/intent"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/intent"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // fakeGitHubPAT reconstructs a GitHub-PAT-shaped test value at runtime via

@@ -12,14 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/wizard"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/wizard"
 )
 
 func TestShouldRouteToWizard(t *testing.T) {
@@ -394,72 +393,6 @@ func TestWizardAgentSuggester_EmptyRetryClearsCachedCommit(t *testing.T) {
 	}
 }
 
-func TestRunWizardTracksPageview(t *testing.T) {
-	recorder := &telemetryRecorder{}
-	restoreTelemetry := telemetry.SetDefaultForTesting(recorder)
-	defer restoreTelemetry()
-
-	prevRun := wizardRun
-	wizardRun = func(cfg wizard.Config) (wizard.Result, error) {
-		return wizard.Result{Success: true, BranchCreated: true, CommitMade: true, Pushed: true}, nil
-	}
-	defer func() { wizardRun = prevRun }()
-
-	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
-	p := paths.WithRoot(nmHome)
-	if err := p.EnsureDirs(); err != nil {
-		t.Fatal(err)
-	}
-
-	repoDir := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(repoDir, ".git"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	state := &repoState{
-		workDir:       repoDir,
-		currentBranch: "main",
-		defaultBranch: "main",
-		detached:      false,
-		dirty:         true,
-	}
-
-	if _, err := runWizard(context.Background(), p, state, nil); err != nil {
-		t.Fatalf("runWizard() error = %v", err)
-	}
-
-	event := recorder.find("pageview", "path", "/wizard")
-	if event == nil {
-		t.Fatal("expected wizard pageview telemetry")
-	}
-	if got := event.fields["needs_branch"]; got != true {
-		t.Fatalf("needs_branch = %v, want true", got)
-	}
-	if got := event.fields["is_dirty"]; got != true {
-		t.Fatalf("is_dirty = %v, want true", got)
-	}
-	if got := event.fields["detached"]; got != false {
-		t.Fatalf("detached = %v, want false", got)
-	}
-	if got := event.fields["entrypoint"]; got != "wizard" {
-		t.Fatalf("entrypoint = %v, want wizard", got)
-	}
-	if got := event.fields["current_branch_role"]; got != "default" {
-		t.Fatalf("current_branch_role = %v, want default", got)
-	}
-	resultEvent := recorder.find("wizard", "action", "result")
-	if resultEvent == nil {
-		t.Fatal("expected wizard result telemetry")
-	}
-	if got := resultEvent.fields["status"]; got != "completed" {
-		t.Fatalf("status = %v, want completed", got)
-	}
-	if got := resultEvent.fields["branch_created"]; got != true {
-		t.Fatalf("branch_created = %v, want true", got)
-	}
-}
-
 func TestRunWizardReturnsTerminalWizardError(t *testing.T) {
 	wantErr := errors.New("suggest branch: agent down")
 
@@ -470,7 +403,7 @@ func TestRunWizardReturnsTerminalWizardError(t *testing.T) {
 	defer func() { wizardRun = prevRun }()
 
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
@@ -511,7 +444,7 @@ func TestRunWizard_ConfiguresServerPIDsDir(t *testing.T) {
 	defer func() { wizardRun = prevRun }()
 
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
@@ -560,7 +493,7 @@ func TestRunWizard_ConfiguresServerPIDsDir(t *testing.T) {
 // through to "No active run".
 func TestAwaitDaemonRunRegistration_ErrorsWhenNoRunAppears(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
@@ -593,7 +526,7 @@ func TestAwaitDaemonRunRegistration_ErrorsWhenNoRunAppears(t *testing.T) {
 
 func TestAwaitDaemonRunRegistration_UsesNMHomeInTimeoutError(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	p := paths.WithRoot(nmHome)
 	if err := p.EnsureDirs(); err != nil {

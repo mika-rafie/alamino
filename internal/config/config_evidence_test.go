@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/evidence"
+	"github.com/mika-rafie/alamino/internal/evidence"
 )
 
 func TestTestEvidenceDefaults(t *testing.T) {
@@ -20,8 +20,8 @@ func TestTestEvidenceDefaults(t *testing.T) {
 	if !got.Evidence.AttachMedia {
 		t.Error("default AttachMedia should be true so default-config PRs upload screenshots")
 	}
-	if got.Evidence.Dir != ".no-mistakes/evidence" {
-		t.Errorf("default Dir = %q, want .no-mistakes/evidence", got.Evidence.Dir)
+	if got.Evidence.Dir != ".alamino/evidence" {
+		t.Errorf("default Dir = %q, want .alamino/evidence", got.Evidence.Dir)
 	}
 	if got.Evidence.Branch != evidence.DefaultBranch {
 		t.Errorf("default Branch = %q, want %q", got.Evidence.Branch, evidence.DefaultBranch)
@@ -38,7 +38,7 @@ func TestTestEvidenceMerge_GlobalEnable(t *testing.T) {
 		t.Error("global enable should propagate")
 	}
 	// Defaults preserved when not overridden.
-	if cfg.Test.Evidence.Dir != ".no-mistakes/evidence" {
+	if cfg.Test.Evidence.Dir != ".alamino/evidence" {
 		t.Errorf("dir = %q, want default", cfg.Test.Evidence.Dir)
 	}
 	if cfg.Test.Evidence.Branch != evidence.DefaultBranch {
@@ -62,7 +62,7 @@ func TestTestEvidenceMerge_RepoOverridesGlobal(t *testing.T) {
 	enabled := true
 	disabled := false
 	dir := "docs/evidence"
-	globalBranch := "no-mistakes/global-evidence"
+	globalBranch := "alamino/global-evidence"
 	repoBranch := "team/ci/evidence"
 	global := &GlobalConfig{Test: TestRaw{Evidence: EvidenceRaw{StoreInRepo: &disabled, Branch: &globalBranch}}}
 	repo := &RepoConfig{Test: TestRaw{Evidence: EvidenceRaw{StoreInRepo: &enabled, Dir: &dir, Branch: &repoBranch}}}
@@ -80,7 +80,7 @@ func TestTestEvidenceMerge_RepoOverridesGlobal(t *testing.T) {
 }
 
 func TestTestEvidenceMerge_GlobalBranchAppliesWithoutRepoOverride(t *testing.T) {
-	branch := "no-mistakes/global-evidence"
+	branch := "alamino/global-evidence"
 	global := &GlobalConfig{Test: TestRaw{Evidence: EvidenceRaw{Branch: &branch}}}
 
 	cfg := Merge(global, &RepoConfig{})
@@ -94,7 +94,7 @@ func TestTestEvidenceMerge_BlankDirIgnored(t *testing.T) {
 	repo := &RepoConfig{Test: TestRaw{Evidence: EvidenceRaw{Dir: &blank}}}
 
 	cfg := Merge(&GlobalConfig{}, repo)
-	if cfg.Test.Evidence.Dir != ".no-mistakes/evidence" {
+	if cfg.Test.Evidence.Dir != ".alamino/evidence" {
 		t.Errorf("blank dir should fall back to default, got %q", cfg.Test.Evidence.Dir)
 	}
 }
@@ -173,7 +173,7 @@ test:
     compact: false
     branch: team/ci/evidence
 `
-	if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte(yaml), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte(yaml), 0o644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 
@@ -199,7 +199,7 @@ test:
   evidence:
     branch: "evidence..branch"
 `
-	if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte(yaml), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte(yaml), 0o644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 
@@ -224,7 +224,7 @@ func TestLoadConfig_InvalidEvidenceCommitMessageFailsClosed(t *testing.T) {
 				t.Errorf("global config error = %v, want test.evidence.commit_message rejection", err)
 			}
 			dir := t.TempDir()
-			if err := os.WriteFile(filepath.Join(dir, ".no-mistakes.yaml"), []byte(yaml), 0o644); err != nil {
+			if err := os.WriteFile(filepath.Join(dir, ".alamino.yaml"), []byte(yaml), 0o644); err != nil {
 				t.Fatal(err)
 			}
 			if _, err := LoadRepo(dir); err == nil || !strings.Contains(err.Error(), "test.evidence.commit_message") {

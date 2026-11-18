@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func makeLongRoot(t *testing.T) string {
@@ -45,7 +45,7 @@ func TestDaemonGateHelpersReportSocketPathTooLong(t *testing.T) {
 			t.Fatalf("%v: expected an error", args)
 		}
 		msg := out + err.Error()
-		for _, want := range []string{filepath.Join(root, "socket"), wantLength, "-byte limit", "NM_HOME", "physical"} {
+		for _, want := range []string{filepath.Join(root, "socket"), wantLength, "-byte limit", "ALAMINO_HOME", "physical"} {
 			if !strings.Contains(msg, want) {
 				t.Errorf("%v: output %q does not mention %q", args, msg, want)
 			}
@@ -60,8 +60,8 @@ func TestPreReceiveHookThroughShortLinkReportsPhysicalSocketPathTooLong(t *testi
 		t.Fatalf("git init: %v: %s", err, out)
 	}
 
-	bin := filepath.Join(t.TempDir(), "no-mistakes")
-	build := exec.Command("go", "build", "-o", bin, "github.com/kunchenguid/no-mistakes/cmd/no-mistakes")
+	bin := filepath.Join(t.TempDir(), "alamino")
+	build := exec.Command("go", "build", "-o", bin, "github.com/mika-rafie/alamino/cmd/alamino")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v: %s", err, out)
 	}
@@ -71,8 +71,8 @@ func TestPreReceiveHookThroughShortLinkReportsPhysicalSocketPathTooLong(t *testi
 		t.Fatal(err)
 	}
 	script := git.PreReceiveHookScript()
-	script = strings.Replace(script, "NM_BIN='"+exe+"'", "NM_BIN='"+bin+"'", 1)
-	if !strings.Contains(script, "NM_BIN='"+bin+"'") {
+	script = strings.Replace(script, "ALAMINO_BIN='"+exe+"'", "ALAMINO_BIN='"+bin+"'", 1)
+	if !strings.Contains(script, "ALAMINO_BIN='"+bin+"'") {
 		t.Fatal("hook script does not point at the built binary")
 	}
 	hook := filepath.Join(gate, "hooks", "pre-receive")
@@ -91,7 +91,7 @@ func TestPreReceiveHookThroughShortLinkReportsPhysicalSocketPathTooLong(t *testi
 
 	cmd := exec.Command("/bin/sh", hook)
 	cmd.Dir = linkedGate
-	cmd.Env = append(os.Environ(), "PWD="+linkedGate, "NM_HOME="+link)
+	cmd.Env = append(os.Environ(), "PWD="+linkedGate, "ALAMINO_HOME="+link)
 	out, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("hook should refuse the push; output %q", out)
@@ -109,7 +109,7 @@ func TestPreReceiveHookThroughShortLinkReportsPhysicalSocketPathTooLong(t *testi
 
 func TestDaemonStartRestartAndStatusReportSocketPathTooLong(t *testing.T) {
 	root := makeLongRoot(t)
-	t.Setenv("NM_HOME", root)
+	t.Setenv("ALAMINO_HOME", root)
 
 	originalStart, originalStartGuarded, originalStop, originalRunning := daemonStartFn, daemonStartGuardedFn, daemonStopFn, daemonIsRunningFn
 	t.Cleanup(func() {
@@ -138,7 +138,7 @@ func TestDaemonStartRestartAndStatusReportSocketPathTooLong(t *testing.T) {
 			t.Fatalf("daemon %s: expected an error", sub)
 		}
 		msg := out + err.Error()
-		for _, want := range []string{filepath.Join(root, "socket"), "NM_HOME", "limit"} {
+		for _, want := range []string{filepath.Join(root, "socket"), "ALAMINO_HOME", "limit"} {
 			if !strings.Contains(msg, want) {
 				t.Errorf("daemon %s: output %q does not mention %q", sub, msg, want)
 			}

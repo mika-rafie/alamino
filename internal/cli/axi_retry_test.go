@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestRunObjectLinksARetryToTheFailureItContinues(t *testing.T) {
@@ -31,7 +31,7 @@ func TestRunObjectLinksARetryToTheFailureItContinues(t *testing.T) {
 }
 
 func TestAxiRetryRequiresTheFailedRunsID(t *testing.T) {
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	chdir(t, t.TempDir())
 	out, err := executeCmd("axi", "retry")
 	var exit *exitError

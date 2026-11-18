@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
 )
 
 func TestVerificationPlanCannotBeChangedOrRebound(t *testing.T) {

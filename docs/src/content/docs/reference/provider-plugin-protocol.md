@@ -1,21 +1,21 @@
 ---
 title: Provider Plugin Protocol
-description: The AXI-shaped CLI contract a provider plugin implements to give no-mistakes PR and CI support for a host it does not ship.
+description: The AXI-shaped CLI contract a provider plugin implements to give alamino PR and CI support for a host it does not ship.
 ---
 
 A provider plugin is an executable you configure under global
-[`provider_plugins`](/no-mistakes/reference/global-config/#provider_plugins). It
+[`provider_plugins`](/alamino/reference/global-config/#provider_plugins). It
 lets the PR and CI steps work against any forge - a company-internal host,
 Google Cloud Secure Source Manager, or anything else with an API - without that
-forge's code living in no-mistakes. This page is the contract the executable
+forge's code living in alamino. This page is the contract the executable
 implements.
 
 The plugin is an **AXI-shaped CLI**: subcommands such as `pr find` and
 `pr checks`, each printing one JSON document when called with `--json`. It is
-the same shape no-mistakes uses to drive
-[`forgejo-axi`](/no-mistakes/reference/global-config/#forgejo_axi_path), so the same
+the same shape alamino uses to drive
+[`forgejo-axi`](/alamino/reference/global-config/#forgejo_axi_path), so the same
 binary can print a human- or agent-friendly format (for example TOON) when
-`--json` is absent. no-mistakes always passes `--json` and only ever reads
+`--json` is absent. alamino always passes `--json` and only ever reads
 JSON.
 
 ## Invocation model
@@ -29,7 +29,7 @@ Every operation is one process:
 For example:
 
 ```text
-no-mistakes-ssm --profile work pr view 7 --plugin=ssm --repo=my-project/my-repo --host=my-instance-123456-git.us-central1.sourcemanager.dev --raw-host=my-instance-123456-git.us-central1.sourcemanager.dev --remote-url=https://my-instance-123456-git.us-central1.sourcemanager.dev/my-project/my-repo.git --json
+alamino-ssm --profile work pr view 7 --plugin=ssm --repo=my-project/my-repo --host=my-instance-123456-git.us-central1.sourcemanager.dev --raw-host=my-instance-123456-git.us-central1.sourcemanager.dev --remote-url=https://my-instance-123456-git.us-central1.sourcemanager.dev/my-project/my-repo.git --json
 ```
 
 - **Argument form.** Positional arguments (the subcommand words, then a PR
@@ -44,7 +44,7 @@ no-mistakes-ssm --profile work pr view 7 --plugin=ssm --repo=my-project/my-repo 
 - **Stdin is empty.** The plugin reads EOF immediately. Nothing is ever sent on
   stdin.
 - **PR bodies travel in a file.** `pr create` and `pr update` pass
-  `--body-file=<path>`: a temporary file no-mistakes creates with mode `0600`
+  `--body-file=<path>`: a temporary file alamino creates with mode `0600`
   (readable only by the daemon's user), outside the worktree, and deletes as
   soon as the process exits. Read it during the call; do not keep the path. A
   body can therefore exceed argv limits, survive Windows `.cmd` shims (which
@@ -89,7 +89,7 @@ Every invocation carries all five, mirroring `forgejo-axi`'s `--repo`:
 { "error": { "code": "unauthenticated", "message": "run `gcloud auth login`" } }
 ```
 
-Without one, no-mistakes reports the (redacted, capped) stderr instead.
+Without one, alamino reports the (redacted, capped) stderr instead.
 
 Rules:
 
@@ -105,14 +105,14 @@ Error codes with defined meaning:
 | Code | Meaning |
 | --- | --- |
 | `head_changed` | The PR head is no longer the expected commit (`pr merged`). |
-| `unsupported` | Never a valid answer: no-mistakes invokes only the required subcommands and the ones you declared. It is reported as a contract violation (capability mismatch). |
+| `unsupported` | Never a valid answer: alamino invokes only the required subcommands and the ones you declared. It is reported as a contract violation (capability mismatch). |
 
 Any other code, or none, is an ordinary failure whose message is shown to the
 operator.
 
 ## Failing closed
 
-no-mistakes treats two kinds of failure differently:
+alamino treats two kinds of failure differently:
 
 - **The plugin cannot serve the repository.** `status` exits non-zero (not
   authenticated, wrong account, repository unknown), or the configured command
@@ -255,7 +255,7 @@ Print the checks for the PR's current head.
 The `checks` key is required. An empty list means "nothing registered yet";
 a missing key is an unreadable response and is never treated as empty. If the
 repository has no CI at all, declare
-[`no_ci: true`](/no-mistakes/reference/repo-config/#no_ci) instead of returning an
+[`no_ci: true`](/alamino/reference/repo-config/#no_ci) instead of returning an
 empty list forever.
 
 ### pr mergeability (capability `mergeable_state`)
@@ -278,7 +278,7 @@ keeps the last 1 MiB, where build and test failures are reported.
 
 ### pr merged (capability `merged_proof`)
 
-Prove that the PR merged at the commit no-mistakes validated.
+Prove that the PR merged at the commit alamino validated.
 
 - **args:** `<number> --expected-head=<sha>`
 - **result:**
@@ -343,7 +343,7 @@ def fail(message, code=""):
 
 
 def parser():
-    root = argparse.ArgumentParser(prog="no-mistakes-ssm")
+    root = argparse.ArgumentParser(prog="alamino-ssm")
     # Configured `args` come before the subcommand words, so the root parser
     # must declare them (here the `--profile work` from the example above).
     root.add_argument("--profile")
@@ -412,7 +412,7 @@ This skeleton declares no optional capabilities, so the optional subcommands
 are never invoked. Declare every option your configured `args` use on the
 root parser, as `--profile` is above. argparse exits with status `2` and a
 usage message on stderr for arguments it does not understand, which
-no-mistakes reports as an ordinary failure.
+alamino reports as an ordinary failure.
 
 The repository's own reference implementation, used by its tests, lives in
 `internal/scm/plugin/fakeplugin`.

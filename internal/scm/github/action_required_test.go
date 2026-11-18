@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // heldWorkflowRunResponses is the shape GitHub reports for a pull request whose

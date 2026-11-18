@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // A real CLI fix selection must settle a pre-upgrade, unanchored finding only

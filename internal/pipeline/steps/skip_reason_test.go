@@ -3,8 +3,8 @@ package steps
 import (
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 func TestAutomaticSkipReasons(t *testing.T) {

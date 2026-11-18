@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
-const noMistakesSignature = "Updates from [git push no-mistakes](https://github.com/kunchenguid/no-mistakes)"
+const alaminoSignature = "Updates from [git push alamino](https://github.com/mika-rafie/alamino)"
 
 func attestationBody(t *testing.T, payload map[string]any) string {
 	t.Helper()
@@ -18,7 +18,7 @@ func attestationBody(t *testing.T, payload map[string]any) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return "## Pipeline\n\n" + noMistakesSignature + "\n\n<!-- no-mistakes-pipeline-attestation:v1 " + string(raw) + " -->\n"
+	return "## Pipeline\n\n" + alaminoSignature + "\n\n<!-- alamino-pipeline-attestation:v1 " + string(raw) + " -->\n"
 }
 
 func completedSteps(overrideReason string) []map[string]any {

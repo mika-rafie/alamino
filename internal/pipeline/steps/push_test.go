@@ -8,17 +8,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/testgit"
 )
 
 func setupGateMirror(t *testing.T, sctx *pipeline.StepContext) string {
 	t.Helper()
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	gateDir := paths.WithRoot(t.TempDir()).RepoDir(sctx.Repo.ID)
 	sctx.GateDir = gateDir
 	if err := os.MkdirAll(filepath.Dir(gateDir), 0o755); err != nil {
@@ -380,7 +380,7 @@ func TestPushStep_DoesNotPublishTestEvidenceIntoThePushedBranch(t *testing.T) {
 	sctx.Repo.UpstreamURL = upstream
 	sctx.Run.Branch = "feature"
 	setupGateMirror(t, sctx)
-	sctx.Config.Test.Evidence = config.Evidence{StoreInRepo: true, Dir: "evidence", Branch: "no-mistakes/evidence"}
+	sctx.Config.Test.Evidence = config.Evidence{StoreInRepo: true, Dir: "evidence", Branch: "alamino/evidence"}
 	recordReviewApproval(t, sctx, headSHA)
 
 	// Evidence for this run exists, collected outside the worktree.
@@ -410,7 +410,7 @@ func TestPushStep_CatchAllCommitSubject(t *testing.T) {
 	for _, tc := range []struct {
 		name, template, want string
 	}{
-		{"default", config.DefaultFixMessageTemplate, "no-mistakes: apply agent fixes"},
+		{"default", config.DefaultFixMessageTemplate, "alamino: apply agent fixes"},
 		{"configured", "chore({{.Step}}): {{.Summary}} [{{.Branch}}]", "chore(push): apply agent fixes [feature]"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -867,7 +867,7 @@ func TestLastKnownBranchTip_BranchRefNormalization(t *testing.T) {
 
 func TestPushStep_UpdatesGateMirrorRefOnSuccessfulPush(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -933,7 +933,7 @@ func TestPushStep_UpdatesGateMirrorRefOnSuccessfulPush(t *testing.T) {
 
 func TestPushStep_PublishesRebasedHeadWhosePatchDiffersFromSubmittedHead(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -988,7 +988,7 @@ func TestPushStep_PublishesRebasedHeadWhosePatchDiffersFromSubmittedHead(t *test
 		t.Fatalf("gate mirror ref = %s, want %s", got, rebasedHead)
 	}
 	// The replaced head stays recoverable.
-	archived := gitCmd(t, gateDir, "rev-parse", "refs/tags/no-mistakes-abandoned/feature/"+submittedHead+"^{commit}")
+	archived := gitCmd(t, gateDir, "rev-parse", "refs/tags/alamino-abandoned/feature/"+submittedHead+"^{commit}")
 	if archived != submittedHead {
 		t.Fatalf("archived submitted head = %s, want %s", archived, submittedHead)
 	}
@@ -996,7 +996,7 @@ func TestPushStep_PublishesRebasedHeadWhosePatchDiffersFromSubmittedHead(t *test
 
 func TestPushStep_RefusedUpstreamPushLeavesGateMirrorRefIntact(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -1067,14 +1067,14 @@ func TestPushStep_RefusedUpstreamPushLeavesGateMirrorRefIntact(t *testing.T) {
 	if got := gitCmd(t, gateDir, "rev-parse", "refs/heads/feature"); got != staleMirrorHead {
 		t.Fatalf("gate mirror ref = %s after a refused push, want %s", got, staleMirrorHead)
 	}
-	if tags := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+	if tags := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 		t.Fatalf("refused push archived and removed the gate branch: %q", tags)
 	}
 }
 
 func TestPushStep_RefusesUniquePrivateMirrorCommitBeforeRemotePush(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -1133,7 +1133,7 @@ func TestPushStep_RefusesUniquePrivateMirrorCommitBeforeRemotePush(t *testing.T)
 
 func TestPushStep_GateMirrorUpdateFailurePropagatesError(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -1171,7 +1171,7 @@ func TestPushStep_GateMirrorUpdateFailurePropagatesError(t *testing.T) {
 
 func TestPushStep_GateMirrorFetchesExplicitPushedHeadInDetachedWorktree(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -1240,7 +1240,7 @@ func TestPushStep_GateMirrorFetchesExplicitPushedHeadInDetachedWorktree(t *testi
 
 func TestPushStep_SkipsWhenGateMirrorDirectoryMissing(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -1275,7 +1275,7 @@ func TestPushStep_SkipsWhenGateMirrorDirectoryMissing(t *testing.T) {
 
 func TestPushStep_GateMirrorDoesNotRewindNewerInterveningPush(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -1334,7 +1334,7 @@ func TestPushStep_GateMirrorDoesNotRewindNewerInterveningPush(t *testing.T) {
 	if remoteHead != rebasedHead {
 		t.Fatalf("expected remote head = %s, got %s", rebasedHead, remoteHead)
 	}
-	if tags := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+	if tags := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 		t.Fatalf("descendant was archived: %s", tags)
 	}
 
@@ -1381,7 +1381,7 @@ func TestPushStep_MirrorMovesAfterPlanning(t *testing.T) {
 			if got := gitCmd(t, gateDir, "rev-parse", "refs/heads/feature"); got != interveningHead {
 				t.Fatalf("mirror = %s, want preserved %s", got, interveningHead)
 			}
-			if tags := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+			if tags := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 				t.Fatalf("moved mirror was archived: %s", tags)
 			}
 		})
@@ -1390,7 +1390,7 @@ func TestPushStep_MirrorMovesAfterPlanning(t *testing.T) {
 
 func TestPushStep_RefusesToOverwriteNewerInterveningPrivateCommit(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -1455,7 +1455,7 @@ func TestPushStep_RefusesToOverwriteNewerInterveningPrivateCommit(t *testing.T) 
 }
 
 func TestPushStep_DetachedGateWorktreePreservesDescendantAfterEmptyIndex(t *testing.T) {
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	source, baseSHA, _ := setupGitRepo(t)
 	submodule, _, _ := setupGitRepo(t)
 	gitCmd(t, source, "-c", "protocol.file.allow=always", "submodule", "add", submodule, "sub")
@@ -1512,7 +1512,7 @@ func TestPushStep_DetachedGateWorktreePreservesDescendantAfterEmptyIndex(t *test
 	if got := gitCmd(t, workDir, "rev-parse", "HEAD"); got != reviewedHead {
 		t.Fatalf("empty-index handoff created a commit: %s", got)
 	}
-	if got := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); got != "" {
+	if got := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); got != "" {
 		t.Fatalf("preserved descendant was archived: %s", got)
 	}
 	persisted, err := sctx.DB.GetRun(sctx.Run.ID)

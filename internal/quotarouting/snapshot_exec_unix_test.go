@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestReadSnapshotReapsDescendantsOnEveryExit(t *testing.T) {
@@ -45,9 +45,9 @@ func TestReadSnapshotReapsDescendantsOnEveryExit(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer release.Close()
-			t.Setenv("NM_QUOTA_CHILD_PID", pidFile)
-			t.Setenv("NM_QUOTA_RELEASE", releaseFile)
-			script := "#!/bin/sh\n" + tc.startup + "sleep 30 &\nprintf '%s' \"$!\" > \"$NM_QUOTA_CHILD_PID\"\nread release < \"$NM_QUOTA_RELEASE\"\n"
+			t.Setenv("ALAMINO_QUOTA_CHILD_PID", pidFile)
+			t.Setenv("ALAMINO_QUOTA_RELEASE", releaseFile)
+			script := "#!/bin/sh\n" + tc.startup + "sleep 30 &\nprintf '%s' \"$!\" > \"$ALAMINO_QUOTA_CHILD_PID\"\nread release < \"$ALAMINO_QUOTA_RELEASE\"\n"
 			switch mode {
 			case "success":
 				script += "printf '%s' '{\"schemaVersion\":5,\"providers\":[]}'\n"
@@ -175,11 +175,11 @@ func TestReadSnapshotOwnTimeout(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer release.Close()
-	t.Setenv("NM_QUOTA_RELEASE", releaseFile)
+	t.Setenv("ALAMINO_QUOTA_RELEASE", releaseFile)
 	executable := filepath.Join(dir, "quota-axi")
 	// A shell builtin blocks without spawning a child or imposing another
 	// deadline that could accidentally substitute for the reader's timeout.
-	if err := os.WriteFile(executable, []byte("#!/bin/sh\nread release < \"$NM_QUOTA_RELEASE\"\n"), 0o755); err != nil {
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\nread release < \"$ALAMINO_QUOTA_RELEASE\"\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())

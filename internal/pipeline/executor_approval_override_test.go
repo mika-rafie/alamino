@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // overrideVerifyingStep is a mockStep that also implements
@@ -79,7 +79,7 @@ func runApprovalOverrideCase(t *testing.T, step Step) *string {
 }
 
 // TestExecutor_ApprovalOverride_StillFailingIsRecorded is the core regression
-// for the "no-mistakes must never self-report a passing terminal outcome when
+// for the "alamino must never self-report a passing terminal outcome when
 // the live required-check view still contains an unresolved failure" defect:
 // a human approves a CI-shaped gate while the live condition is still
 // unresolved. The approval must still proceed (never block a deliberate

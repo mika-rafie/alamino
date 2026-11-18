@@ -9,8 +9,8 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func branchTestPtr[T any](v T) *T { return &v }
@@ -271,7 +271,7 @@ func TestAxiBranchStatusDoesNotCreateStorage(t *testing.T) {
 	dir, _, _, _ := setupAxiQueryRepo(t)
 	chdir(t, dir)
 	missing := filepath.Join(t.TempDir(), "missing")
-	t.Setenv("NM_HOME", missing)
+	t.Setenv("ALAMINO_HOME", missing)
 	var out bytes.Buffer
 	cmd := newAxiStatusCmd()
 	cmd.SetOut(&out)

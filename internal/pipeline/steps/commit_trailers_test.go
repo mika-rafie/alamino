@@ -5,14 +5,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 var attributionTrailers = []string{
-	"Co-Authored-By: no-mistakes {{.Agent}} <noreply@example.com>",
-	"Assisted-by: no-mistakes:{{.Agent}}:{{.Model}}",
+	"Co-Authored-By: alamino {{.Agent}} <noreply@example.com>",
+	"Assisted-by: alamino:{{.Agent}}:{{.Model}}",
 }
 
 // gitTrailers reads trailers back through git's own parser, so the assertion
@@ -41,10 +41,10 @@ func TestCommitAgentFixes_AppendsTrailersForTheAgentThatRan(t *testing.T) {
 	if _, err := commitAgentFixesWithResult(sctx, types.StepReview, "repair widget", "fallback", producer); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := lastCommitMessage(t, dir), "no-mistakes(review): repair widget"; got != want {
+	if got, want := lastCommitMessage(t, dir), "alamino(review): repair widget"; got != want {
 		t.Fatalf("commit subject = %q, want %q", got, want)
 	}
-	want := "Co-Authored-By: no-mistakes codex <noreply@example.com>\nAssisted-by: no-mistakes:codex:gpt-5.5"
+	want := "Co-Authored-By: alamino codex <noreply@example.com>\nAssisted-by: alamino:codex:gpt-5.5"
 	if got := gitTrailers(t, dir); got != want {
 		t.Fatalf("commit trailers = %q, want %q", got, want)
 	}
@@ -62,7 +62,7 @@ func TestCommitAgentFixes_TrailersFallBackToStepAgentName(t *testing.T) {
 	if _, err := commitAgentFixesWithResult(sctx, types.StepLint, "fix lint", "fallback", producer); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := gitTrailers(t, dir), "Assisted-by: no-mistakes:claude:claude-opus-5-5"; got != want {
+	if got, want := gitTrailers(t, dir), "Assisted-by: alamino:claude:claude-opus-5-5"; got != want {
 		t.Fatalf("commit trailers = %q, want %q", got, want)
 	}
 }
@@ -118,7 +118,7 @@ func TestCIStep_CommitRepairAppendsTrailers(t *testing.T) {
 	if !repair.HeadAdvanced {
 		t.Fatal("CI repair did not advance HEAD")
 	}
-	if got, want := gitTrailers(t, dir), "Assisted-by: no-mistakes:grok:grok-5"; got != want {
+	if got, want := gitTrailers(t, dir), "Assisted-by: alamino:grok:grok-5"; got != want {
 		t.Fatalf("commit trailers = %q, want %q", got, want)
 	}
 }

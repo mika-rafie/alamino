@@ -3,10 +3,8 @@ package tui
 import (
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
+	"github.com/mika-rafie/alamino/internal/branchsync"
 )
 
 func renderLocalBranchStatus(state *branchsync.State, refreshing bool, width int) string {
@@ -30,7 +28,7 @@ func renderLocalBranchStatus(state *branchsync.State, refreshing bool, width int
 				}
 				footer = "u recover custody"
 			} else if state.NextAction != nil && state.NextAction.Code == "recover_custody" {
-				message = "Run ended without a recoverable preserved head. Keep the current local head and return custody with `no-mistakes axi sync --recover --keep-local`."
+				message = "Run ended without a recoverable preserved head. Keep the current local head and return custody with `alamino axi sync --recover --keep-local`."
 			} else {
 				message = "Local branch unchanged; the pipeline fix is not pushed yet. Do not make follow-up commits."
 			}
@@ -78,36 +76,6 @@ func renderLocalBranchStatus(state *branchsync.State, refreshing bool, width int
 	return renderBoxWithFooter("Local branch", message, width, footer)
 }
 
-func trackTUISyncAttempt(mode string, state branchsync.State, result string, started time.Time) {
-	telemetry.Track("command", telemetry.Fields{
-		"command":      "tui-sync",
-		"surface":      "tui",
-		"mode":         mode,
-		"status":       result,
-		"result":       result,
-		"state_before": boundedTUISyncValue(state.State),
-		"relation":     boundedTUISyncValue(state.Relation),
-		"target_kind":  boundedTUISyncValue(state.Target.Kind),
-		"run_phase":    boundedTUISyncValue(state.Pipeline.Phase),
-		"pr_state":     boundedTUISyncValue(state.PRState),
-		"reason":       boundedTUISyncValue(state.Safety),
-		"dirty":        !state.Local.Clean && state.Local.Head != "",
-		"duration_ms":  time.Since(started).Milliseconds(),
-	})
-}
-
-func boundedTUISyncValue(value string) string {
-	if value == "" || len(value) > 64 {
-		return "unknown"
-	}
-	for _, r := range value {
-		if (r < 'a' || r > 'z') && r != '_' {
-			return "unknown"
-		}
-	}
-	return value
-}
-
 // recoverableBranchSync reports whether the state is the stranded terminal
 // pipeline_owned custody state that the guarded recovery action can end.
 func recoverableBranchSync(state *branchsync.State) bool {
@@ -150,7 +118,7 @@ func renderRecoverConfirmation(state branchsync.State, width int) string {
 	} else if pinnedKeepLocalRecovery(&state) {
 		b.WriteString("\nThe worktree does not move.")
 	} else {
-		b.WriteString("\nDirty worktrees and divergence that cannot be proven contained refuse without changes; `no-mistakes sync --recover --keep-local` keeps the current head instead.")
+		b.WriteString("\nDirty worktrees and divergence that cannot be proven contained refuse without changes; `alamino sync --recover --keep-local` keeps the current head instead.")
 	}
 	return renderBoxWithFooter("Confirm custody recovery", b.String(), width, "u/enter recover  ·  esc cancel")
 }

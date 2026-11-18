@@ -97,7 +97,7 @@ func TestApplyToProcessWithShellRetryExcept_PreservesExcludedEntry(t *testing.T)
 	}
 	resetForTests()
 	t.Setenv("SHELL", "/bin/zsh")
-	t.Setenv("NM_HOME", "/service/root")
+	t.Setenv("ALAMINO_HOME", "/service/root")
 
 	oldOutput := shellCommandOutput
 	defer func() {
@@ -105,14 +105,14 @@ func TestApplyToProcessWithShellRetryExcept_PreservesExcludedEntry(t *testing.T)
 		resetForTests()
 	}()
 	shellCommandOutput = func(string, ...string) ([]byte, error) {
-		return []byte("PATH=/resolved/bin\x00NM_HOME=/shell/root\x00SPECIAL=1\x00"), nil
+		return []byte("PATH=/resolved/bin\x00ALAMINO_HOME=/shell/root\x00SPECIAL=1\x00"), nil
 	}
 
-	if err := ApplyToProcessWithShellRetryExcept(0, "NM_HOME"); err != nil {
+	if err := ApplyToProcessWithShellRetryExcept(0, "ALAMINO_HOME"); err != nil {
 		t.Fatal(err)
 	}
-	if got := os.Getenv("NM_HOME"); got != "/service/root" {
-		t.Fatalf("NM_HOME = %q, want excluded service value", got)
+	if got := os.Getenv("ALAMINO_HOME"); got != "/service/root" {
+		t.Fatalf("ALAMINO_HOME = %q, want excluded service value", got)
 	}
 	if got := os.Getenv("SPECIAL"); got != "1" {
 		t.Fatalf("SPECIAL = %q, want included shell value", got)

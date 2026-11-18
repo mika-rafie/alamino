@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/winproc"
 	"gopkg.in/yaml.v3"
 )
 
@@ -38,7 +38,7 @@ const (
 // keeps falling through to its default branch for a plugin.
 const pluginProviderPrefix = "plugin:"
 
-// BuiltinProviders lists the provider names compiled into no-mistakes. Plugin
+// BuiltinProviders lists the provider names compiled into alamino. Plugin
 // names must not reuse them, so an operator reading "provider gitea" in a log
 // never has to wonder which implementation ran.
 var BuiltinProviders = []Provider{

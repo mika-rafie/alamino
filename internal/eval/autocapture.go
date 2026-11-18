@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // AutoCaptureResult reports what one automatic collection pass did. Skipped is

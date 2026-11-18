@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestLoadGlobal_AcceptsPerRepositoryCommitAndTitleOverrides(t *testing.T) {
@@ -148,7 +148,7 @@ func TestMergeForRemote_RepositoryPathCaseAndSuffixPolicy(t *testing.T) {
 				want   string
 			}{
 				{remote: tc.matching, want: "override summary"},
-				{remote: tc.distinct, want: "no-mistakes(review): summary"},
+				{remote: tc.distinct, want: "alamino(review): summary"},
 			} {
 				merged := MergeForRemote(global, &RepoConfig{}, candidate.remote)
 				got, err := merged.Commit.RenderFixMessageForBranch(types.StepReview, "summary", "feature")
@@ -234,7 +234,7 @@ func TestMergeForRemote_SCPAbsoluteAndRelativePathsStayDistinct(t *testing.T) {
 				want   string
 			}{
 				{remote: tc.matching, want: "override summary"},
-				{remote: tc.distinct, want: "no-mistakes(review): summary"},
+				{remote: tc.distinct, want: "alamino(review): summary"},
 			} {
 				merged := MergeForRemote(global, &RepoConfig{}, candidate.remote)
 				got, err := merged.Commit.RenderFixMessageForBranch(types.StepReview, "summary", "feature")
@@ -284,7 +284,7 @@ func TestMergeForRemote_IPv6HostPortKeysRemainDistinct(t *testing.T) {
 				want   string
 			}{
 				{remote: tc.matching, want: "override summary"},
-				{remote: tc.distinct, want: "no-mistakes(review): summary"},
+				{remote: tc.distinct, want: "alamino(review): summary"},
 			} {
 				merged := MergeForRemote(global, &RepoConfig{}, candidate.remote)
 				got, err := merged.Commit.RenderFixMessageForBranch(types.StepReview, "summary", "feature")
@@ -499,7 +499,7 @@ func TestMergeForRemote_MatchesNestedGitLabPaths(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "no-mistakes(review): summary"; got != want {
+	if want := "alamino(review): summary"; got != want {
 		t.Fatalf("distinct GitLab subgroup rendered fix subject = %q, want default %q", got, want)
 	}
 }
@@ -549,7 +549,7 @@ func TestMergeForRemote_RenderFixCommitMatchingAndDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "no-mistakes(review): summary"; got != want {
+	if want := "alamino(review): summary"; got != want {
 		t.Fatalf("non-matching fix subject = %q, want built-in default %q", got, want)
 	}
 }

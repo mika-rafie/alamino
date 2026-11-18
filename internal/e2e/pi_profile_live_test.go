@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // assertParkedRunIntact proves a refused dispatch never superseded a healthy
@@ -67,10 +67,10 @@ func TestLivePiProfileTrustedPiOverridesGlobalAuto(t *testing.T) {
 	writeGlobalAutoPiPath(t, h)
 
 	trusted := "agent: pi\nignore_patterns:\n  - '*.generated.go'\n  - 'vendor/**'\nallow_repo_commands: false\n"
-	if err := os.WriteFile(filepath.Join(h.WorkDir, ".no-mistakes.yaml"), []byte(trusted), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(h.WorkDir, ".alamino.yaml"), []byte(trusted), 0o644); err != nil {
 		t.Fatalf("write trusted config: %v", err)
 	}
-	for _, args := range [][]string{{"add", ".no-mistakes.yaml"}, {"commit", "-m", "trust Pi for this project"}, {"push", "origin", "main"}} {
+	for _, args := range [][]string{{"add", ".alamino.yaml"}, {"commit", "-m", "trust Pi for this project"}, {"push", "origin", "main"}} {
 		if out, err := h.runGit(context.Background(), h.WorkDir, args...); err != nil {
 			t.Fatalf("git %v: %v\n%s", args, err, out)
 		}
@@ -120,10 +120,10 @@ func TestLivePiProfileFeatureBranchPiCannotOverrideGlobalAuto(t *testing.T) {
 	parked := waitForStepStatus(t, h, branch, types.StepReview, types.StepStatusAwaitingApproval, 90*time.Second)
 	beforeInvocations := len(h.AgentInvocations())
 
-	if err := os.WriteFile(filepath.Join(h.WorkDir, ".no-mistakes.yaml"), []byte("agent: pi\nallow_repo_commands: false\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(h.WorkDir, ".alamino.yaml"), []byte("agent: pi\nallow_repo_commands: false\n"), 0o644); err != nil {
 		t.Fatalf("write feature config: %v", err)
 	}
-	for _, args := range [][]string{{"add", ".no-mistakes.yaml"}, {"commit", "-m", "request Pi from feature branch"}} {
+	for _, args := range [][]string{{"add", ".alamino.yaml"}, {"commit", "-m", "request Pi from feature branch"}} {
 		if out, err := h.runGit(context.Background(), h.WorkDir, args...); err != nil {
 			t.Fatalf("git %v: %v\n%s", args, err, out)
 		}
@@ -235,10 +235,10 @@ func TestLivePiProfileMixedHarnessRefusedBeforeActiveRunCancelled(t *testing.T) 
 			}
 			// The trusted default branch, never the pushed branch, selects the agent.
 			trusted := tc.agentYAML + "ignore_patterns:\n  - '*.generated.go'\n  - 'vendor/**'\nallow_repo_commands: false\n"
-			if err := os.WriteFile(h.WorkDir+"/.no-mistakes.yaml", []byte(trusted), 0o644); err != nil {
+			if err := os.WriteFile(h.WorkDir+"/.alamino.yaml", []byte(trusted), 0o644); err != nil {
 				t.Fatalf("write trusted config: %v", err)
 			}
-			for _, args := range [][]string{{"add", ".no-mistakes.yaml"}, {"commit", "-m", "trusted agent selection"}, {"push", "origin", "main"}} {
+			for _, args := range [][]string{{"add", ".alamino.yaml"}, {"commit", "-m", "trusted agent selection"}, {"push", "origin", "main"}} {
 				if out, err := h.runGit(context.Background(), h.WorkDir, args...); err != nil {
 					t.Fatalf("git %v: %v\n%s", args, err, out)
 				}

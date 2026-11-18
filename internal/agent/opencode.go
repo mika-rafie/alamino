@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
 )
 
 var errOpencodeThinkingToolChoiceConflict = errors.New("opencode provider rejects required tool choice while thinking is enabled")

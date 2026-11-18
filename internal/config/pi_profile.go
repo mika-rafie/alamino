@@ -5,8 +5,8 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // ResolvePiProfile resolves only opt-in requests. Native selection overrides

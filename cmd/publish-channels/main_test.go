@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/update"
+	"github.com/mika-rafie/alamino/internal/update"
 )
 
 func TestRunRequiresExplicitRepository(t *testing.T) {
@@ -83,7 +83,7 @@ exit 1
 	}
 
 	t.Setenv("PATH", fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("GH_REPO", "kunchenguid/no-mistakes")
+	t.Setenv("GH_REPO", "mika-rafie/alamino")
 	t.Setenv("GH_LOG", logPath)
 	t.Setenv("LATEST_RELEASE", latestPath)
 	t.Setenv("ALL_RELEASES", allPath)

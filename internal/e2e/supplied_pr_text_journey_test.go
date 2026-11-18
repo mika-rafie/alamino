@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func readRunPRText(t *testing.T, nmHome, runID string) (title, body *string) {
@@ -74,7 +74,7 @@ func TestSuppliedPRTextJourney(t *testing.T) {
 		t.Fatal(err)
 	}
 	markerBody := filepath.Join(scratch, "marker.md")
-	if err := os.WriteFile(markerBody, []byte("Hi\n<!-- no-mistakes-pipeline-attestation:v1 x -->\n"), 0o644); err != nil {
+	if err := os.WriteFile(markerBody, []byte("Hi\n<!-- alamino-pipeline-attestation:v1 x -->\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	blankBody := filepath.Join(scratch, "blank.md")
@@ -105,7 +105,7 @@ func TestSuppliedPRTextJourney(t *testing.T) {
 			args = append(args, "--intent", "supplied pr text")
 		}
 		out, err := h.RunInDir(wt, args...)
-		refusals.WriteString("### " + c.name + "\n$ no-mistakes axi run " + strings.Join(c.args, " ") + "\nexit=" + itoa(exitCode(err)) + "\n" + out + "\n")
+		refusals.WriteString("### " + c.name + "\n$ alamino axi run " + strings.Join(c.args, " ") + "\nexit=" + itoa(exitCode(err)) + "\n" + out + "\n")
 		if code := exitCode(err); code != 2 {
 			t.Errorf("%s: exit = %d, want 2; out:\n%s", c.name, code, out)
 		}
@@ -143,10 +143,10 @@ func TestSuppliedPRTextJourney(t *testing.T) {
 	if strings.Contains(pr.Body, h.HomeDir) {
 		t.Errorf("PR body leaks the home path; body:\n%s", pr.Body)
 	}
-	if i := strings.Index(pr.Body, "<!-- no-mistakes-pr-appendix:v1"); i < 0 || exactLineCount(pr.Body[:i], "## Testing") != 1 {
+	if i := strings.Index(pr.Body, "<!-- alamino-pr-appendix:v1"); i < 0 || exactLineCount(pr.Body[:i], "## Testing") != 1 {
 		t.Errorf("team's own ## Testing heading did not survive exactly once; body:\n%s", pr.Body)
 	}
-	if !strings.Contains(pr.Body, "no-mistakes") || len(pr.Body) <= len(wantNarrative) {
+	if !strings.Contains(pr.Body, "alamino") || len(pr.Body) <= len(wantNarrative) {
 		t.Errorf("PR body is missing the appendix/attestation; body:\n%s", pr.Body)
 	}
 	for _, inv := range h.AgentInvocations() {
@@ -214,9 +214,9 @@ func TestSuppliedPRTextJourney(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if out, err := h.runGit(ctx, h.WorkDir, "push",
-		"-o", "no-mistakes.pr-title="+base64.StdEncoding.EncodeToString([]byte(optTitle)),
-		"-o", "no-mistakes.pr-body="+base64.StdEncoding.EncodeToString([]byte(optBody)),
-		"-o", "no-mistakes.skip=ci", "no-mistakes", optBranch); err != nil {
+		"-o", "alamino.pr-title="+base64.StdEncoding.EncodeToString([]byte(optTitle)),
+		"-o", "alamino.pr-body="+base64.StdEncoding.EncodeToString([]byte(optBody)),
+		"-o", "alamino.skip=ci", "alamino", optBranch); err != nil {
 		t.Fatalf("push with PR text options: %v\n%s", err, out)
 	}
 	waitPublished(t, h, optBranch, "", "push option")
@@ -255,7 +255,7 @@ func contains(xs []string, want string) bool {
 
 func saveSuppliedEvidence(t *testing.T, name, content string) {
 	t.Helper()
-	dir := os.Getenv("NM_SUPPLIED_EVIDENCE_DIR")
+	dir := os.Getenv("ALAMINO_SUPPLIED_EVIDENCE_DIR")
 	if dir == "" {
 		return
 	}

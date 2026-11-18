@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // The Test step's live-validation verdict rides the PR-body attestation as a
@@ -54,7 +54,7 @@ func liveValidatedPipelineBody(t *testing.T, scenarios []types.TestScenario, ver
 // the same way the gate does: first marker wins.
 func attestationPayload(t *testing.T, body string) map[string]any {
 	t.Helper()
-	const prefix = "<!-- no-mistakes-pipeline-attestation:v1 "
+	const prefix = "<!-- alamino-pipeline-attestation:v1 "
 	const closing = " -->"
 	start := strings.Index(body, prefix)
 	if start < 0 {
@@ -129,7 +129,7 @@ func TestRequireActionDoesNotAdjudicateTheVerdict(t *testing.T) {
 
 func TestRequireActionAcceptsAttestationCarryingNoSurface(t *testing.T) {
 	body := liveValidatedPipelineBody(t, []types.TestScenario{
-		{Name: "Windows git-heavy shard runs the git-backed packages", Result: types.ScenarioResultUntested, Reason: "CI workflow YAML has no running product no-mistakes can drive"},
+		{Name: "Windows git-heavy shard runs the git-backed packages", Result: types.ScenarioResultUntested, Reason: "CI workflow YAML has no running product alamino can drive"},
 	}, types.TestVerdictNoSurface)
 	payload := attestationPayload(t, body)
 	live, ok := payload["live_validation"].(map[string]any)

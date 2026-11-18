@@ -1,12 +1,12 @@
-# repro: no-mistakes gate declines from a partial response
+# repro: alamino gate declines from a partial response
 
-- checkout under test: /home/dimas/.treehouse/no-mistakes-21aae1/1/no-mistakes
+- checkout under test: /home/dimas/.treehouse/alamino-21aae1/1/alamino
 - commit: b3311a8 test(sim): make the fixture apply the fixes it claims
-- isolated home: /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work/nm-home (the operator's own ~/.no-mistakes is never touched)
-- scratch project: /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work/project
+- isolated home: /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work/alamino-home (the operator's own ~/.alamino is never touched)
+- scratch project: /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work/project
 
 ## Build the tool and the scripted agent from the checkout
-built /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work/bin/no-mistakes and /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work/bin/fakeagent
+built /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work/bin/alamino and /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work/bin/fakeagent
 
 ## Round 1: run the pipeline, then ask for every finding
 
@@ -54,7 +54,7 @@ branch_sync:
   target:
     kind: ""
     remote: origin
-    url: /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work/origin.git
+    url: /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work/origin.git
     ref: ""
   remote:
     observed_head: ""
@@ -66,7 +66,7 @@ branch_sync:
   note: a validation run is active on this branch; do not make local follow-up commits until it finishes
   next_action:
     code: continue_active_run
-    command: no-mistakes axi status
+    command: alamino axi status
 gate:
   step: review
   status: awaiting_approval
@@ -79,9 +79,9 @@ gate:
     r3,warning,deploy.sh,auto-fix,the compose heredoc expands variables because its delimiter is unquoted
     r4,error,snapshot.sh,ask-user,the snapshot tarball is written into the repository and committed with git add
     r5,warning,deploy.sh,auto-fix,the health check exit status is ignored so a failed deploy reports success
-help[6]: Run `no-mistakes axi respond --action approve` to accept this step and continue,"Run `no-mistakes axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response",Run `no-mistakes axi respond --action skip` to skip this step,Run `no-mistakes axi logs --step review --full` to read the complete step summary and log,"A long-running call is working, not stalled - background it if your harness needs to, but the run never advances past a gate on its own. Read every return; on a `gate:`, respond; loop until an `outcome:`.","Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits."
+help[6]: Run `alamino axi respond --action approve` to accept this step and continue,"Run `alamino axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response",Run `alamino axi respond --action skip` to skip this step,Run `alamino axi logs --step review --full` to read the complete step summary and log,"A long-running call is working, not stalled - background it if your harness needs to, but the run never advances past a gate on its own. Read every return; on a `gate:`, respond; loop until an `outcome:`.","Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits."
 
-$ no-mistakes axi respond --action fix --findings r1,r2,r3,r4,r5
+$ alamino axi respond --action fix --findings r1,r2,r3,r4,r5
 run: running
   intent: completed
   rebase: completed
@@ -129,7 +129,7 @@ branch_sync:
   target:
     kind: ""
     remote: origin
-    url: /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work/origin.git
+    url: /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work/origin.git
     ref: ""
   remote:
     observed_head: ""
@@ -141,7 +141,7 @@ branch_sync:
   note: the pipeline head has moved but has not been successfully pushed; do not make local follow-up commits yet
   next_action:
     code: continue_active_run
-    command: no-mistakes axi status
+    command: alamino axi status
 gate:
   step: review
   status: fix_review
@@ -156,11 +156,11 @@ gate:
     r5,warning,deploy.sh,auto-fix,the health check exit status is ignored so a failed deploy reports success
     r6,error,snapshot.sh,ask-user,the snapshot tarball is written into the repository root instead of the artifacts directory
     r7,warning,deploy.sh,auto-fix,"cleanup never runs when the deploy fails, leaving the staging directory behind"
-help[6]: Run `no-mistakes axi respond --action approve` to accept this step and continue,"Run `no-mistakes axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response",Run `no-mistakes axi respond --action skip` to skip this step,Run `no-mistakes axi logs --step review --full` to read the complete step summary and log,"A long-running call is working, not stalled - background it if your harness needs to, but the run never advances past a gate on its own. Read every return; on a `gate:`, respond; loop until an `outcome:`.","Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits."
+help[6]: Run `alamino axi respond --action approve` to accept this step and continue,"Run `alamino axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response",Run `alamino axi respond --action skip` to skip this step,Run `alamino axi logs --step review --full` to read the complete step summary and log,"A long-running call is working, not stalled - background it if your harness needs to, but the run never advances past a gate on its own. Read every return; on a `gate:`, respond; loop until an `outcome:`.","Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits."
 
 ## Round 2: ask for only the two new findings
 
-$ no-mistakes axi respond --action fix --findings r6,r7
+$ alamino axi respond --action fix --findings r6,r7
 run: running
   intent: completed
   rebase: completed
@@ -208,7 +208,7 @@ branch_sync:
   target:
     kind: ""
     remote: origin
-    url: /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work/origin.git
+    url: /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work/origin.git
     ref: ""
   remote:
     observed_head: ""
@@ -220,7 +220,7 @@ branch_sync:
   note: the pipeline head has moved but has not been successfully pushed; do not make local follow-up commits yet
   next_action:
     code: continue_active_run
-    command: no-mistakes axi status
+    command: alamino axi status
 gate:
   step: review
   status: fix_review
@@ -235,7 +235,7 @@ gate:
     r5,warning,deploy.sh,auto-fix,the health check exit status is ignored so a failed deploy reports success
     r6,error,snapshot.sh,ask-user,the snapshot tarball is written into the repository root instead of the artifacts directory
     r7,warning,deploy.sh,auto-fix,"cleanup never runs when the deploy fails, leaving the staging directory behind"
-help[6]: Run `no-mistakes axi respond --action approve` to accept this step and continue,"Run `no-mistakes axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response",Run `no-mistakes axi respond --action skip` to skip this step,Run `no-mistakes axi logs --step review --full` to read the complete step summary and log,"A long-running call is working, not stalled - background it if your harness needs to, but the run never advances past a gate on its own. Read every return; on a `gate:`, respond; loop until an `outcome:`.","Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits."
+help[6]: Run `alamino axi respond --action approve` to accept this step and continue,"Run `alamino axi respond --action fix --findings <ids> [--ignore <ids>]` to have the pipeline fix the selected findings (do not edit files yourself); list every finding below in `--findings` or `--ignore`, unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined by a later response",Run `alamino axi respond --action skip` to skip this step,Run `alamino axi logs --step review --full` to read the complete step summary and log,"A long-running call is working, not stalled - background it if your harness needs to, but the run never advances past a gate on its own. Read every return; on a `gate:`, respond; loop until an `outcome:`.","Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits."
 
 ## What the fixer actually applied
 
@@ -275,4 +275,4 @@ round 2's omission kept the five round-1 fixes: nothing is rendered as
 declined, and the response reported them under kept (see the recorded:
 block above the round-2 gate).
 
-(isolated daemon stopped; scratch project and logs left in /home/dimas/git/firstmate/data/nm-explicit-declines-n1/sim/runs-after/work)
+(isolated daemon stopped; scratch project and logs left in /home/dimas/git/firstmate/data/alamino-explicit-declines-n1/sim/runs-after/work)

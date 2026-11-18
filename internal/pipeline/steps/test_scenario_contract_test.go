@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // TestTestStep_PromptBoundsCompletionAndStatesBudget pins issue #1576: the
@@ -130,7 +130,7 @@ func TestTestStep_PromptDerivesScenariosAndMarksLive(t *testing.T) {
 		`Return a "verdict"`,
 		`A "no-go" verdict parks this step for a decision`,
 		`A "no-surface" verdict parks for a human to decide whether to proceed without live validation`,
-		"no runtime product surface no-mistakes can drive live",
+		"no runtime product surface alamino can drive live",
 		"never mark those as pass",
 		"never use no-surface to skip live validation of a change that does have a product surface",
 		"Untested scenarios are listed on the pull request and do not park by themselves",
@@ -277,7 +277,7 @@ func TestTestStep_MachineLocalRunbookPrecedesTrustedAndPushedStaysOut(t *testing
 			t.Fatalf("fixing=%v: got %d agent turns, want %d", fixing, len(prompts), wantPrompts)
 		}
 		for i, prompt := range prompts {
-			machineLocal := strings.Index(prompt, "Machine-local live-validation runbook for this repository (from the operator's global no-mistakes config, not from this repository; adds to the repository's runbook and cannot weaken it):\nNever install on a physical device; use the emulator.")
+			machineLocal := strings.Index(prompt, "Machine-local live-validation runbook for this repository (from the operator's global alamino config, not from this repository; adds to the repository's runbook and cannot weaken it):\nNever install on a physical device; use the emulator.")
 			trustedAt := strings.Index(prompt, "Repository live-validation runbook (trusted, from the default branch):\nStart the app with `make dev`.")
 			if machineLocal < 0 || trustedAt < 0 || machineLocal > trustedAt {
 				t.Fatalf("fixing=%v turn %d: want the labeled machine-local runbook before the trusted runbook, got indexes %d and %d:\n%s", fixing, i, machineLocal, trustedAt, prompt)
@@ -395,7 +395,7 @@ func TestTestStep_VerdictPolicy(t *testing.T) {
 		{
 			name: "no-surface parks as ask-user",
 			output: `{"findings":[],"summary":"","tested":["inspected .github/workflows/ci.yml"],"testing_summary":"CI workflow has no running product to drive","artifacts":[],
-				"scenarios":[{"name":"Windows git-heavy shard runs the git-backed packages","result":"untested","live":false,"evidence":"","reason":"CI workflow YAML has no running product no-mistakes can drive"}],
+				"scenarios":[{"name":"Windows git-heavy shard runs the git-backed packages","result":"untested","live":false,"evidence":"","reason":"CI workflow YAML has no running product alamino can drive"}],
 				"verdict":"no-surface"}`,
 			wantApproval:      true,
 			wantDescription:   "this change has no live-validatable surface; proceed without live validation?",
@@ -585,12 +585,12 @@ const noSurfaceCIWorkflowFindingsJSON = `{
   "tested": ["inspected .github/workflows/ci.yml"],
   "testing_summary": "CI workflow split has no running product to drive",
   "artifacts": [],
-  "scenarios": [{"name":"Windows git-heavy shard runs the git-backed packages","result":"untested","live":false,"evidence":"","reason":"CI workflow YAML has no running product no-mistakes can drive"}],
+  "scenarios": [{"name":"Windows git-heavy shard runs the git-backed packages","result":"untested","live":false,"evidence":"","reason":"CI workflow YAML has no running product alamino can drive"}],
   "verdict": "no-surface"
 }`
 
 // TestTestStep_NoLiveSurfaceCIWorkflowAsksUser models the captain's
-// windows-shard failure: a CI-workflow-only change has nothing no-mistakes
+// windows-shard failure: a CI-workflow-only change has nothing alamino
 // can drive live. The evidence turn must park as ask-user with the reason,
 // not hard-fail the step the way pass+live:false used to.
 func TestTestStep_NoLiveSurfaceCIWorkflowAsksUser(t *testing.T) {
@@ -640,7 +640,7 @@ func TestTestStep_NoLiveSurfaceCIWorkflowAsksUser(t *testing.T) {
 	if matched.Severity != types.FindingSeverityWarning {
 		t.Fatalf("severity = %q, want warning so the step parks without treating this as a defect", matched.Severity)
 	}
-	if !strings.Contains(matched.Description, "CI workflow YAML has no running product no-mistakes can drive") {
+	if !strings.Contains(matched.Description, "CI workflow YAML has no running product alamino can drive") {
 		t.Fatalf("finding omitted the scenario reason: %q", matched.Description)
 	}
 	if len(types.AutoFixableFindings(findings).Items) != 0 {

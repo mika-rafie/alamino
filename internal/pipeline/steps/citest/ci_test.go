@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/cimonitor"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps/internal/stepstest"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/cimonitor"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps/internal/stepstest"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestCIStep_PendingChecksUseAdaptivePollIntervals(t *testing.T) {
@@ -201,7 +201,7 @@ func TestCIStep_Execute_FixMode_RemoteAlreadyUpdatedDoesNotReturnManualIntervent
 
 	os.WriteFile(filepath.Join(dir, "resolved.txt"), []byte("resolved"), 0o644)
 	stepstest.GitCmd(t, dir, "add", "-A")
-	stepstest.GitCmd(t, dir, "commit", "-m", "no-mistakes(ci): repair failing checks")
+	stepstest.GitCmd(t, dir, "commit", "-m", "alamino(ci): repair failing checks")
 	advancedHeadSHA := stepstest.GitCmd(t, dir, "rev-parse", "HEAD")
 	stepstest.GitCmd(t, dir, "push", "--force-with-lease", "origin", "HEAD:refs/heads/feature")
 
@@ -2286,7 +2286,7 @@ func TestCIStep_GreenChecksAtAdvancedHeadAreRecognizedWhileRunTracksOlderHead(t 
 	// pipeline fix commit does mid-run.
 	os.WriteFile(filepath.Join(dir, "fix.txt"), []byte("pipeline fix"), 0o644)
 	stepstest.GitCmd(t, dir, "add", "-A")
-	stepstest.GitCmd(t, dir, "commit", "-m", "no-mistakes(document): align docs")
+	stepstest.GitCmd(t, dir, "commit", "-m", "alamino(document): align docs")
 	stepstest.GitCmd(t, dir, "push", "origin", "feature")
 	advanced := stepstest.GitCmd(t, dir, "rev-parse", "HEAD")
 	if advanced == headSHA {
@@ -2531,7 +2531,7 @@ func TestCIStep_ResolvedRerunDoesNotParkALaterGreenHead(t *testing.T) {
 				t.Fatal(err)
 			}
 			stepstest.GitCmd(t, dir, "add", "-A")
-			stepstest.GitCmd(t, dir, "commit", "-m", "no-mistakes(ci): apply fixes")
+			stepstest.GitCmd(t, dir, "commit", "-m", "alamino(ci): apply fixes")
 			stepstest.GitCmd(t, dir, "push", "origin", "feature")
 			advancedHeadSHA = stepstest.GitCmd(t, dir, "rev-parse", "HEAD")
 			sctx.Run.HeadSHA = advancedHeadSHA

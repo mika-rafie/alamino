@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // ErrRestartWhenIdleUnsupported reports a running daemon from before

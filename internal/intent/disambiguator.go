@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	nmgit "github.com/kunchenguid/no-mistakes/internal/git"
+	"github.com/mika-rafie/alamino/internal/agent"
+	nmgit "github.com/mika-rafie/alamino/internal/git"
 )
 
 // Disambiguator chooses among multiple accepted transcript matches when the
@@ -58,7 +58,7 @@ func (d *agentDisambiguator) Disambiguate(ctx context.Context, diffFiles []strin
 		return DisambiguationChoice{}, fmt.Errorf("no candidates")
 	}
 
-	dir, err := os.MkdirTemp("", "no-mistakes-intent-rerank-*")
+	dir, err := os.MkdirTemp("", "alamino-intent-rerank-*")
 	if err != nil {
 		return DisambiguationChoice{}, err
 	}

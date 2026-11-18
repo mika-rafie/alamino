@@ -6,8 +6,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
 )
 
 var doctorACPAliasRows = []struct {
@@ -21,10 +19,7 @@ var doctorACPAliasRows = []struct {
 func TestDoctorACPAliasRequiresBothBinaries(t *testing.T) {
 	for _, tt := range doctorACPAliasRows {
 		t.Run(tt.row, func(t *testing.T) {
-			restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-			defer restore()
-
-			t.Setenv("NM_HOME", t.TempDir())
+			t.Setenv("ALAMINO_HOME", t.TempDir())
 
 			binDir := t.TempDir()
 			writeFakeBinary(t, binDir, tt.commandBin)
@@ -46,10 +41,7 @@ func TestDoctorACPAliasRequiresBothBinaries(t *testing.T) {
 func TestDoctorACPAliasDetectedWithBothBinaries(t *testing.T) {
 	for _, tt := range doctorACPAliasRows {
 		t.Run(tt.row, func(t *testing.T) {
-			restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-			defer restore()
-
-			t.Setenv("NM_HOME", t.TempDir())
+			t.Setenv("ALAMINO_HOME", t.TempDir())
 
 			binDir := t.TempDir()
 			commandPath := writeFakeBinary(t, binDir, tt.commandBin)

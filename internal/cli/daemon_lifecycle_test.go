@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestDaemonStopRefusesWithActiveRunsAndListsThem(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	createLifecycleGuardRuns(t, paths.WithRoot(nmHome))
 
 	stopCalled := false
@@ -48,7 +48,7 @@ func TestDaemonStopRefusesWithActiveRunsAndListsThem(t *testing.T) {
 
 func TestDaemonStopForceOverridesActiveRunGuard(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	createLifecycleGuardRuns(t, paths.WithRoot(nmHome))
 
 	stopCalled := false
@@ -73,7 +73,7 @@ func TestDaemonStopForceOverridesActiveRunGuard(t *testing.T) {
 
 func TestDaemonRestartRefusesWithActiveRuns(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	createLifecycleGuardRuns(t, paths.WithRoot(nmHome))
 
 	stopCalled := false
@@ -110,7 +110,7 @@ func TestDaemonRestartRefusesWithActiveRuns(t *testing.T) {
 // `daemon start`, so that restart must pass the same active-run guard.
 func TestDaemonStartRefusesToRestartForDriftWithActiveRuns(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	createLifecycleGuardRuns(t, paths.WithRoot(nmHome))
 
 	restarted := false
@@ -155,7 +155,7 @@ func TestDaemonStartRefusesToRestartForDriftWithActiveRuns(t *testing.T) {
 
 func TestLifecycleCommandsWriteCallerAttributionToCLILog(t *testing.T) {
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	prevStop := daemonStopFn
 	prevStart := daemonStartFn

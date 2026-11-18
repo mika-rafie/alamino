@@ -7,14 +7,14 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/azuredevops"
-	"github.com/kunchenguid/no-mistakes/internal/scm/forgejo"
-	"github.com/kunchenguid/no-mistakes/internal/scm/origin"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/azuredevops"
+	"github.com/mika-rafie/alamino/internal/scm/forgejo"
+	"github.com/mika-rafie/alamino/internal/scm/origin"
 )
 
 // PRAppendixVerification reports the publication parser's ownership decision.

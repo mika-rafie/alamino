@@ -8,10 +8,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
-// reapRunLogs bounds <NM_HOME>/logs/<run_id>, the per-run step-log directory
+// reapRunLogs bounds <ALAMINO_HOME>/logs/<run_id>, the per-run step-log directory
 // Executor.Execute/Resume create (paths.RunLogDir) and never anything else
 // removes. It was never given its own reaper, so a long-lived daemon
 // accumulated one small text-log directory per run forever - on one real
@@ -20,7 +20,7 @@ import (
 // There is no dedicated config surface for this: these are the same kind of
 // per-run diagnostic artifact test.evidence.retention already bounds, so the
 // daemon's own evidence policy governs both rather than adding a second knob
-// an operator has to learn. `no-mistakes axi logs --run <id>` already
+// an operator has to learn. `alamino axi logs --run <id>` already
 // tolerates a missing step log as an ordinary "not recorded for this run"
 // case (see runAxiLogs), so reaping an old run's directory degrades exactly
 // like evidence retention already does for screenshots - not a new trade-off.

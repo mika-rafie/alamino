@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // DefaultProviderPluginTimeout bounds one provider-plugin invocation when the
@@ -23,7 +23,7 @@ var providerPluginNamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,62}$`)
 // operator's credentials for every repository on those hosts, so - like
 // agent_args_override - no repository file may add, change, or redirect it.
 // RepoConfig has no such field, so a provider_plugins block in a repository
-// .no-mistakes.yaml is ignored.
+// .alamino.yaml is ignored.
 type ProviderPlugin struct {
 	Command           string
 	Args              []string

@@ -310,16 +310,16 @@ func labeledUnknownTestKeys(pushed, trusted *RepoConfig) []string {
 	if trusted != nil {
 		for _, key := range trusted.UnknownTestKeys {
 			if inPushed[key] {
-				out = append(out, key+" (default-branch and pushed .no-mistakes.yaml)")
+				out = append(out, key+" (default-branch and pushed .alamino.yaml)")
 			} else {
-				out = append(out, key+" (default-branch .no-mistakes.yaml)")
+				out = append(out, key+" (default-branch .alamino.yaml)")
 			}
 		}
 	}
 	if pushed != nil {
 		for _, key := range pushed.UnknownTestKeys {
 			if !inTrusted[key] {
-				out = append(out, key+" (pushed .no-mistakes.yaml)")
+				out = append(out, key+" (pushed .alamino.yaml)")
 			}
 		}
 	}

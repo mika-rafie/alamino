@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/cimonitor"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps/internal/stepstest"
+	"github.com/mika-rafie/alamino/internal/cimonitor"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps/internal/stepstest"
 )
 
 // TestCIStep_GreenChecksReleaseWithoutWaitingForTheMerge proves the opt-in

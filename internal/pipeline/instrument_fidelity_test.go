@@ -6,9 +6,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // cumulativeSessionAgent models codex: a stable durable session whose reported

@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -282,7 +282,7 @@ func TestCallerRestrictionsPushOptionBudget(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			jsonBytes := (budget - len("no-mistakes.caller-restrictions=")) * 3 / 4
+			jsonBytes := (budget - len("alamino.caller-restrictions=")) * 3 / 4
 			if over {
 				jsonBytes++
 			}
@@ -293,7 +293,7 @@ func TestCallerRestrictionsPushOptionBudget(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			option := "no-mistakes.caller-restrictions=" + base64.RawURLEncoding.EncodeToString(wire)
+			option := "alamino.caller-restrictions=" + base64.RawURLEncoding.EncodeToString(wire)
 			if (len(option) > budget) != over || (!over && len(option) < budget-1) {
 				t.Fatalf("fixture option length = %d, over=%t", len(option), over)
 			}

@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // RefreshFailureReason is a bounded, URL-free reason safe to emit in logs.

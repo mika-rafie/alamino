@@ -14,7 +14,7 @@ func TestReplayConfigPreservesTrustedReviewIgnores(t *testing.T) {
 	mustGit(t, ctx, workDir, "init")
 	mustGit(t, ctx, workDir, "config", "user.name", "test")
 	mustGit(t, ctx, workDir, "config", "user.email", "test@example.com")
-	configPath := filepath.Join(workDir, ".no-mistakes.yaml")
+	configPath := filepath.Join(workDir, ".alamino.yaml")
 	if err := os.WriteFile(configPath, []byte("ignore_patterns: ['vendor/**']\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 // TestPushStep_PublishesRebasedEquivalentsOverAnEarlierRunsHead reproduces a
@@ -101,7 +101,7 @@ func TestPushStep_PublishesRebasedEquivalentsOverAnEarlierRunsHead(t *testing.T)
 						t.Fatalf("refused publication moved %s to %s, want %s", repo, got, published)
 					}
 				}
-				if tags := gitCmd(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+				if tags := gitCmd(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 					t.Fatalf("refused publication archived a head: %s", tags)
 				}
 				return
@@ -114,7 +114,7 @@ func TestPushStep_PublishesRebasedEquivalentsOverAnEarlierRunsHead(t *testing.T)
 					t.Fatalf("%s = %s, want rebased head %s", repo, got, rebased)
 				}
 			}
-			if got := gitCmd(t, gateDir, "rev-parse", "refs/tags/no-mistakes-abandoned/feature/"+published+"^{commit}"); got != published {
+			if got := gitCmd(t, gateDir, "rev-parse", "refs/tags/alamino-abandoned/feature/"+published+"^{commit}"); got != published {
 				t.Fatalf("replaced mirror head archived as %s, want %s", got, published)
 			}
 		})

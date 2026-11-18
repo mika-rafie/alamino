@@ -10,34 +10,34 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/gatecontext"
-	"github.com/kunchenguid/no-mistakes/internal/gateguidance"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/skill"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/gatecontext"
+	"github.com/mika-rafie/alamino/internal/gateguidance"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/skill"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // canonicalStaleMonitorPhrases are the load-bearing claims of the corrected
 // "PR fell behind / conflicted after checks pass" guidance: the live CI monitor
 // auto-rebases and re-pushes such a PR, so the agent runs no command and never
-// hand-rebases, and `no-mistakes rerun` is only the dead-monitor recovery,
+// hand-rebases, and `alamino rerun` is only the dead-monitor recovery,
 // subject to its clean caller-head check.
 var canonicalStaleMonitorPhrases = []string{
 	"never hand-rebase",
 	"revalidates from Review",
 	"cannot prove continuity with the reviewed head",
 	"re-pushes",
-	"no-mistakes rerun",
+	"alamino rerun",
 }
 
 var canonicalRerunRecoveryPhrases = []string{
 	"known clean caller",
 	"selected",
 	"refuses",
-	"no-mistakes axi status",
+	"alamino axi status",
 	"next_action.command",
-	"no-mistakes axi run",
+	"alamino axi run",
 	"custody",
 }
 
@@ -154,7 +154,7 @@ func TestBranchSyncGuidance_EmittedForBoundArchiveRecovery(t *testing.T) {
 	for _, want := range []string{
 		"branch_sync:",
 		"code: recover_custody",
-		"command: no-mistakes axi sync --recover --keep-local",
+		"command: alamino axi sync --recover --keep-local",
 		"bound archive preserves a divergent later head",
 		"custody returns at the reported required head",
 	} {
@@ -281,7 +281,7 @@ var canonicalReleasedChecksPassedPhrases = []string{
 	"released",
 	"nothing is left watching the PR",
 	"will not rebase or re-push it",
-	"a fresh `no-mistakes axi run`",
+	"a fresh `alamino axi run`",
 	"ci.release_after_checks_pass",
 }
 

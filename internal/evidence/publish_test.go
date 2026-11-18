@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
+	"github.com/mika-rafie/alamino/internal/git"
 )
 
 // Ambient GIT_CONFIG_* injection from agent harnesses would leak into every
@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	// Fixtures must not inherit the developer's global git config: a
 	// commit.gpgsign=true there makes every fixture commit ask gpg to sign.
-	globalConfigDir, err := os.MkdirTemp("", "no-mistakes-evidence-tests-")
+	globalConfigDir, err := os.MkdirTemp("", "alamino-evidence-tests-")
 	if err != nil {
 		panic(err)
 	}
@@ -96,10 +96,10 @@ func baseRequest(remote, work, source string) Request {
 	return Request{
 		RepoDir:   work,
 		PushURL:   remote,
-		Dir:       ".no-mistakes/evidence",
+		Dir:       ".alamino/evidence",
 		Segments:  []string{"fm", "add-login"},
 		SourceDir: source,
-		Message:   "no-mistakes: evidence for fm/add-login",
+		Message:   "alamino: evidence for fm/add-login",
 	}
 }
 
@@ -132,14 +132,14 @@ func TestPublish_LandsEvidenceOnOrphanBranchAndLeavesCodeBranchesUntouched(t *te
 	tree := runGit(t, remote, "ls-tree", "-r", "--name-only", tip)
 	for _, want := range []string{
 		MarkerPath,
-		".no-mistakes/evidence/fm/add-login/checkout.png",
-		".no-mistakes/evidence/fm/add-login/logs/cli-run.txt",
+		".alamino/evidence/fm/add-login/checkout.png",
+		".alamino/evidence/fm/add-login/logs/cli-run.txt",
 	} {
 		if !strings.Contains(tree, want) {
 			t.Errorf("evidence branch is missing %q, has:\n%s", want, tree)
 		}
 	}
-	if got := runGit(t, remote, "cat-file", "-p", tip+":.no-mistakes/evidence/fm/add-login/logs/cli-run.txt"); got != "it works" {
+	if got := runGit(t, remote, "cat-file", "-p", tip+":.alamino/evidence/fm/add-login/logs/cli-run.txt"); got != "it works" {
 		t.Errorf("published content = %q", got)
 	}
 
@@ -218,10 +218,10 @@ func TestPublish_AppendsWithoutRewritingEarlierEvidence(t *testing.T) {
 		t.Errorf("second commit parent = %s, want %s (fast-forward append)", parent, one.CommitSHA)
 	}
 	// The first run's link target still resolves to the bytes it published.
-	if got := runGit(t, remote, "cat-file", "-p", one.CommitSHA+":.no-mistakes/evidence/fm/add-login/round-1.txt"); got != "first" {
+	if got := runGit(t, remote, "cat-file", "-p", one.CommitSHA+":.alamino/evidence/fm/add-login/round-1.txt"); got != "first" {
 		t.Errorf("earlier evidence commit no longer resolves: %q", got)
 	}
-	if got := runGit(t, remote, "cat-file", "-p", two.CommitSHA+":.no-mistakes/evidence/fm/add-login/round-2.txt"); got != "second" {
+	if got := runGit(t, remote, "cat-file", "-p", two.CommitSHA+":.alamino/evidence/fm/add-login/round-2.txt"); got != "second" {
 		t.Errorf("later evidence missing: %q", got)
 	}
 }
@@ -247,7 +247,7 @@ func TestPublish_RefusesExistingBranchThatIsNotAnEvidenceBranch(t *testing.T) {
 	remote, work := newRepoWithRemote(t)
 	source := writeEvidence(t, t.TempDir(), map[string]string{"proof.txt": "ok\n"})
 	// Someone already uses this branch name for code.
-	runGit(t, work, "push", "origin", "main:refs/heads/no-mistakes/evidence")
+	runGit(t, work, "push", "origin", "main:refs/heads/alamino/evidence")
 	before := runGit(t, remote, "rev-parse", "refs/heads/"+DefaultBranch)
 
 	if _, err := Publish(context.Background(), baseRequest(remote, work, source)); err == nil {
@@ -263,7 +263,7 @@ func TestPublish_RefusesExistingBranchThatIsNotAnEvidenceBranch(t *testing.T) {
 func TestPublish_RefusesExistingBranchWithWrongMarkerContent(t *testing.T) {
 	remote, work := newRepoWithRemote(t)
 	source := writeEvidence(t, t.TempDir(), map[string]string{"proof.txt": "ok\n"})
-	if err := os.WriteFile(filepath.Join(work, MarkerPath), []byte("not a no-mistakes evidence branch\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(work, MarkerPath), []byte("not an alamino evidence branch\n"), 0o644); err != nil {
 		t.Fatalf("write false marker: %v", err)
 	}
 	runGit(t, work, "add", MarkerPath)
@@ -381,7 +381,7 @@ func TestPublish_ReportsPublishedFilesRelativeToTheSourceDirectory(t *testing.T)
 	if got, want := strings.Join(result.Files, ","), "a.txt,sub/b.txt"; got != want {
 		t.Errorf("files = %q, want %q", got, want)
 	}
-	if result.Dir != ".no-mistakes/evidence/fm/add-login" {
+	if result.Dir != ".alamino/evidence/fm/add-login" {
 		t.Errorf("dir = %q", result.Dir)
 	}
 }
@@ -472,7 +472,7 @@ func TestPublish_RedactsHomePathsInTextEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Publish: %v", err)
 	}
-	prefix := result.CommitSHA + ":.no-mistakes/evidence/fm/add-login/"
+	prefix := result.CommitSHA + ":.alamino/evidence/fm/add-login/"
 	got := runGit(t, remote, "cat-file", "-p", prefix+"logs/run.txt")
 	if want := "ran ~/project/bin/tool\nwrote ~/out.json"; got != want {
 		t.Errorf("published text = %q, want %q", got, want)
@@ -491,8 +491,8 @@ func TestPublish_RedactsHomePathsInTextEvidence(t *testing.T) {
 
 func TestPublish_RedactsRunWorktreePathsInTextEvidence(t *testing.T) {
 	remote, work := newRepoWithRemote(t)
-	// An NM_HOME outside the home directory, which home redaction never sees.
-	worktrees := filepath.Join(t.TempDir(), "nm-home", "worktrees")
+	// An ALAMINO_HOME outside the home directory, which home redaction never sees.
+	worktrees := filepath.Join(t.TempDir(), "alamino-home", "worktrees")
 	runWorktree := filepath.Join(worktrees, "ab12cd34ef56", "run-1")
 	text := "ran " + runWorktree + "/bin/tool\n" +
 		"cd " + runWorktree + "\n" +
@@ -508,7 +508,7 @@ func TestPublish_RedactsRunWorktreePathsInTextEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Publish: %v", err)
 	}
-	got := runGit(t, remote, "cat-file", "-p", result.CommitSHA+":.no-mistakes/evidence/fm/add-login/logs/run.txt")
+	got := runGit(t, remote, "cat-file", "-p", result.CommitSHA+":.alamino/evidence/fm/add-login/logs/run.txt")
 	want := "ran {run-worktree}/bin/tool\n" +
 		"cd {run-worktree}\n" +
 		"saw " + filepath.Join("{run-worktree}", "out.log") + "\n" +
@@ -540,7 +540,7 @@ func TestPublishCommitIdentityBoundAndUnboundContexts(t *testing.T) {
 			case "fallback":
 				runGit(t, work, "config", "--unset", "user.name")
 				runGit(t, work, "config", "--unset", "user.email")
-				want = "no-mistakes <no-mistakes@localhost> | no-mistakes <no-mistakes@localhost>"
+				want = "alamino <alamino@localhost> | alamino <alamino@localhost>"
 			case "invalid bound":
 				identity.AuthorEmail = ""
 				ctx = git.WithCommitIdentity(ctx, identity)

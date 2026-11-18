@@ -254,7 +254,7 @@ func classifyTransient(err error) (string, bool) {
 	if isTerminalRetryError(msg) {
 		return "", false
 	}
-	const piMissingOutputPrefix = "pi did not finish by calling no_mistakes_output alone"
+	const piMissingOutputPrefix = "pi did not finish by calling alamino_output alone"
 	if strings.HasPrefix(msg, piMissingOutputPrefix) {
 		stderr := strings.TrimSpace(strings.TrimPrefix(msg[len(piMissingOutputPrefix):], ":"))
 		if isPiPermanentStderr(stderr) {

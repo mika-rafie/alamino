@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 func ownedFixture(t *testing.T) (prContent, string) {
@@ -24,7 +24,7 @@ func ownedFixture(t *testing.T) (prContent, string) {
 
 func TestPROwnershipNeverInfersFromHeadings(t *testing.T) {
 	t.Parallel()
-	body := "Mention no-mistakes-pr-appendix by name without claiming ownership.\n\n## Intent\n\nAuthor intent\n\n## Risk Assessment\n\nAuthor risk\n\n## Tests\n\n- [x] Human checkbox\n\n## Pipeline\n\nRelease plan\nCloses test/repo#1"
+	body := "Mention alamino-pr-appendix by name without claiming ownership.\n\n## Intent\n\nAuthor intent\n\n## Risk Assessment\n\nAuthor risk\n\n## Tests\n\n- [x] Human checkbox\n\n## Pipeline\n\nRelease plan\nCloses test/repo#1"
 	parts, err := parsePROwnedBody(body)
 	if err != nil || parts.managed || parts.before != body {
 		t.Fatalf("heading resemblance claimed author content: %+v, %v", parts, err)
@@ -51,7 +51,7 @@ func TestPROwnershipRejectsAmbiguityAndEdits(t *testing.T) {
 		"quoted block":        "```markdown\n" + content.Body + "\n```",
 		"tilde quote":         "~~~~\n" + content.Body + "\n~~~~",
 		"indented marker":     strings.Replace(content.Body, prAppendixStart, "    "+prAppendixStart, 1),
-		"spacing change":      strings.Replace(content.Body, prAppendixStart, "<!--  no-mistakes-pr-appendix:v1 sha256=", 1),
+		"spacing change":      strings.Replace(content.Body, prAppendixStart, "<!--  alamino-pr-appendix:v1 sha256=", 1),
 		"inline marker":       strings.Replace(content.Body, prAppendixStart, "quote "+prAppendixStart, 1),
 		"foreign attestation": content.Body + "\n" + buildPipelineAttestation(nil, nil, testPipelineHeadSHA),
 		"unowned legacy":      compliantPipelineBody(t, testPipelineHeadSHA),
@@ -231,7 +231,7 @@ func TestPROwnershipRestampPreservesAuthorsAndConsumerContract(t *testing.T) {
 func TestPROwnershipRedactsRunWorktreePaths(t *testing.T) {
 	t.Parallel()
 	_, appendix := ownedFixture(t)
-	worktrees := filepath.Join(t.TempDir(), "nm-home", "worktrees")
+	worktrees := filepath.Join(t.TempDir(), "alamino-home", "worktrees")
 	runWorktree := filepath.Join(worktrees, "ab12cd34ef56", "run-1")
 	appendix += "\n\nran " + filepath.Join(runWorktree, "bin", "tool")
 	got, err := composeOwnedPRContent(prOwnedBody{before: "saw " + filepath.Join(worktrees, "0f0f0f0f0f0f", "run-0", "out.log")}, "feat: "+runWorktree, appendix, 0, runWorktree, worktrees)

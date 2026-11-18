@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // GetPRContent reads glab's single-MR JSON description, never rendered HTML.

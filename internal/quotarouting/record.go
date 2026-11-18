@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Record is the durable, local-only outcome of one run's quota-aware agent
 // ordering. It is written on the run row at run setup, amended when a
 // mid-run quota switch moves the run to the next agent, and rendered by
-// `no-mistakes axi status`. It carries the candidates, their evidence, the
+// `alamino axi status`. It carries the candidates, their evidence, the
 // choice, and the reason the configured order was kept when it was.
 type Record struct {
 	// Version guards future shape changes.

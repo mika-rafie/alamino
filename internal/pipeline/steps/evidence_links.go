@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
 )
 
 // test.evidence.link_base_url links structured local evidence references,

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func mustJSON(t *testing.T, record *quotarouting.Record) string {

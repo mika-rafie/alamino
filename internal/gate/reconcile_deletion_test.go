@@ -115,7 +115,7 @@ func TestReconcileStaleBranchRebasedAcrossBaseDeletion(t *testing.T) {
 [ "$1" = "prepared" ] || exit 0
 while read old new ref; do
   if [ "$ref" = "refs/heads/feature" ] && [ "$new" = "0000000000000000000000000000000000000000" ]; then
-    archived=$(git --git-dir=. rev-parse --verify "refs/tags/no-mistakes-abandoned/feature/$old") || exit 1
+    archived=$(git --git-dir=. rev-parse --verify "refs/tags/alamino-abandoned/feature/$old") || exit 1
     [ "$archived" = "$old" ] || exit 1
     printf '%s' "$archived" > archive-before-delete.observed
   fi
@@ -176,7 +176,7 @@ done
 			if got := reconcileGit(t, gateDir, "rev-parse", "refs/heads/feature"); got != privateHead {
 				t.Fatalf("planning moved mirror to %s, want %s", got, privateHead)
 			}
-			if tags := reconcileGit(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+			if tags := reconcileGit(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 				t.Fatalf("planning created archive %s", tags)
 			}
 			if change != "kept" && change != "later_edit" && change != "selected_deletes" && change != "stale_origin" && change != "many_deletions" {

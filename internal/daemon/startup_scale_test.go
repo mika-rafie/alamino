@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/testgit"
 )
 
 // TestColdDetachedStartupProductionGateCardinality reproduces the production
@@ -41,7 +41,7 @@ func TestColdDetachedStartupProductionGateCardinality(t *testing.T) {
 func startColdDetachedFixture(t *testing.T, gateCount int, delayedGit bool) time.Duration {
 	t.Helper()
 
-	root, err := os.MkdirTemp("", fmt.Sprintf("nm-startup-%d-", gateCount))
+	root, err := os.MkdirTemp("", fmt.Sprintf("alamino-startup-%d-", gateCount))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,11 +80,11 @@ func startColdDetachedFixture(t *testing.T, gateCount int, delayedGit bool) time
 		gitShim := filepath.Join(shimDir, "git")
 		shim := "#!/bin/sh\n" +
 			"if [ \"$2\" = config ] && [ \"$3\" = receive.advertisePushOptions ]; then /bin/sleep 0.075; fi\n" +
-			"exec \"$NM_TEST_REAL_GIT\" \"$@\"\n"
+			"exec \"$ALAMINO_TEST_REAL_GIT\" \"$@\"\n"
 		if err := os.WriteFile(gitShim, []byte(shim), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		t.Setenv("NM_TEST_REAL_GIT", realGit)
+		t.Setenv("ALAMINO_TEST_REAL_GIT", realGit)
 		t.Setenv("PATH", shimDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	}
 
@@ -95,10 +95,10 @@ func startColdDetachedFixture(t *testing.T, gateCount int, delayedGit bool) time
 		t.Fatal(err)
 	}
 	t.Setenv("SHELL", shellShim)
-	t.Setenv("NM_TEST_START_DAEMON", "1")
-	t.Setenv("NM_DAEMON_HELPER_PROCESS", "daemon")
-	t.Setenv("NM_TEST_DAEMON_START_TIMEOUT", "")
-	t.Setenv("NM_TEST_DAEMON_START_POLL_INTERVAL", "20ms")
+	t.Setenv("ALAMINO_TEST_START_DAEMON", "1")
+	t.Setenv("ALAMINO_DAEMON_HELPER_PROCESS", "daemon")
+	t.Setenv("ALAMINO_TEST_DAEMON_START_TIMEOUT", "")
+	t.Setenv("ALAMINO_TEST_DAEMON_START_POLL_INTERVAL", "20ms")
 
 	started := time.Now()
 	if err := startDetachedDaemon(p); err != nil {
@@ -135,7 +135,7 @@ func startColdDetachedFixture(t *testing.T, gateCount int, delayedGit bool) time
 	if err != nil {
 		t.Fatalf("read isolated daemon log: %v", err)
 	}
-	if evidenceDir := os.Getenv("NM_TEST_STARTUP_EVIDENCE_DIR"); evidenceDir != "" {
+	if evidenceDir := os.Getenv("ALAMINO_TEST_STARTUP_EVIDENCE_DIR"); evidenceDir != "" {
 		if err := os.MkdirAll(evidenceDir, 0o755); err != nil {
 			t.Fatalf("create startup evidence directory: %v", err)
 		}

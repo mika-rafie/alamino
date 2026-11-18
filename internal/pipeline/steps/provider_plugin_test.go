@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin"
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin/fakeplugin"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/plugin"
+	"github.com/mika-rafie/alamino/internal/scm/plugin/fakeplugin"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // fakeProviderPlugin puts the reference fake plugin on the step's PATH and
@@ -78,12 +78,12 @@ func TestProviderPlugin_ClaimsHostBeforeBuiltinDetection(t *testing.T) {
 	t.Parallel()
 	dir, baseSHA, headSHA := setupGitRepo(t)
 	sctx := newTestContextWithDBRecords(t, &mockAgent{name: "test"}, dir, baseSHA, headSHA, config.Commands{})
-	sctx.Config.ProviderPlugins = config.ProviderPlugins{"ssm": {Command: "nm-ssm", Hosts: []string{"github.com"}}}
+	sctx.Config.ProviderPlugins = config.ProviderPlugins{"ssm": {Command: "alamino-ssm", Hosts: []string{"github.com"}}}
 
 	if got := resolvedProvider(sctx); got != scm.PluginProvider("ssm") {
 		t.Fatalf("resolvedProvider = %q, want plugin:ssm", got)
 	}
-	sctx.Config.ProviderPlugins = config.ProviderPlugins{"ssm": {Command: "nm-ssm", Hosts: []string{"*.sourcemanager.dev"}}}
+	sctx.Config.ProviderPlugins = config.ProviderPlugins{"ssm": {Command: "alamino-ssm", Hosts: []string{"*.sourcemanager.dev"}}}
 	if got := resolvedProvider(sctx); got != scm.ProviderGitHub {
 		t.Fatalf("resolvedProvider for an unclaimed host = %q, want github", got)
 	}
@@ -148,7 +148,7 @@ func TestProviderPlugin_PRStepPublishesASuppliedBodyAndReadsItBack(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(state.PRs) != 1 || state.PRs[0].Title != title || !strings.HasPrefix(state.PRs[0].Body, body+"\n\n<!-- no-mistakes-pr-appendix:v1 ") {
+	if len(state.PRs) != 1 || state.PRs[0].Title != title || !strings.HasPrefix(state.PRs[0].Body, body+"\n\n<!-- alamino-pr-appendix:v1 ") {
 		t.Fatalf("created PR = %+v", state.PRs)
 	}
 	if ops := strings.Join(pluginOperations(t, logPath), ","); !strings.Contains(ops, "pr create,pr view") {
@@ -220,10 +220,10 @@ func TestProviderPlugin_PRStepSkipsWithPluginReason(t *testing.T) {
 			name: "missing command",
 			mutate: func(sctx *pipeline.StepContext) {
 				cfg := sctx.Config.ProviderPlugins["ssm"]
-				cfg.Command = "nm-provider-plugin-that-does-not-exist"
+				cfg.Command = "alamino-provider-plugin-that-does-not-exist"
 				sctx.Config.ProviderPlugins["ssm"] = cfg
 			},
-			wantMsg: `command "nm-provider-plugin-that-does-not-exist" not found`,
+			wantMsg: `command "alamino-provider-plugin-that-does-not-exist" not found`,
 		},
 	}
 	for _, tt := range tests {
@@ -353,7 +353,7 @@ func TestProviderPlugin_RemoteWithoutRepositoryPathSkips(t *testing.T) {
 	t.Parallel()
 	dir, baseSHA, headSHA := setupGitRepo(t)
 	sctx := newTestContextWithDBRecords(t, &mockAgent{name: "test"}, dir, baseSHA, headSHA, config.Commands{})
-	sctx.Config.ProviderPlugins = config.ProviderPlugins{"ssm": {Command: "nm-ssm", Hosts: []string{"git.example.com"}}}
+	sctx.Config.ProviderPlugins = config.ProviderPlugins{"ssm": {Command: "alamino-ssm", Hosts: []string{"git.example.com"}}}
 	sctx.Repo.UpstreamURL = "https://git.example.com/"
 	host, reason := buildHost(sctx, scm.PluginProvider("ssm"))
 	if host != nil || !strings.Contains(reason, "could not resolve the repository path") {

@@ -1,4 +1,4 @@
-module github.com/kunchenguid/no-mistakes
+module github.com/mika-rafie/alamino
 
 go 1.25.0
 

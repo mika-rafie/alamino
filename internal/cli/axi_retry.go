@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 // newAxiRetryCmd continues a run that failed on an agent invocation error, or
@@ -29,7 +29,7 @@ func newAxiRetryCmd() *cobra.Command {
 		Long: "Continues the current branch's latest run when it failed because an agent\n" +
 			"invocation itself failed - a provider error, a usage limit, a transport\n" +
 			"failure, or the agent process exiting - instead of starting the whole\n" +
-			"pipeline again with `no-mistakes rerun`.\n\n" +
+			"pipeline again with `alamino rerun`.\n\n" +
 			"A new run starts at the failed run's preserved head, so every correction\n" +
 			"the pipeline already committed is kept. The steps before the failed one\n" +
 			"are carried from the failed run. The failed step restarts from the\n" +
@@ -41,7 +41,7 @@ func newAxiRetryCmd() *cobra.Command {
 			"the branch; for a run that never pushed, its record shows exactly one\n" +
 			"failed step, failed on an agent invocation error, at or before Test; its preserved head\n" +
 			"is still anchored in the local gate; the working tree is clean at exactly\n" +
-			"that head (adopt it first with `no-mistakes axi sync --recover`); and the\n" +
+			"that head (adopt it first with `alamino axi sync --recover`); and the\n" +
 			"run's model profile and the repository's gates are unchanged, and a carried\n" +
 			"Review's repository configuration, recorded global configuration, agent,\n" +
 			"and model are still the ones a new run would use. A failure\n" +
@@ -59,9 +59,7 @@ func newAxiRetryCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackAxiSurface("axi-retry", "/axi/retry", nil, func() error {
-				return runAxiRetry(cmd, strings.TrimSpace(runID), wait)
-			})
+			return runAxiRetry(cmd, strings.TrimSpace(runID), wait)
 		},
 	}
 	cmd.Flags().StringVar(&runID, "run", "", "id of the failed run, which must be the current branch's latest run (required)")
@@ -72,7 +70,7 @@ func newAxiRetryCmd() *cobra.Command {
 func runAxiRetry(cmd *cobra.Command, runID string, wait time.Duration) error {
 	if runID == "" {
 		return emitError(cmd, 2, "--run is required",
-			"Run `no-mistakes axi status` to read the failed run's id")
+			"Run `alamino axi status` to read the failed run's id")
 	}
 	if err := validateAxiWait(wait); err != nil {
 		return emitError(cmd, 2, err.Error(), "Pass a positive duration such as --wait 8m")
@@ -107,10 +105,10 @@ func runAxiRetry(cmd *cobra.Command, runID string, wait time.Duration) error {
 		var rpcErr *ipc.RPCError
 		if errors.As(err, &rpcErr) && rpcErr.Code == ipc.ErrMethodNotFound {
 			return emitError(cmd, 1, "the running daemon is too old to retry a run",
-				"Restart it with `no-mistakes daemon restart` so the current binary serves it")
+				"Restart it with `alamino daemon restart` so the current binary serves it")
 		}
 		return emitError(cmd, 1, err.Error(),
-			"Run `no-mistakes axi status` to inspect the failed run and the branch's custody")
+			"Run `alamino axi status` to inspect the failed run and the branch's custody")
 	}
 
 	lead := []toon.Field{
@@ -127,10 +125,10 @@ func runAxiRetry(cmd *cobra.Command, runID string, wait time.Duration) error {
 	final, ciReady, err := driveRun(driveCtx, cmd.ErrOrStderr(), env.client, env.p.Socket(), result.RunID, false)
 	if err != nil {
 		if isAxiWaitElapsed(ctx, driveCtx, err) {
-			return emitAxiWaitElapsed(cmd, wait, "no-mistakes axi run", lead...)
+			return emitAxiWaitElapsed(cmd, wait, "alamino axi run", lead...)
 		}
 		return emitError(cmd, 1, fmt.Sprintf("follow the retried run %s: %v", result.RunID, err),
-			"The retry started; run `no-mistakes axi run` to reattach to it")
+			"The retry started; run `alamino axi run` to reattach to it")
 	}
 	return renderDriveResult(cmd, final, ciReady, lead...)
 }

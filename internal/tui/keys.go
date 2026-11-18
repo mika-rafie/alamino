@@ -2,7 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {

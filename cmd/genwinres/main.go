@@ -1,7 +1,7 @@
 // Command genwinres renders the Windows resource objects that embed the
-// no-mistakes application manifest (internal/winres) into
-// cmd/no-mistakes/rsrc_windows_<arch>.syso. Go links any .syso object in the
-// package directory, so every Windows build of no-mistakes.exe carries the
+// alamino application manifest (internal/winres) into
+// cmd/alamino/rsrc_windows_<arch>.syso. Go links any .syso object in the
+// package directory, so every Windows build of alamino.exe carries the
 // manifest without extra build steps.
 //
 // Usage:
@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kunchenguid/no-mistakes/internal/winres"
+	"github.com/mika-rafie/alamino/internal/winres"
 )
 
 func main() {

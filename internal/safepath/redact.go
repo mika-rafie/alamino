@@ -2,7 +2,7 @@
 // and run worktree paths (RedactWorktrees) - out of the text a caller passes
 // it.
 //
-// It guarantees nothing on its own about what no-mistakes publishes: coverage
+// It guarantees nothing on its own about what alamino publishes: coverage
 // is exactly the set of publication boundaries that call it. Today that is the
 // pull request title and body (PRStep.buildPRContent) and the text files the
 // opt-in evidence branch publishes (evidence.Publish). Agent-authored commit

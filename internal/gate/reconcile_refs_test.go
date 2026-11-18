@@ -62,7 +62,7 @@ func TestReconciliationDirectArchiveSurvivesBranchRecreation(t *testing.T) {
 		t.Run(archiveState, func(t *testing.T) {
 			ctx := context.Background()
 			work, gateDir, privateHead, liveHead := reconciliationRefFixture(t)
-			archive := "refs/tags/no-mistakes-abandoned/feature/" + privateHead
+			archive := "refs/tags/alamino-abandoned/feature/" + privateHead
 			if archiveState == "existing" {
 				reconcileGit(t, gateDir, "update-ref", "--no-deref", archive, privateHead, strings.Repeat("0", len(privateHead)))
 			}
@@ -70,7 +70,7 @@ func TestReconciliationDirectArchiveSurvivesBranchRecreation(t *testing.T) {
 [ "$1" = "prepared" ] || exit 0
 while read old new ref; do
   if [ "$ref" = "refs/heads/feature" ] && [ "$new" = "0000000000000000000000000000000000000000" ]; then
-    archived=$(git --git-dir=. rev-parse --verify "refs/tags/no-mistakes-abandoned/feature/$old") || exit 1
+    archived=$(git --git-dir=. rev-parse --verify "refs/tags/alamino-abandoned/feature/$old") || exit 1
     [ "$archived" = "$old" ] || exit 1
     printf '%s' "$archived" > archive-before-delete.observed
   fi

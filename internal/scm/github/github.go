@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // CmdFactory builds an exec.Cmd in the caller's workdir with the caller's env.

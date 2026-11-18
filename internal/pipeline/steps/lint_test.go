@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestLintStep_FixMode_CommitsChanges(t *testing.T) {
@@ -75,7 +75,7 @@ func TestLintStep_FixMode_CommitsChanges(t *testing.T) {
 	if status := gitStatusPorcelain(t, dir); status != "" {
 		t.Fatalf("expected clean worktree after fix commit, got %q", status)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(lint): fix lint issues" {
+	if got := lastCommitMessage(t, dir); got != "alamino(lint): fix lint issues" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }
@@ -101,7 +101,7 @@ func TestLintStep_FixMode_UsesFallbackSummaryWhenStructuredSummaryMalformed(t *t
 		t.Fatal(err)
 	}
 
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(lint): fix lint issues" {
+	if got := lastCommitMessage(t, dir); got != "alamino(lint): fix lint issues" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }
@@ -140,7 +140,7 @@ func TestLintStep_NoConfiguredLint_CommitsAgentFixesWithoutApproval(t *testing.T
 	if status := gitStatusPorcelain(t, dir); status != "" {
 		t.Fatalf("expected clean worktree after lint fix commit, got %q", status)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(lint): format code" {
+	if got := lastCommitMessage(t, dir); got != "alamino(lint): format code" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }

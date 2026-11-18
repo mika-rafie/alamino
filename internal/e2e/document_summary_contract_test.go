@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // documentTurnMarker identifies a document-pass invocation by the real prompt
@@ -106,7 +106,7 @@ func documentSummaryContractScenario(t *testing.T) string {
 	return path
 }
 
-// TestDocumentAnalyzerSummaryContractOnRealBinary drives the real no-mistakes
+// TestDocumentAnalyzerSummaryContractOnRealBinary drives the real alamino
 // binary end to end (init -> git push -> daemon pipeline) and pins the
 // document step's summary contract: a legitimate no-op pass succeeds where it
 // used to be refused with "validate document analyzer findings: missing

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 )
 
 // maxStepDiffBytes bounds one fix-review diff response. The IPC transport

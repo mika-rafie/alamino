@@ -3,8 +3,8 @@ package steps
 import (
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/cimonitor"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/cimonitor"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // A blocking manual job holds the pipeline until a person runs it, so

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 // With rerere.enabled and rerere.autoupdate in the operator's git config, a

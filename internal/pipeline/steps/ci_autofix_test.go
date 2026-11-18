@@ -11,13 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps/internal/stepstest"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps/internal/stepstest"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func assertCIRestartsValidation(t *testing.T, outcome *pipeline.StepOutcome, err error) {
@@ -947,7 +947,7 @@ func TestCIStep_AutoFixNoChanges_CountsAsAttempt(t *testing.T) {
 func TestCIStep_AutoFixExternalFailureStopsWithAgentConclusion(t *testing.T) {
 	t.Parallel()
 	dir, baseSHA, headSHA := setupGitRepo(t)
-	checksJSON := `[{"name":"PR must be raised via no-mistakes","status":"COMPLETED","conclusion":"failure","bucket":"fail"}]`
+	checksJSON := `[{"name":"PR must be raised via alamino","status":"COMPLETED","conclusion":"failure","bucket":"fail"}]`
 	fixCount := 0
 	ag := &mockAgent{
 		name: "test",
@@ -1234,7 +1234,7 @@ func TestCIStep_FixPromptLeavesPublicationAndMonitoringToPipeline(t *testing.T) 
 				"Never repeatedly query run, job, or check status in a polling loop.",
 				"Do not wait for CI to finish.",
 				"Finish with your fix as local changes in the worktree and return.",
-				"Never push, force-push, or otherwise publish: the no-mistakes pipeline commits and publishes the repair through its guarded path, and its own CI monitoring then takes over.",
+				"Never push, force-push, or otherwise publish: the alamino pipeline commits and publishes the repair through its guarded path, and its own CI monitoring then takes over.",
 				"You may retrieve a failing job's logs once when that helps diagnose the failure.",
 			} {
 				if !strings.Contains(capturedPrompt, want) {
@@ -1342,7 +1342,7 @@ func TestCIStep_FixPromptDistinguishesCodeDefectFromExternalFailure(t *testing.T
 	}
 	sctx := newTestContext(t, ag, dir, baseSHA, headSHA, config.Commands{})
 	pr := &scm.PR{Number: "42", URL: "https://github.com/test/repo/pull/42"}
-	if _, err := (&CIStep{}).autoFixCI(sctx, &forgejoLogTestHost{}, pr, ciTargetsFor([]string{"PR must be raised via no-mistakes"}, false)); err != nil {
+	if _, err := (&CIStep{}).autoFixCI(sctx, &forgejoLogTestHost{}, pr, ciTargetsFor([]string{"PR must be raised via alamino"}, false)); err != nil {
 		t.Fatal(err)
 	}
 	if capturedPrompt == "" {
@@ -1360,7 +1360,7 @@ func TestCIStep_FixPromptDistinguishesCodeDefectFromExternalFailure(t *testing.T
 	if !strings.Contains(capturedPrompt, "not caused by the code under review") {
 		t.Errorf("prompt should draw the caused-by-this-PR-code line:\n%s", capturedPrompt)
 	}
-	if !strings.Contains(capturedPrompt, "PR must be raised via no-mistakes") {
+	if !strings.Contains(capturedPrompt, "PR must be raised via alamino") {
 		t.Errorf("prompt should name the attestation check as a non-code example:\n%s", capturedPrompt)
 	}
 	if strings.Contains(capturedPrompt, "Do not conclude that nothing needs to change") {
@@ -1668,7 +1668,7 @@ func TestCIStep_AutoFixUsesOnlySelectedFindings(t *testing.T) {
 
 	sctx := newTestContext(t, ag, dir, baseSHA, headSHA, config.Commands{})
 	host := &mockReviewHost{comments: []scm.ReviewComment{{Author: "greptile-apps[bot]", Body: "unselected bot finding"}}}
-	pr := &scm.PR{Number: "869", URL: "https://github.com/kunchenguid/no-mistakes/pull/869"}
+	pr := &scm.PR{Number: "869", URL: "https://github.com/mika-rafie/alamino/pull/869"}
 
 	_, _ = (&CIStep{}).autoFixCI(sctx, host, pr, ciTargetsFor([]string{"test"}, false))
 

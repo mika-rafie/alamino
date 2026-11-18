@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 // maxSnapshotBytes bounds the snapshot read. A quota-axi --json document is a
@@ -16,7 +16,7 @@ import (
 const maxSnapshotBytes = 4 << 20
 
 // ReadSnapshot runs the quota-axi executable once (--json) and parses its
-// output. It is the one place no-mistakes invokes quota-axi, called once per
+// output. It is the one place alamino invokes quota-axi, called once per
 // run at run setup. Every failure mode - missing executable, timeout, non-zero
 // exit, unparseable output - is an error the caller resolves to today's
 // configured order with a recorded reason; it never blocks a run.

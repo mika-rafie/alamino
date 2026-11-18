@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestRerunChecksCallerHeadAgainstSelectedHead(t *testing.T) {
@@ -79,7 +79,7 @@ func TestRerunChecksCallerHeadAgainstSelectedHead(t *testing.T) {
 					if err == nil {
 						t.Fatalf("rerun started %s at selected head %s despite clean caller head %s", result.RunID, selected, callerHead)
 					}
-					for _, want := range []string{selected, callerHead, "no-mistakes axi status", "no-mistakes axi run"} {
+					for _, want := range []string{selected, callerHead, "alamino axi status", "alamino axi run"} {
 						if !strings.Contains(err.Error(), want) {
 							t.Errorf("refusal %q missing %q", err, want)
 						}

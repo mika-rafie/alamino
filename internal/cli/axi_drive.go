@@ -15,25 +15,24 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
-	"github.com/kunchenguid/no-mistakes/internal/cimonitor"
-	"github.com/kunchenguid/no-mistakes/internal/closingissues"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/cimonitor"
+	"github.com/mika-rafie/alamino/internal/closingissues"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
 	"github.com/spf13/cobra"
 )
 
@@ -101,7 +100,7 @@ func emitAxiWaitElapsedForRun(cmd *cobra.Command, wait time.Duration, runID, rea
 		toon.Field{Key: "error", Value: fmt.Sprintf("wait of %s elapsed while driving the run", wait)},
 		toon.Field{Key: "help", Value: []string{
 			"This bounded hold ended; it is not a pipeline failure and does not mean the daemon is dead.",
-			"Run `no-mistakes axi status" + runFlag(runID) + "` to inspect progress",
+			"Run `alamino axi status" + runFlag(runID) + "` to inspect progress",
 			reattachLine,
 		}},
 	)
@@ -186,7 +185,7 @@ func newAxiRunCmd() *cobra.Command {
 			"text reaches the run request unchanged; ordinary runs still trim outer\n" +
 			"whitespace when storing intent. Prefer file/stdin to interpolating prose\n" +
 			"into shell commands: the caller's shell can expand\n" +
-			"backticks and dollars in --intent TEXT before no-mistakes receives it.\n" +
+			"backticks and dollars in --intent TEXT before alamino receives it.\n" +
 			"Ordinary reattachment needs no input and keeps the existing run's intent.\n\n" +
 			"--wait bounds this hold (default 8m) so an agent harness with a 10-minute\n" +
 			"tool cap gets a structured return instead of an unbounded hang. Elapsed wait\n" +
@@ -226,7 +225,7 @@ func newAxiRunCmd() *cobra.Command {
 			"description is owned author text that later runs keep byte for byte. On\n" +
 			"an existing PR freshly passed flags replace only their named fields;\n" +
 			"inherited rerun values do not request an update. Empty or oversized titles,\n" +
-			"control or bidi characters, and no-mistakes markers are refused before any\n" +
+			"control or bidi characters, and alamino markers are refused before any\n" +
 			"push. They are inherited by rerun and retry, and cannot be combined with\n" +
 			"--skip pr.\n\n" +
 			"--model and/or --effort opt into an immutable Pi profile for a new run.\n" +
@@ -259,28 +258,16 @@ func newAxiRunCmd() *cobra.Command {
 			if err != nil {
 				return emitError(cmd, 2, err.Error())
 			}
-			return trackAxiSurface("axi-run", "/axi/run", telemetry.Fields{
-				"auto_yes":          autoYes,
-				"has_intent":        strings.TrimSpace(resolvedIntent) != "",
-				"has_skip":          strings.TrimSpace(skipValue) != "",
-				"has_base_branch":   strings.TrimSpace(baseBranch) != "",
-				"has_launch_nonce":  launchNonce != "",
-				"no_publish_intent": noPublishIntent,
-				"has_closes":        len(closesIssues) > 0,
-				"has_pr_title":      prText.Title != "",
-				"has_pr_body":       prText.Body != "",
-			}, func() error {
-				skipSteps, err := parseSkipSteps(skipValue)
-				if err != nil {
-					return emitError(cmd, 2, err.Error(),
-						"Valid steps: intent, rebase, review, test, document, lint, push, pr, ci")
-				}
-				profile, err := piProfileFromFlags(cmd, model, effort)
-				if err != nil {
-					return emitError(cmd, 2, err.Error())
-				}
-				return runAxiRunWithPRText(cmd, autoYes, skipSteps, resolvedIntent, baseBranch, noPublishIntent, launchNonce, validationGeneration, wait, prText, profile)
-			})
+			skipSteps, err := parseSkipSteps(skipValue)
+			if err != nil {
+				return emitError(cmd, 2, err.Error(),
+					"Valid steps: intent, rebase, review, test, document, lint, push, pr, ci")
+			}
+			profile, err := piProfileFromFlags(cmd, model, effort)
+			if err != nil {
+				return emitError(cmd, 2, err.Error())
+			}
+			return runAxiRunWithPRText(cmd, autoYes, skipSteps, resolvedIntent, baseBranch, noPublishIntent, launchNonce, validationGeneration, wait, prText, profile)
 		},
 	}
 	cmd.Flags().BoolVarP(&autoYes, "yes", "y", false, "auto-resolve eligible gates (fix findings, then accept) until a decision point or outcome; protected-path and Test unvalidated-work refusals require an explicit response, and an open review question requires `axi answer`")
@@ -442,7 +429,7 @@ func runAxiRunWithPRText(cmd *cobra.Command, autoYes bool, skipSteps []types.Ste
 		active, err := activeRunInfo(driveCtx, env, branch, headSHA)
 		if err != nil {
 			if isAxiWaitElapsed(ctx, driveCtx, err) {
-				return emitAxiWaitElapsed(cmd, wait, "no-mistakes axi run")
+				return emitAxiWaitElapsed(cmd, wait, "alamino axi run")
 			}
 			return emitError(cmd, 1, fmt.Sprintf("get active run: %v", err))
 		}
@@ -573,7 +560,7 @@ func runAxiRunWithPRText(cmd *cobra.Command, autoYes bool, skipSteps []types.Ste
 	run, ciReady, err := driveRun(driveCtx, cmd.ErrOrStderr(), env.client, env.p.Socket(), runID, autoYes)
 	if err != nil {
 		if isAxiWaitElapsed(ctx, driveCtx, err) {
-			return emitAxiWaitElapsed(cmd, wait, "no-mistakes axi run")
+			return emitAxiWaitElapsed(cmd, wait, "alamino axi run")
 		}
 		return emitError(cmd, 1, fmt.Sprintf("drive run: %v", err))
 	}
@@ -613,7 +600,7 @@ func requireDaemonHonorsClosingIssueRefs(client closingIssueRefsUpdateClient, re
 		err = errors.New("daemon declined the closing-reference capability")
 	}
 	if err != nil {
-		return fmt.Errorf("the running daemon is too old to honor --closes (%v); restart it with `no-mistakes daemon restart` so the current binary serves it", err)
+		return fmt.Errorf("the running daemon is too old to honor --closes (%v); restart it with `alamino daemon restart` so the current binary serves it", err)
 	}
 	return nil
 }
@@ -1042,14 +1029,14 @@ func submissionReconciliationUpstream(ctx context.Context, env *axiEnv, head, re
 		return gate.ReconciliationUpstream{}
 	}
 	readConfig := func(commit string) (*config.RepoConfig, error) {
-		entry, err := git.Run(ctx, ".", "ls-tree", "--full-tree", commit, "--", ".no-mistakes.yaml")
+		entry, err := git.Run(ctx, ".", "ls-tree", "--full-tree", commit, "--", ".alamino.yaml")
 		if err != nil {
 			return nil, err
 		}
 		if entry == "" {
 			return &config.RepoConfig{}, nil
 		}
-		content, err := git.ShowFile(ctx, ".", commit, ".no-mistakes.yaml")
+		content, err := git.ShowFile(ctx, ".", commit, ".alamino.yaml")
 		if err != nil {
 			return nil, err
 		}
@@ -1389,7 +1376,7 @@ func driveRunScoped(ctx context.Context, progress io.Writer, client *ipc.Client,
 				if explicitRun {
 					cloneNote = fmt.Sprintf(" run in the clone of run %s, because `axi answer` has no --run form;", runID)
 				}
-				fmt.Fprintf(progress, "%s: an open review question needs an explicit answer (no-mistakes axi answer --question <id> --answer \"...\");%s --yes leaves this gate awaiting one\n", gate.Name, cloneNote)
+				fmt.Fprintf(progress, "%s: an open review question needs an explicit answer (alamino axi answer --question <id> --answer \"...\");%s --yes leaves this gate awaiting one\n", gate.Name, cloneNote)
 				return run, false, nil
 			}
 			// The reviewer's question history could not be read in full, so
@@ -1575,11 +1562,11 @@ func (e *respondRefusalError) helpLines(runID string) []string {
 		help = append(help, e.help)
 	}
 	if len(help) == 0 {
-		help = append(help, "Run `no-mistakes axi status` to list the gate's finding IDs")
+		help = append(help, "Run `alamino axi status` to list the gate's finding IDs")
 	}
 	if runID != "" {
 		for i := range help {
-			help[i] = strings.ReplaceAll(help[i], "`no-mistakes axi status`", "`no-mistakes axi status"+runFlag(runID)+"`")
+			help[i] = strings.ReplaceAll(help[i], "`alamino axi status`", "`alamino axi status"+runFlag(runID)+"`")
 		}
 	}
 	return help
@@ -1631,7 +1618,7 @@ func renderDriveResultForRun(cmd *cobra.Command, run *ipc.RunInfo, ciReady bool,
 		if runID == "" {
 			return help
 		}
-		return append(help, fmt.Sprintf("The follow-up commands above (`no-mistakes rerun`, `axi run`, `axi sync`, and the bare `axi status`) have no --run form: run them in the clone of run %s", runID))
+		return append(help, fmt.Sprintf("The follow-up commands above (`alamino rerun`, `axi run`, `axi sync`, and the bare `axi status`) have no --run form: run them in the clone of run %s", runID))
 	}
 	hasBranchSync := false
 	if syncField := cachedBranchSyncField(cmd, run.ID); syncField != nil {
@@ -1835,25 +1822,20 @@ func newAxiRespondCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackAxiSurface("axi-respond", "/axi/respond", telemetry.Fields{
-				"action":   sanitizeAxiTelemetryAction(action),
-				"auto_yes": autoYes,
-			}, func() error {
-				return runAxiRespond(cmd, respondArgs{
-					action:           action,
-					step:             step,
-					findings:         findings,
-					ignore:           ignore,
-					instructions:     instructions,
-					instructionsFile: instructionsFile,
-					addFinding:       addFinding,
-					addFindingFile:   addFindingFile,
-					reason:           reason,
-					autoYes:          autoYes,
-					wait:             wait,
-					runID:            strings.TrimSpace(runID),
-					runFlagSet:       cmd.Flags().Changed("run"),
-				})
+			return runAxiRespond(cmd, respondArgs{
+				action:           action,
+				step:             step,
+				findings:         findings,
+				ignore:           ignore,
+				instructions:     instructions,
+				instructionsFile: instructionsFile,
+				addFinding:       addFinding,
+				addFindingFile:   addFindingFile,
+				reason:           reason,
+				autoYes:          autoYes,
+				wait:             wait,
+				runID:            strings.TrimSpace(runID),
+				runFlagSet:       cmd.Flags().Changed("run"),
 			})
 		},
 	}
@@ -1903,7 +1885,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 	}
 	defer cancel()
 
-	respondCmd := "no-mistakes axi respond" + runFlag(ra.runID)
+	respondCmd := "alamino axi respond" + runFlag(ra.runID)
 	act := types.ApprovalAction(strings.TrimSpace(ra.action))
 	switch act {
 	case types.ActionApprove, types.ActionFix, types.ActionSkip, types.ActionAbort, types.ActionCompleteCoverage:
@@ -1964,13 +1946,13 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 		source := &ipcRunStateSource{socketPath: env.p.Socket()}
 		if err := source.callWithSlowReplyRetry(driveCtx, ipc.MethodGetActiveRun, activeRunLookupParams(env.repo.ID, branch), &active); err != nil {
 			if isAxiWaitElapsed(ctx, driveCtx, err) {
-				return emitAxiWaitElapsed(cmd, ra.wait, "no-mistakes axi respond --action approve|fix|skip")
+				return emitAxiWaitElapsed(cmd, ra.wait, "alamino axi respond --action approve|fix|skip")
 			}
 			return emitError(cmd, 1, fmt.Sprintf("get active run: %v", err))
 		}
 		if active.Run == nil {
 			return emitError(cmd, 1, "no active run to respond to",
-				"Run `no-mistakes axi run --intent \"...\"` to start one")
+				"Run `alamino axi run --intent \"...\"` to start one")
 		}
 		runID = active.Run.ID
 	}
@@ -1982,7 +1964,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 		}
 		if ra.runID != "" && isExactRunNotFound(err, runID) {
 			return emitError(cmd, 1, fmt.Sprintf("no run with id %s", runID),
-				"Check the run id; `no-mistakes axi status`, run in a clone of the repository, lists its runs")
+				"Check the run id; `alamino axi status`, run in a clone of the repository, lists its runs")
 		}
 		return emitError(cmd, 1, fmt.Sprintf("load run: %v", err))
 	}
@@ -1996,7 +1978,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 	if ra.runID != "" {
 		if _, ok := rv.awaitingStep(); !ok {
 			return emitError(cmd, 1, fmt.Sprintf("run %s is not parked at a gate (status: %s)", runID, run.Status),
-				"Run `no-mistakes axi status --run "+runID+"` to see the run state")
+				"Run `alamino axi status --run "+runID+"` to see the run state")
 		}
 	}
 
@@ -2005,7 +1987,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 		gate, ok := rv.awaitingStep()
 		if !ok {
 			return emitError(cmd, 1, "no step is awaiting approval",
-				"Run `no-mistakes axi status"+runFlag(ra.runID)+"` to see the run state")
+				"Run `alamino axi status"+runFlag(ra.runID)+"` to see the run state")
 		}
 		stepName = types.StepName(gate.Name)
 	}
@@ -2032,7 +2014,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 	if act == types.ActionFix {
 		if len(findingIDs) == 0 && resolvedFinding == "" && len(ignoreIDs) == 0 {
 			return emitError(cmd, 2, "--action fix requires --findings <id,...>, --ignore <id,...>, or --add-finding <json>",
-				"Run `no-mistakes axi status"+runFlag(ra.runID)+"` to list finding IDs")
+				"Run `alamino axi status"+runFlag(ra.runID)+"` to list finding IDs")
 		}
 		if strings.TrimSpace(resolvedInstructions) != "" && len(findingIDs) > 0 {
 			if !cmd.Flags().Changed("instructions-file") && ra.instructions != "-" {
@@ -2074,7 +2056,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 		}
 		if act == types.ActionAbort && strings.Contains(err.Error(), legacyApprovalReasonRefusal) {
 			return emitError(cmd, 1, "the running daemon is too old to record an abort reason; nothing was recorded",
-				"A plain `no-mistakes daemon restart` refuses while runs are active and lists every run, in all repositories, that a restart would interrupt: read that list, then run `no-mistakes daemon restart --force` so the current binary serves it, and send the abort again")
+				"A plain `alamino daemon restart` refuses while runs are active and lists every run, in all repositories, that a restart would interrupt: read that list, then run `alamino daemon restart --force` so the current binary serves it, and send the abort again")
 		}
 		return emitError(cmd, 1, fmt.Sprintf("respond to %s: %v", stepName, err))
 	}
@@ -2095,7 +2077,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 	// don't immediately observe the same gate we just answered.
 	if err := waitStepLeavesGate(driveCtx, env.p.Socket(), runID, string(stepName), gateIdentityFor(rv, string(stepName))); err != nil {
 		if isAxiWaitElapsed(ctx, driveCtx, err) {
-			return emitAxiWaitElapsedForRun(cmd, ra.wait, ra.runID, "no-mistakes axi run", lead...)
+			return emitAxiWaitElapsedForRun(cmd, ra.wait, ra.runID, "alamino axi run", lead...)
 		}
 		return emitError(cmd, 1, fmt.Sprintf("wait for %s: %v", stepName, err))
 	}
@@ -2103,7 +2085,7 @@ func runAxiRespond(cmd *cobra.Command, ra respondArgs) error {
 	final, ciReady, err := driveRunSelected(driveCtx, cmd.ErrOrStderr(), env.client, env.p.Socket(), runID, ra.autoYes, ra.runID != "")
 	if err != nil {
 		if isAxiWaitElapsed(ctx, driveCtx, err) {
-			return emitAxiWaitElapsedForRun(cmd, ra.wait, ra.runID, "no-mistakes axi run", lead...)
+			return emitAxiWaitElapsedForRun(cmd, ra.wait, ra.runID, "alamino axi run", lead...)
 		}
 		return emitError(cmd, 1, fmt.Sprintf("drive run: %v", err))
 	}
@@ -2140,9 +2122,7 @@ func newAxiAbortCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackAxiSurface("axi-abort", "/axi/abort", nil, func() error {
-				return runAxiAbort(cmd, strings.TrimSpace(runID))
-			})
+			return runAxiAbort(cmd, strings.TrimSpace(runID))
 		},
 	}
 	cmd.Flags().StringVar(&runID, "run", "", "cancel this run id directly, without resolving the current branch or worktree")
@@ -2207,7 +2187,7 @@ func runAxiAbort(cmd *cobra.Command, runID string) error {
 		fields = append(fields, branchSyncField(state))
 	}
 	help := []string{
-		"Run `no-mistakes axi sync --check` before any local follow-up commit - a cancelled run can leave unpublished pipeline commits preserved in the local gate, and the check offers the guarded custody recovery",
+		"Run `alamino axi sync --check` before any local follow-up commit - a cancelled run can leave unpublished pipeline commits preserved in the local gate, and the check offers the guarded custody recovery",
 	}
 	if state.Pipeline.RunID == active.Run.ID {
 		switch {
@@ -2313,8 +2293,8 @@ func emitUnconfirmedAbort(cmd *cobra.Command, runID, branch, reason string, last
 		fields = append(fields, runObjectFieldWithKey("run_state", *last))
 	}
 	fields = append(fields, toon.Field{Key: "help", Value: []string{
-		"Run `no-mistakes axi status --run " + runID + "` to observe the run until it reports a terminal status",
-		"Re-run `no-mistakes axi abort` once the daemon is reachable; a repeated abort is an idempotent no-op",
+		"Run `alamino axi status --run " + runID + "` to observe the run until it reports a terminal status",
+		"Re-run `alamino axi abort` once the daemon is reachable; a repeated abort is an idempotent no-op",
 		"Do not treat the branch as released or recoverable until a terminal status is confirmed",
 	}})
 	emitDoc(cmd, fields...)

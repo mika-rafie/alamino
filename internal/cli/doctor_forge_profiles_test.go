@@ -7,14 +7,9 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
 )
 
 func TestDoctorValidatesForgeProfileWithItsAuthoritativeEnvironment(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	profileDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(profileDir, "hosts.yml"), []byte("github.com:\n    user: personal\n"), 0o644); err != nil {
@@ -29,7 +24,7 @@ func TestDoctorValidatesForgeProfileWithItsAuthoritativeEnvironment(t *testing.T
 	writeDoctorGitBinary(t, binDir)
 	writeDoctorStubBinary(t, binDir, "codex")
 	writeDoctorProfileGHBinary(t, binDir, profileDir)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	t.Setenv("PATH", binDir)
 	t.Setenv("GH_TOKEN", "must-not-leak")
 
@@ -43,9 +38,6 @@ func TestDoctorValidatesForgeProfileWithItsAuthoritativeEnvironment(t *testing.T
 }
 
 func TestDoctorReportsForgeProfileAuthenticationFailureWithoutChangingExitContract(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	profileDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(profileDir, "hosts.yml"), []byte("github.com:\n    user: personal\n"), 0o644); err != nil {
@@ -59,7 +51,7 @@ func TestDoctorReportsForgeProfileAuthenticationFailureWithoutChangingExitContra
 	writeDoctorGitBinary(t, binDir)
 	writeDoctorStubBinary(t, binDir, "codex")
 	writeDoctorFailingBinary(t, binDir, "gh")
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	t.Setenv("PATH", binDir)
 
 	out, err := executeCmd("doctor")
@@ -74,9 +66,6 @@ func TestDoctorReportsForgeProfileAuthenticationFailureWithoutChangingExitContra
 }
 
 func TestDoctorValidatesGitLabForgeProfile(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	profileDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(profileDir, "config.yml"), []byte("hosts:\n    gitlab.com:\n        user: work\n"), 0o644); err != nil {
@@ -90,7 +79,7 @@ func TestDoctorValidatesGitLabForgeProfile(t *testing.T) {
 	writeDoctorGitBinary(t, binDir)
 	writeDoctorStubBinary(t, binDir, "codex")
 	writeDoctorStubBinary(t, binDir, "glab")
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	t.Setenv("PATH", binDir)
 
 	out, err := executeCmd("doctor")
@@ -129,9 +118,6 @@ func writeDoctorFailingBinary(t *testing.T, dir, base string) {
 }
 
 func TestDoctorValidatesOwnerScopedGHUserProfileAsThatLogin(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	global := "agent: codex\nforge_profiles:\n  github.com/remicaesar:\n    gh_user: remicaesar\n"
 	if err := os.WriteFile(filepath.Join(nmHome, "config.yaml"), []byte(global), 0o644); err != nil {
@@ -155,7 +141,7 @@ func TestDoctorValidatesOwnerScopedGHUserProfileAsThatLogin(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(binDir, name), []byte(contents), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	t.Setenv("PATH", binDir)
 	t.Setenv("GH_TOKEN", "ambient-active-account")
 

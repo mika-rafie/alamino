@@ -1,6 +1,6 @@
 // Package quotarouting is the quota-aware agent-ordering selection unit.
 //
-// no-mistakes can be configured with an ordered agent list, but it picks them
+// alamino can be configured with an ordered agent list, but it picks them
 // in a fixed order and only falls back when an agent cannot start, so a run
 // can begin on an agent whose subscription quota is nearly or fully spent and
 // then stall mid-run. When the operator opts in (global quota_routing), the
@@ -10,7 +10,7 @@
 // The selection itself is the pure Select function: a parsed snapshot plus the
 // candidate list in configured order in, the reordered list plus per-candidate
 // evidence out. The semantics mirror firstmate's quota-array dispatch (three
-// gates, then spendPriority) with the no-mistakes design's differences: an
+// gates, then spendPriority) with the alamino design's differences: an
 // unknown quota keeps an agent eligible but ranked below known-good headroom,
 // ties keep the configured order, and nothing here ever blocks a run - the
 // worst case is the configured order unchanged.

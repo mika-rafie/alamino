@@ -12,12 +12,11 @@ import (
 
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 type cliSyncFixture struct {
@@ -26,8 +25,8 @@ type cliSyncFixture struct {
 
 func newCLISyncFixture(t *testing.T) cliSyncFixture {
 	t.Helper()
-	nmHome := filepath.Join(t.TempDir(), "nm-home")
-	t.Setenv("NM_HOME", nmHome)
+	nmHome := filepath.Join(t.TempDir(), "alamino-home")
+	t.Setenv("ALAMINO_HOME", nmHome)
 	root := t.TempDir()
 	remote := filepath.Join(root, "remote.git")
 	cliGit(t, root, "init", "--bare", remote)
@@ -164,7 +163,7 @@ func TestAxiSyncCheckAndApplyReturnFullStructuredState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("check: %v\n%s", err, out)
 	}
-	for _, want := range []string{"branch_sync:", "state: behind", "safety: safe_fast_forward", "freshness: live", f.old, f.pushed, "refs/heads/feature/sync", "command: no-mistakes axi sync"} {
+	for _, want := range []string{"branch_sync:", "state: behind", "safety: safe_fast_forward", "freshness: live", f.old, f.pushed, "refs/heads/feature/sync", "command: alamino axi sync"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("check missing %q:\n%s", want, out)
 		}
@@ -198,7 +197,7 @@ func TestAxiSyncEquivalentDivergedCheckAndApply(t *testing.T) {
 	if err != nil {
 		t.Fatalf("check: %v\n%s", err, out)
 	}
-	for _, want := range []string{"state: diverged", "safety: safe_equivalent_advance", "relation: diverged", "command: no-mistakes axi sync"} {
+	for _, want := range []string{"state: diverged", "safety: safe_equivalent_advance", "relation: diverged", "command: alamino axi sync"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("check missing %q:\n%s", want, out)
 		}
@@ -216,7 +215,7 @@ func TestAxiSyncEquivalentDivergedCheckAndApply(t *testing.T) {
 	if got := cliGit(t, f.local, "rev-parse", "HEAD"); got != f.pushed {
 		t.Fatalf("HEAD = %s, want %s", got, f.pushed)
 	}
-	if got := cliGit(t, f.local, "rev-parse", "refs/no-mistakes/sync-anchor/"+f.runID); got != f.old {
+	if got := cliGit(t, f.local, "rev-parse", "refs/alamino/sync-anchor/"+f.runID); got != f.old {
 		t.Fatalf("anchor = %s, want %s", got, f.old)
 	}
 }
@@ -250,7 +249,7 @@ func TestHumanSyncRequiresConfirmationOutsideTTY(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected refusal:\n%s", out)
 	}
-	if !strings.Contains(out, "Re-run with `no-mistakes sync --yes`") {
+	if !strings.Contains(out, "Re-run with `alamino sync --yes`") {
 		t.Fatalf("output:\n%s", out)
 	}
 	if got := cliGit(t, f.local, "rev-parse", "HEAD"); got != f.old {
@@ -288,40 +287,6 @@ func TestHumanSyncTTYConfirmationAppliesOnlyAfterYes(t *testing.T) {
 	}
 }
 
-func TestSyncTelemetryIsOneBoundedPrivacySafeEvent(t *testing.T) {
-	f := newCLISyncFixture(t)
-	recorder := &telemetryRecorder{}
-	restore := telemetry.SetDefaultForTesting(recorder)
-	defer restore()
-	if out, err := executeCmd("axi", "sync", "--check"); err != nil {
-		t.Fatalf("sync check: %v\n%s", err, out)
-	}
-	event := recorder.find("command", "command", "axi-sync")
-	if event == nil {
-		t.Fatal("missing explicit sync command event")
-	}
-	count := 0
-	for _, candidate := range recorder.events {
-		if candidate.name == "command" && candidate.fields["command"] == "axi-sync" {
-			count++
-		}
-	}
-	if count != 1 {
-		t.Fatalf("sync command events = %d, want 1", count)
-	}
-	serialized := fmt.Sprint(event.fields)
-	for _, forbidden := range []string{f.old, f.pushed, f.local, f.remote, "feature/sync", "refs/heads/feature/sync"} {
-		if strings.Contains(serialized, forbidden) {
-			t.Fatalf("telemetry leaked %q: %s", forbidden, serialized)
-		}
-	}
-	for _, want := range []string{"surface:axi", "mode:check", "state_before:behind", "target_kind:upstream", "result:noop"} {
-		if !strings.Contains(serialized, want) {
-			t.Errorf("telemetry missing %q: %s", want, serialized)
-		}
-	}
-}
-
 func TestAxiStatusCachedBranchSyncDoesNotFetch(t *testing.T) {
 	f := newCLISyncFixture(t)
 	fetchHead := filepath.Join(f.local, ".git", "FETCH_HEAD")
@@ -345,12 +310,12 @@ type cliRecoverFixture struct {
 
 // newCLIRecoverFixture reproduces the stranded custody state end to end for
 // the CLI surface: a cancelled pre-push run whose pipeline fix commit exists
-// only in the repo's local gate at <NM_HOME>/repos/<id>.git, while the
+// only in the repo's local gate at <ALAMINO_HOME>/repos/<id>.git, while the
 // operator worktree sits at the submitted head with no push binding.
 func newCLIRecoverFixture(t *testing.T) cliRecoverFixture {
 	t.Helper()
-	nmHome := filepath.Join(t.TempDir(), "nm-home")
-	t.Setenv("NM_HOME", nmHome)
+	nmHome := filepath.Join(t.TempDir(), "alamino-home")
+	t.Setenv("ALAMINO_HOME", nmHome)
 	root := t.TempDir()
 	remote := filepath.Join(root, "remote.git")
 	cliGit(t, root, "init", "--bare", remote)
@@ -403,7 +368,7 @@ func newCLIRecoverFixture(t *testing.T) cliRecoverFixture {
 		t.Fatal(err)
 	}
 	cliGit(t, pipeline, "add", "fix.txt")
-	cliGit(t, pipeline, "commit", "-m", "no-mistakes(review): fix")
+	cliGit(t, pipeline, "commit", "-m", "alamino(review): fix")
 	preserved := cliGit(t, pipeline, "rev-parse", "HEAD")
 	cliGit(t, pipeline, "push", "origin", "HEAD:refs/heads/feature/recover")
 
@@ -433,8 +398,8 @@ func newCLIRecoverFixture(t *testing.T) cliRecoverFixture {
 // setup uses no reset, force update, or deleted ref.
 func newCLIDivergentArchiveFixture(t *testing.T) cliRecoverFixture {
 	t.Helper()
-	nmHome := filepath.Join(t.TempDir(), "nm-home")
-	t.Setenv("NM_HOME", nmHome)
+	nmHome := filepath.Join(t.TempDir(), "alamino-home")
+	t.Setenv("ALAMINO_HOME", nmHome)
 	root := t.TempDir()
 	remote := filepath.Join(root, "remote.git")
 	cliGit(t, root, "init", "--bare", remote)
@@ -499,7 +464,7 @@ func newCLIDivergentArchiveFixture(t *testing.T) cliRecoverFixture {
 	cliGit(t, writer, "add", "later.txt")
 	cliGit(t, writer, "commit", "-m", "preserved later head 2a972a5")
 	preserved := cliGit(t, writer, "rev-parse", "HEAD")
-	gateRecovery := "refs/no-mistakes/recover/" + run.ID
+	gateRecovery := "refs/alamino/recover/" + run.ID
 	archiveRef := "refs/heads/archive/validation-" + run.ID + "-2a972a5"
 	cliGit(t, writer, "push", gate,
 		preserved+":refs/heads/feature/recover",
@@ -609,8 +574,8 @@ func cliRecoverRunCustodyStamps(t *testing.T, runID string) (stamped, total int)
 // provenance or custody stamp exists.
 func newCLIUnmovedAbortFixture(t *testing.T) cliRecoverFixture {
 	t.Helper()
-	nmHome := filepath.Join(t.TempDir(), "nm-home")
-	t.Setenv("NM_HOME", nmHome)
+	nmHome := filepath.Join(t.TempDir(), "alamino-home")
+	t.Setenv("ALAMINO_HOME", nmHome)
 	root := t.TempDir()
 	remote := filepath.Join(root, "remote.git")
 	cliGit(t, root, "init", "--bare", remote)
@@ -820,8 +785,8 @@ func newCLIStaleUnpublishedFixtureWithRelation(t *testing.T, pushedDescendant bo
 
 func newCLIStaleUnpublishedFixtureWithOptions(t *testing.T, pushedDescendant bool, provenance olderTargetProvenance) cliStaleUnpublishedFixture {
 	t.Helper()
-	nmHome := filepath.Join(t.TempDir(), "nm-home")
-	t.Setenv("NM_HOME", nmHome)
+	nmHome := filepath.Join(t.TempDir(), "alamino-home")
+	t.Setenv("ALAMINO_HOME", nmHome)
 	root := t.TempDir()
 	remote := filepath.Join(root, "remote.git")
 	cliGit(t, root, "init", "--bare", remote)
@@ -1060,14 +1025,14 @@ func TestAxiSyncCheckSurfacesRecoveryForTerminalPrePushRun(t *testing.T) {
 		"status: cancelled",
 		"safety: blocked_pipeline_owned_recoverable",
 		"code: recover_custody",
-		"command: no-mistakes axi sync --recover",
-		"no-mistakes rerun",
+		"command: alamino axi sync --recover",
+		"alamino rerun",
 	}, canonicalRerunRecoveryPhrases...) {
 		if !strings.Contains(out, want) {
 			t.Errorf("stranded check missing %q:\n%s", want, out)
 		}
 	}
-	for _, forbidden := range []string{"source: bound_archive", "command: no-mistakes axi sync --recover --keep-local"} {
+	for _, forbidden := range []string{"source: bound_archive", "command: alamino axi sync --recover --keep-local"} {
 		if strings.Contains(out, forbidden) {
 			t.Errorf("ordinary preserved-head path unexpectedly contains %q:\n%s", forbidden, out)
 		}
@@ -1107,7 +1072,7 @@ func TestAxiSyncRecoversRemoteRewrittenBindingEndToEnd(t *testing.T) {
 	if err == nil || !asExitError(err, &ee) || ee.code != 1 {
 		t.Fatalf("rewritten check should exit 1, got %#v\n%s", err, out)
 	}
-	for _, want := range []string{"state: remote_rewritten", "safety: blocked_remote_rewritten", "code: recover_remote_rewritten", "command: no-mistakes axi sync --recover"} {
+	for _, want := range []string{"state: remote_rewritten", "safety: blocked_remote_rewritten", "code: recover_remote_rewritten", "command: alamino axi sync --recover"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("rewritten check missing %q:\n%s", want, out)
 		}
@@ -1135,10 +1100,10 @@ func TestAxiSyncRecoversRemoteRewrittenBindingEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("recover: %v\n%s", err, out)
 	}
-	if strings.Contains(out, "\nerror:") || !strings.Contains(out, "the superseded pipeline head was anchored at "+"refs/no-mistakes/recover-rewritten/"+f.runID+"/1") || !strings.Contains(out, "the branch, worktree, and remote were not changed") || !strings.Contains(out, "local and pipeline-pushed histories have diverged") || strings.Contains(out, "no files or refs were changed") {
+	if strings.Contains(out, "\nerror:") || !strings.Contains(out, "the superseded pipeline head was anchored at "+"refs/alamino/recover-rewritten/"+f.runID+"/1") || !strings.Contains(out, "the branch, worktree, and remote were not changed") || !strings.Contains(out, "local and pipeline-pushed histories have diverged") || strings.Contains(out, "no files or refs were changed") {
 		t.Errorf("successful rebind must keep divergence in branch_sync.note without a top-level error:\n%s", out)
 	}
-	anchor := "refs/no-mistakes/recover-rewritten/" + f.runID + "/1"
+	anchor := "refs/alamino/recover-rewritten/" + f.runID + "/1"
 	for _, want := range []string{"recovered: true", "changed: false", "source: remote_rewritten", "archive_ref: " + anchor, "proof: worktree"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("recover output missing %q:\n%s", want, out)
@@ -1179,7 +1144,7 @@ func TestAxiSyncRecoverReturnsCustodyEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("recover: %v\n%s", err, out)
 	}
-	for _, want := range []string{"recovered: true", "state: custody_returned", "changed: true", "relation: equal", "no-mistakes axi run --intent"} {
+	for _, want := range []string{"recovered: true", "state: custody_returned", "changed: true", "relation: equal", "alamino axi run --intent"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("recover output missing %q:\n%s", want, out)
 		}
@@ -1257,7 +1222,7 @@ func TestAxiSyncAdoptPublishedRebasedLane(t *testing.T) {
 		"state: custody_returned",
 		"relation: diverged",
 		"code: adopt_published",
-		"command: no-mistakes axi sync --adopt-published",
+		"command: alamino axi sync --adopt-published",
 	} {
 		if !strings.Contains(status, want) {
 			t.Errorf("rebased status missing %q:\n%s", want, status)
@@ -1355,7 +1320,7 @@ func TestAxiSyncRecoverDivergedRefusesThenKeepLocalSucceeds(t *testing.T) {
 	if err == nil || !asExitError(err, &ee) || ee.code != 1 {
 		t.Fatalf("diverged recover should exit 1, got %#v\n%s", err, out)
 	}
-	for _, want := range append([]string{"safety: blocked_recover_diverged", "refs/no-mistakes/recover/", "--keep-local"}, canonicalRerunRecoveryPhrases...) {
+	for _, want := range append([]string{"safety: blocked_recover_diverged", "refs/alamino/recover/", "--keep-local"}, canonicalRerunRecoveryPhrases...) {
 		if !strings.Contains(out, want) {
 			t.Errorf("diverged refusal missing %q:\n%s", want, out)
 		}
@@ -1430,13 +1395,13 @@ func TestAxiArchiveBackedRecoveryKeepsExactRequiredHeadAndBothHistories(t *testi
 		"keep_local: true",
 		"proof: verified",
 		"code: recover_custody",
-		"command: no-mistakes axi sync --recover --keep-local",
+		"command: alamino axi sync --recover --keep-local",
 	} {
 		if !strings.Contains(bound, want) {
 			t.Errorf("bound state missing %q:\n%s", want, bound)
 		}
 	}
-	if strings.Contains(bound, "no-mistakes rerun") {
+	if strings.Contains(bound, "alamino rerun") {
 		t.Fatalf("archive plan offered a second action instead of exact custody restoration:\n%s", bound)
 	}
 	if after := cliRecoveryGitSnapshot(t, f); after != beforeBind {
@@ -1473,7 +1438,7 @@ func TestAxiArchiveBackedRecoveryKeepsExactRequiredHeadAndBothHistories(t *testi
 	if err == nil || !asExitError(err, &ee) || ee.code != 1 {
 		t.Fatalf("default recovery should refuse, got %#v\n%s", err, refused)
 	}
-	for _, want := range []string{"safety: blocked_recover_archive_requires_keep_local", "code: recover_custody", "command: no-mistakes axi sync --recover --keep-local"} {
+	for _, want := range []string{"safety: blocked_recover_archive_requires_keep_local", "code: recover_custody", "command: alamino axi sync --recover --keep-local"} {
 		if !strings.Contains(refused, want) {
 			t.Errorf("default recovery refusal missing %q:\n%s", want, refused)
 		}
@@ -1498,14 +1463,14 @@ func TestAxiArchiveBackedRecoveryKeepsExactRequiredHeadAndBothHistories(t *testi
 	if got := cliGit(t, f.local, "rev-parse", f.archiveRef); got != f.preserved {
 		t.Fatalf("archive moved to %s, want preserved later head %s", got, f.preserved)
 	}
-	if got := cliGit(t, f.gate, "rev-parse", "refs/no-mistakes/recover/"+f.runID); got != f.preserved {
+	if got := cliGit(t, f.gate, "rev-parse", "refs/alamino/recover/"+f.runID); got != f.preserved {
 		t.Fatalf("gate recovery ref = %s, want preserved later head %s", got, f.preserved)
 	}
 	if got := cliGit(t, f.gate, "rev-parse", "refs/heads/feature/recover"); got != f.submitted {
 		t.Fatalf("gate branch = %s, want exact required head %s", got, f.submitted)
 	}
 	if gateBefore != f.submitted && gateBefore != f.preserved {
-		if got := cliGit(t, f.gate, "rev-parse", "refs/no-mistakes/recover-gate/"+f.runID); got != gateBefore {
+		if got := cliGit(t, f.gate, "rev-parse", "refs/alamino/recover-gate/"+f.runID); got != gateBefore {
 			t.Fatalf("independent pre-recovery gate head = %s, want %s", got, gateBefore)
 		}
 	}
@@ -1623,7 +1588,7 @@ func TestAxiStatusOffersKeepLocalWhenPreservedHeadIsMissing(t *testing.T) {
 		"state: pipeline_owned",
 		"safety: blocked_recover_preserved_head_missing",
 		"code: recover_custody",
-		"command: no-mistakes axi sync --recover --keep-local",
+		"command: alamino axi sync --recover --keep-local",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing-head status missing %q:\n%s", want, out)
@@ -1637,7 +1602,7 @@ func TestAxiStatusOffersKeepLocalWhenPreservedHeadIsMissing(t *testing.T) {
 	if err == nil || !asExitError(err, &ee) || ee.code != 1 {
 		t.Fatalf("missing-head check should exit 1, got %#v\n%s", err, check)
 	}
-	if !strings.Contains(check, "command: no-mistakes axi sync --recover --keep-local") {
+	if !strings.Contains(check, "command: alamino axi sync --recover --keep-local") {
 		t.Fatalf("missing-head check did not offer keep-local:\n%s", check)
 	}
 
@@ -1679,7 +1644,7 @@ func TestAxiSyncRecoverKeepLocalReturnsCustodyWhenPreservedHeadIsMissing(t *test
 	if err != nil {
 		t.Fatalf("post-recover axi status: %v\n%s", err, status)
 	}
-	if !strings.Contains(status, "state: custody_returned") || !strings.Contains(status, "no-mistakes axi run --intent") {
+	if !strings.Contains(status, "state: custody_returned") || !strings.Contains(status, "alamino axi run --intent") {
 		t.Fatalf("post-recover status should unblock axi run:\n%s", status)
 	}
 	check, err := executeCmd("axi", "sync", "--check")
@@ -1730,7 +1695,7 @@ func TestHumanSyncRecoverRequiresConfirmationOutsideTTY(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected refusal:\n%s", out)
 	}
-	if !strings.Contains(out, "Re-run with `no-mistakes sync --recover --yes`") {
+	if !strings.Contains(out, "Re-run with `alamino sync --recover --yes`") {
 		t.Fatalf("output:\n%s", out)
 	}
 	if got := cliGit(t, f.local, "rev-parse", "HEAD"); got != f.submitted {

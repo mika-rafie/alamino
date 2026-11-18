@@ -6,15 +6,10 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
 )
 
 func TestDoctorReportsGateCannotValidateWithoutAgent(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
-	t.Setenv("NM_HOME", t.TempDir())
+	t.Setenv("ALAMINO_HOME", t.TempDir())
 	binDir := t.TempDir()
 	writeDoctorGitBinary(t, binDir)
 	t.Setenv("PATH", binDir)
@@ -31,11 +26,8 @@ func TestDoctorReportsGateCannotValidateWithoutAgent(t *testing.T) {
 }
 
 func TestDoctorAcceptsConfiguredACPBridge(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	if err := os.WriteFile(filepath.Join(nmHome, "config.yaml"), []byte("agent: acp:gemini\n"), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}

@@ -10,7 +10,7 @@ import (
 
 // omp (Oh My Pi) gate-instruction neutralization.
 //
-// no-mistakes drives omp only through ACP (acpx), as the dynamic target
+// alamino drives omp only through ACP (acpx), as the dynamic target
 // `acp:omp`. Under the trusted project-settings opt-out
 // (disable_project_settings: true) the gate must refuse any harness that would
 // load the TARGET repository's own project instructions, because the gate runs
@@ -64,7 +64,7 @@ const ompACPTarget = "omp"
 //     operator memory - a cross-turn path around disabledProviders that omp has
 //     and pi does not. A validation gate running with owner credentials must be
 //     stateless with respect to that memory, so the overlay turns it off.
-const ompGateOverlayYAML = `# Written by no-mistakes for a gate run under disable_project_settings: true.
+const ompGateOverlayYAML = `# Written by alamino for a gate run under disable_project_settings: true.
 # Neutralizes the target repository's project instructions by disabling every
 # omp discovery provider that contributes a context file (AGENTS.md/CLAUDE.md/
 # GEMINI.md, .omp/AGENTS.md, and the other supported conventions) and by turning
@@ -133,7 +133,7 @@ func ompNeutralizedACPCommand(overlayPath string) string {
 // [A-Za-z0-9_]-class characters, so a remaining unsafe character would be a
 // platform anomaly; fail closed if one appears.
 func writeOMPGateOverlay() (string, error) {
-	f, err := os.CreateTemp("", "nm-omp-gate-*.yml")
+	f, err := os.CreateTemp("", "alamino-omp-gate-*.yml")
 	if err != nil {
 		return "", fmt.Errorf("create omp gate overlay: %w", err)
 	}

@@ -17,20 +17,20 @@ func TestLoadGlobalParsesProviderPlugins(t *testing.T) {
 	cfg, err := LoadGlobalFromBytes([]byte(`
 provider_plugins:
   ssm:
-    command: ~/bin/nm-ssm
+    command: ~/bin/alamino-ssm
     args: [--profile, work]
     hosts: ["*.sourcemanager.dev", "Git.Example.com"]
     timeout: 30s
     draft_pull_requests: true
   other:
-    command: nm-other
+    command: alamino-other
     hosts: [other.example.com]
 `))
 	if err != nil {
 		t.Fatalf("LoadGlobalFromBytes: %v", err)
 	}
 	ssm := cfg.ProviderPlugins["ssm"]
-	if ssm.Command != filepath.Join(home, "bin", "nm-ssm") {
+	if ssm.Command != filepath.Join(home, "bin", "alamino-ssm") {
 		t.Fatalf("ssm command = %q", ssm.Command)
 	}
 	if strings.Join(ssm.Args, " ") != "--profile work" || ssm.Timeout != 30*time.Second || !ssm.DraftPullRequests {
@@ -40,7 +40,7 @@ provider_plugins:
 		t.Fatalf("ssm hosts = %v", ssm.Hosts)
 	}
 	other := cfg.ProviderPlugins["other"]
-	if other.Command != "nm-other" || other.Timeout != DefaultProviderPluginTimeout || other.DraftPullRequests {
+	if other.Command != "alamino-other" || other.Timeout != DefaultProviderPluginTimeout || other.DraftPullRequests {
 		t.Fatalf("other = %+v", other)
 	}
 }
@@ -63,24 +63,24 @@ func TestLoadGlobalRejectsInvalidProviderPlugins(t *testing.T) {
 		yaml    string
 		wantErr string
 	}{
-		{name: "uppercase name", yaml: "  SSM: {command: nm-ssm, hosts: [a.example.com]}", wantErr: "name must be"},
-		{name: "built-in name", yaml: "  gitlab: {command: nm-ssm, hosts: [a.example.com]}", wantErr: "built-in provider name"},
+		{name: "uppercase name", yaml: "  SSM: {command: alamino-ssm, hosts: [a.example.com]}", wantErr: "name must be"},
+		{name: "built-in name", yaml: "  gitlab: {command: alamino-ssm, hosts: [a.example.com]}", wantErr: "built-in provider name"},
 		{name: "missing command", yaml: "  ssm: {hosts: [a.example.com]}", wantErr: "command is required"},
-		{name: "relative command", yaml: "  ssm: {command: bin/nm-ssm, hosts: [a.example.com]}", wantErr: "absolute or start with ~/"},
-		{name: "dot relative command", yaml: "  ssm: {command: ./nm-ssm, hosts: [a.example.com]}", wantErr: "absolute or start with ~/"},
-		{name: "no hosts", yaml: "  ssm: {command: nm-ssm}", wantErr: "at least one host"},
-		{name: "empty host", yaml: `  ssm: {command: nm-ssm, hosts: [""]}`, wantErr: "must not be empty"},
-		{name: "scheme", yaml: "  ssm: {command: nm-ssm, hosts: [\"https://a.example.com\"]}", wantErr: "not a host name"},
-		{name: "port", yaml: "  ssm: {command: nm-ssm, hosts: [\"a.example.com:443\"]}", wantErr: "not a host name"},
-		{name: "path", yaml: "  ssm: {command: nm-ssm, hosts: [a.example.com/team]}", wantErr: "not a host name"},
-		{name: "user", yaml: "  ssm: {command: nm-ssm, hosts: [git@a.example.com]}", wantErr: "not a host name"},
-		{name: "bare wildcard", yaml: "  ssm: {command: nm-ssm, hosts: [\"*\"]}", wantErr: "not a host name"},
-		{name: "inner wildcard", yaml: "  ssm: {command: nm-ssm, hosts: [\"a.*.com\"]}", wantErr: "not a host name"},
-		{name: "duplicate within plugin", yaml: "  ssm: {command: nm-ssm, hosts: [a.example.com, A.example.com]}", wantErr: "already claimed by provider_plugins.ssm"},
-		{name: "duplicate across plugins", yaml: "  aaa: {command: nm-a, hosts: [a.example.com]}\n  bbb: {command: nm-b, hosts: [a.example.com]}", wantErr: "already claimed by provider_plugins.aaa"},
-		{name: "bad timeout", yaml: "  ssm: {command: nm-ssm, hosts: [a.example.com], timeout: soon}", wantErr: "provider_plugins.ssm.timeout"},
-		{name: "zero timeout", yaml: "  ssm: {command: nm-ssm, hosts: [a.example.com], timeout: 0s}", wantErr: "provider_plugins.ssm.timeout"},
-		{name: "unknown field", yaml: "  ssm: {command: nm-ssm, hosts: [a.example.com], token: x}", wantErr: "token"},
+		{name: "relative command", yaml: "  ssm: {command: bin/alamino-ssm, hosts: [a.example.com]}", wantErr: "absolute or start with ~/"},
+		{name: "dot relative command", yaml: "  ssm: {command: ./alamino-ssm, hosts: [a.example.com]}", wantErr: "absolute or start with ~/"},
+		{name: "no hosts", yaml: "  ssm: {command: alamino-ssm}", wantErr: "at least one host"},
+		{name: "empty host", yaml: `  ssm: {command: alamino-ssm, hosts: [""]}`, wantErr: "must not be empty"},
+		{name: "scheme", yaml: "  ssm: {command: alamino-ssm, hosts: [\"https://a.example.com\"]}", wantErr: "not a host name"},
+		{name: "port", yaml: "  ssm: {command: alamino-ssm, hosts: [\"a.example.com:443\"]}", wantErr: "not a host name"},
+		{name: "path", yaml: "  ssm: {command: alamino-ssm, hosts: [a.example.com/team]}", wantErr: "not a host name"},
+		{name: "user", yaml: "  ssm: {command: alamino-ssm, hosts: [git@a.example.com]}", wantErr: "not a host name"},
+		{name: "bare wildcard", yaml: "  ssm: {command: alamino-ssm, hosts: [\"*\"]}", wantErr: "not a host name"},
+		{name: "inner wildcard", yaml: "  ssm: {command: alamino-ssm, hosts: [\"a.*.com\"]}", wantErr: "not a host name"},
+		{name: "duplicate within plugin", yaml: "  ssm: {command: alamino-ssm, hosts: [a.example.com, A.example.com]}", wantErr: "already claimed by provider_plugins.ssm"},
+		{name: "duplicate across plugins", yaml: "  aaa: {command: alamino-a, hosts: [a.example.com]}\n  bbb: {command: alamino-b, hosts: [a.example.com]}", wantErr: "already claimed by provider_plugins.aaa"},
+		{name: "bad timeout", yaml: "  ssm: {command: alamino-ssm, hosts: [a.example.com], timeout: soon}", wantErr: "provider_plugins.ssm.timeout"},
+		{name: "zero timeout", yaml: "  ssm: {command: alamino-ssm, hosts: [a.example.com], timeout: 0s}", wantErr: "provider_plugins.ssm.timeout"},
+		{name: "unknown field", yaml: "  ssm: {command: alamino-ssm, hosts: [a.example.com], token: x}", wantErr: "token"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestLoadGlobalRejectsHostClaimedByForgeProfileAndPlugin(t *testing.T) {
 	for _, pattern := range []string{"git.example.com", "*.example.com"} {
 		t.Run(pattern, func(t *testing.T) {
 			contents := fmt.Sprintf("forge_profiles:\n  git.example.com:\n    glab_config_dir: %q\n"+
-				"provider_plugins:\n  ssm:\n    command: nm-ssm\n    hosts: [%q]\n", gitlabDir, pattern)
+				"provider_plugins:\n  ssm:\n    command: alamino-ssm\n    hosts: [%q]\n", gitlabDir, pattern)
 			_, err := LoadGlobalFromBytes([]byte(contents))
 			if err == nil || !strings.Contains(err.Error(), "also claimed by provider_plugins.ssm") {
 				t.Fatalf("LoadGlobalFromBytes error = %v", err)
@@ -142,7 +142,7 @@ func TestProviderPluginsSelect(t *testing.T) {
 }
 
 func TestMergeTakesProviderPluginsFromGlobalOnly(t *testing.T) {
-	global, err := LoadGlobalFromBytes([]byte("provider_plugins:\n  ssm:\n    command: nm-ssm\n    hosts: [git.example.com]\n"))
+	global, err := LoadGlobalFromBytes([]byte("provider_plugins:\n  ssm:\n    command: alamino-ssm\n    hosts: [git.example.com]\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestMergeTakesProviderPluginsFromGlobalOnly(t *testing.T) {
 		t.Fatalf("LoadRepoFromBytes: %v", err)
 	}
 	merged := Merge(global, repo)
-	if len(merged.ProviderPlugins) != 1 || merged.ProviderPlugins["ssm"].Command != "nm-ssm" {
+	if len(merged.ProviderPlugins) != 1 || merged.ProviderPlugins["ssm"].Command != "alamino-ssm" {
 		t.Fatalf("merged ProviderPlugins = %#v", merged.ProviderPlugins)
 	}
 	repoOnly := Merge(DefaultGlobalConfig(), repo)

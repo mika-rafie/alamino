@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // GetPRContent uses az's raw description, preserving whitespace and Unicode.

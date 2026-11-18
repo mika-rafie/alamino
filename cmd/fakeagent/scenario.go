@@ -107,7 +107,7 @@ func loadScenario(path string) (*Scenario, error) {
 }
 
 // defaultScenario returns an "everything is clean" response that satisfies
-// every JSON schema no-mistakes hands to an agent: empty findings array,
+// every JSON schema alamino hands to an agent: empty findings array,
 // low risk, and for the test step a populated tested array plus the
 // live-validation contract (one passing scenario and a go verdict) the step
 // now requires of every evidence turn.
@@ -146,7 +146,7 @@ func defaultScenario() *Scenario {
 // Match returns the first action whose Match substring is contained in the
 // prompt. An empty Match matches everything, so a single trailing entry
 // can serve as the catch-all. The process working directory is the
-// worktree no-mistakes pointed the agent at; MatchInDir is the variant for
+// worktree alamino pointed the agent at; MatchInDir is the variant for
 // adapters whose worktree arrives with the request instead.
 func (s *Scenario) Match(prompt string) Action {
 	wd, err := os.Getwd()
@@ -299,7 +299,7 @@ func ignoredByPatterns(file string, patterns []string) bool {
 	return false
 }
 
-// applyEdits mutates files under CWD (which is the worktree no-mistakes
+// applyEdits mutates files under CWD (which is the worktree alamino
 // pointed the agent at). Errors are logged to stderr but not fatal so a
 // scenario with a stale path doesn't kill the whole run.
 

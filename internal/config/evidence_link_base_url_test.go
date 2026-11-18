@@ -13,7 +13,7 @@ import (
 // point, so like local_root it resolves from GlobalConfig alone. A repository
 // value, trusted copy included, loads without error and is ignored.
 func TestEvidenceLinkBaseURLIsGlobalOnly(t *testing.T) {
-	global, err := LoadGlobalFromBytes([]byte("test:\n  evidence:\n    link_base_url: https://evidence.example.com/no-mistakes/\n"))
+	global, err := LoadGlobalFromBytes([]byte("test:\n  evidence:\n    link_base_url: https://evidence.example.com/alamino/\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func TestEvidenceLinkBaseURLIsGlobalOnly(t *testing.T) {
 	}
 	effective := EffectiveRepoConfig(repo, repo, true)
 
-	if got := Merge(global, effective).Test.Evidence.LinkBaseURL; got != "https://evidence.example.com/no-mistakes" {
+	if got := Merge(global, effective).Test.Evidence.LinkBaseURL; got != "https://evidence.example.com/alamino" {
 		t.Errorf("link_base_url = %q, want the global value without its trailing slash", got)
 	}
 	if got := Merge(DefaultGlobalConfig(), effective).Test.Evidence.LinkBaseURL; got != "" {
@@ -60,10 +60,10 @@ func TestRepoConfigProvenanceRoundTripAcceptsEvidenceLinkBaseURL(t *testing.T) {
 
 func TestLoadConfig_EvidenceLinkBaseURLValidation(t *testing.T) {
 	accepted := map[string]string{
-		"": "",
-		"https://evidence.example.com/no-mistakes":       "https://evidence.example.com/no-mistakes",
-		"http://127.0.0.1:8765/":                         "http://127.0.0.1:8765",
-		"  https://evidence.example.com/no-mistakes//  ": "https://evidence.example.com/no-mistakes",
+		"":                                     "",
+		"https://evidence.example.com/alamino": "https://evidence.example.com/alamino",
+		"http://127.0.0.1:8765/":               "http://127.0.0.1:8765",
+		"  https://evidence.example.com/alamino//  ": "https://evidence.example.com/alamino",
 	}
 	for raw, want := range accepted {
 		global, err := LoadGlobalFromBytes([]byte("test:\n  evidence:\n    link_base_url: " + strconv.Quote(raw) + "\n"))
@@ -76,12 +76,12 @@ func TestLoadConfig_EvidenceLinkBaseURLValidation(t *testing.T) {
 	}
 	for _, raw := range []string{
 		"file:///srv/evidence",
-		"evidence.example.com/no-mistakes",
-		"ftp://evidence.example.com/no-mistakes",
-		"https://user:secret@evidence.example.com/no-mistakes",
-		"https://evidence.example.com/no-mistakes?run=1",
-		"https://evidence.example.com/no-mistakes#top",
-		"https://evidence.example.com/no mistakes",
+		"evidence.example.com/alamino",
+		"ftp://evidence.example.com/alamino",
+		"https://user:secret@evidence.example.com/alamino",
+		"https://evidence.example.com/alamino?run=1",
+		"https://evidence.example.com/alamino#top",
+		"https://evidence.example.com/alamino evidence",
 	} {
 		doc := []byte("test:\n  evidence:\n    link_base_url: " + strconv.Quote(raw) + "\n")
 		if _, err := LoadGlobalFromBytes(doc); err == nil || !strings.Contains(err.Error(), "link_base_url") {

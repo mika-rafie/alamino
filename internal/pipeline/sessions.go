@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
 // SessionRole identifies which durable review-loop session an invocation

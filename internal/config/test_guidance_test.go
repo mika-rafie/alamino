@@ -146,10 +146,10 @@ func TestLoadRepo_UnknownTestKeysAreReportedNotRejected(t *testing.T) {
 	}
 	merged := Merge(&GlobalConfig{}, EffectiveRepoConfig(pushed, trusted, false))
 	wantLabeled := []string{
-		"test.path_instruction (default-branch and pushed .no-mistakes.yaml)",
-		"test.evidence.compactt (default-branch .no-mistakes.yaml)",
-		"test.path_instructions[0].instruction_file (default-branch .no-mistakes.yaml)",
-		"test.prepair (pushed .no-mistakes.yaml)",
+		"test.path_instruction (default-branch and pushed .alamino.yaml)",
+		"test.evidence.compactt (default-branch .alamino.yaml)",
+		"test.path_instructions[0].instruction_file (default-branch .alamino.yaml)",
+		"test.prepair (pushed .alamino.yaml)",
 	}
 	if !reflect.DeepEqual(merged.Test.UnknownKeys, wantLabeled) {
 		t.Fatalf("Test.UnknownKeys = %v, want %v", merged.Test.UnknownKeys, wantLabeled)

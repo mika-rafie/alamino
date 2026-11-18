@@ -8,8 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/db"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/db"
 )
 
 // sessionCall records one invocation the fake adapter received.

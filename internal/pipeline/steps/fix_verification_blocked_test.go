@@ -9,9 +9,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // runReviewFixRound drives one Review fix round whose fixer returns fixOutput,

@@ -12,14 +12,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
-const verifyPyRelPath = "../../../.github/actions/require-no-mistakes/verify.py"
+const verifyPyRelPath = "../../../.github/actions/require-alamino/verify.py"
 
 func compliantPipelineBody(t *testing.T, headSHA string) string {
 	t.Helper()
@@ -106,13 +106,13 @@ func TestRebindPipelineAttestationHead_VerifyPyRoundTrip(t *testing.T) {
 	foreign := "a regular pull request with no pipeline section"
 	unchanged, ok := rebindPipelineAttestationHead(foreign, repairHead)
 	if ok {
-		t.Fatal("rebind must not mint an attestation for a PR that was not raised through no-mistakes")
+		t.Fatal("rebind must not mint an attestation for a PR that was not raised through alamino")
 	}
 	if unchanged != foreign {
 		t.Fatal("body without an attestation must be left untouched")
 	}
-	if got, out := runVerifyPy(t, unchanged, repairHead); got != "failure" || !strings.Contains(out, "not raised through no-mistakes") {
-		t.Fatalf("a PR not raised through no-mistakes must still fail, got %s\n%s", got, out)
+	if got, out := runVerifyPy(t, unchanged, repairHead); got != "failure" || !strings.Contains(out, "not raised through alamino") {
+		t.Fatalf("a PR not raised through alamino must still fail, got %s\n%s", got, out)
 	}
 }
 
@@ -278,7 +278,7 @@ func TestRestampPRAttestation_RebindsExistingAndSkipsMissing(t *testing.T) {
 			t.Fatal("body without an attestation must be left untouched")
 		}
 		if got, out := runVerifyPy(t, host.body, repairHead); got != "failure" {
-			t.Fatalf("a PR not raised through no-mistakes must still fail, got %s\n%s", got, out)
+			t.Fatalf("a PR not raised through alamino must still fail, got %s\n%s", got, out)
 		}
 	})
 }
@@ -562,14 +562,14 @@ func TestCIStep_PublishRepairDoesNotMintAttestation(t *testing.T) {
 	}
 	newHead := f.localHead(t)
 	if got, out := runVerifyPy(t, foreign, newHead); got != "failure" {
-		t.Fatalf("a PR not raised through no-mistakes must still fail after a push, got %s\n%s", got, out)
+		t.Fatalf("a PR not raised through alamino must still fail after a push, got %s\n%s", got, out)
 	}
 }
 
 // TestPushStep_AttestsHeadBeforePush pins design C, the simplest sufficient
 // fix for the push-then-attest race: write the attestation for the head
 // about to be pushed BEFORE pushing it, so every consumer of the shared
-// require-no-mistakes action - including one pinned to an immutable
+// require-alamino action - including one pinned to an immutable
 // revision whose verifier reads the PR body from the frozen `synchronize`
 // event payload - already sees the correct attestation the moment the
 // pushed head becomes current. A post-push write, however fast, cannot beat
@@ -862,7 +862,7 @@ func TestPushStep_PushFailureAfterAttestationLeavesBodyAhead(t *testing.T) {
 
 // TestPushStep_DoesNotMintAttestation confirms attestHeadBeforePush is
 // strictly a rebind of an EXISTING attestation and never mints one for a PR
-// that was not raised through no-mistakes.
+// that was not raised through alamino.
 func TestPushStep_DoesNotMintAttestation(t *testing.T) {
 	upstream := t.TempDir()
 	gitCmd(t, upstream, "init", "--bare")
@@ -922,7 +922,7 @@ func TestPushStep_DoesNotMintAttestation(t *testing.T) {
 		t.Fatalf("log = %q, want %q", logs, want)
 	}
 	if got, out := runVerifyPy(t, foreign, newHead); got != "failure" {
-		t.Fatalf("a PR not raised through no-mistakes must still fail, got %s\n%s", got, out)
+		t.Fatalf("a PR not raised through alamino must still fail, got %s\n%s", got, out)
 	}
 }
 

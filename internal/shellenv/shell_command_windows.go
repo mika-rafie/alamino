@@ -18,7 +18,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/winproc"
 	"golang.org/x/sys/windows"
 )
 
@@ -451,7 +451,7 @@ func newWindowsCooperativeCancelEvent() (windows.Handle, string, error) {
 	if _, err := rand.Read(id[:]); err != nil {
 		return 0, "", err
 	}
-	name := `Local\no-mistakes-cooperative-` + hex.EncodeToString(id[:])
+	name := `Local\alamino-cooperative-` + hex.EncodeToString(id[:])
 	namePtr, err := windows.UTF16PtrFromString(name)
 	if err != nil {
 		return 0, "", err

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
+	"github.com/mika-rafie/alamino/internal/git"
 )
 
 func submittedIdentityContext(ctx context.Context, identity *git.CommitIdentity) (context.Context, error) {
@@ -75,7 +75,7 @@ func submissionIdentity(ctx context.Context, checkout string) (git.CommitIdentit
 		*field.value = value
 	}
 	if err := identity.Validate(); err != nil {
-		return identity, fmt.Errorf("cannot prove submitting checkout identity without a caller snapshot; submit using the current no-mistakes binary: %w", err)
+		return identity, fmt.Errorf("cannot prove submitting checkout identity without a caller snapshot; submit using the current alamino binary: %w", err)
 	}
 	return identity, nil
 }

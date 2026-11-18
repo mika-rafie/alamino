@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 // ReapResult summarizes one reaper pass.
@@ -27,7 +27,7 @@ type ReapResult struct {
 // ReapAll stops every inventoried temporary daemon with bounded ownership
 // checks, then removes their inventory entries. It never touches processes
 // that are not listed in the inventory or whose argv no longer matches the
-// recorded NM_HOME (so the shared service is never a target).
+// recorded ALAMINO_HOME (so the shared service is never a target).
 func (inv *Inventory) ReapAll() ReapResult {
 	var result ReapResult
 	if inv == nil {
@@ -107,7 +107,7 @@ func (inv *Inventory) reapEntry(e Entry, result *ReapResult) error {
 }
 
 // isAllowedTempRoot is a hard safety gate: never operate on the shared
-// user NM_HOME or other non-temp paths even if inventory is corrupted.
+// user ALAMINO_HOME or other non-temp paths even if inventory is corrupted.
 func isAllowedTempRoot(nmHome string) bool {
 	nmHome = filepath.Clean(nmHome)
 	if nmHome == "" || nmHome == "." || nmHome == string(filepath.Separator) {
@@ -115,7 +115,7 @@ func isAllowedTempRoot(nmHome string) bool {
 	}
 	// Reject the default shared root spellings.
 	if home, err := os.UserHomeDir(); err == nil {
-		shared := filepath.Join(home, ".no-mistakes")
+		shared := filepath.Join(home, ".alamino")
 		if samePath(nmHome, shared) {
 			return false
 		}
@@ -123,11 +123,11 @@ func isAllowedTempRoot(nmHome string) bool {
 			return false
 		}
 	}
-	// Require a temp-looking path segment. Harness uses nm-e2e-*; daemon_run
-	// tests use nmh-*; suite labs use nm-e2e-keepalive / private/tmp prefixes.
+	// Require a temp-looking path segment. Harness uses alamino-e2e-*; daemon_run
+	// tests use nmh-*; suite labs use alamino-e2e-keepalive / private/tmp prefixes.
 	lower := strings.ToLower(nmHome)
-	if strings.Contains(lower, string(filepath.Separator)+"nm-e2e") ||
-		strings.Contains(lower, string(filepath.Separator)+"nm-eval-") ||
+	if strings.Contains(lower, string(filepath.Separator)+"alamino-e2e") ||
+		strings.Contains(lower, string(filepath.Separator)+"alamino-eval-") ||
 		strings.Contains(lower, string(filepath.Separator)+"nmh-") ||
 		strings.Contains(lower, "/tmp/") ||
 		strings.Contains(lower, "/private/tmp/") ||
@@ -153,10 +153,9 @@ func tryDaemonStop(e Entry) bool {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, bin, "daemon", "stop")
 	cmd.Env = append(os.Environ(),
-		"NM_HOME="+e.NMHome,
-		"NM_TEST_START_DAEMON=1",
-		"NO_MISTAKES_TELEMETRY=off",
-		"NO_MISTAKES_NO_UPDATE_CHECK=1",
+		"ALAMINO_HOME="+e.NMHome,
+		"ALAMINO_TEST_START_DAEMON=1",
+		"ALAMINO_NO_UPDATE_CHECK=1",
 	)
 	cmd.Dir = os.TempDir()
 	winproc.Harden(cmd)
@@ -203,7 +202,7 @@ type Ownership struct {
 	Slot   *Slot
 }
 
-// Acquire creates inventory ownership for a temp NM_HOME under the suite
+// Acquire creates inventory ownership for a temp ALAMINO_HOME under the suite
 // concurrency cap. Call SyncPID after the daemon becomes live; call Release
 // after stop (or from the reaper path).
 func Acquire(nmHome, nmBin string, slotTimeout time.Duration) (*Ownership, error) {
@@ -212,7 +211,7 @@ func Acquire(nmHome, nmBin string, slotTimeout time.Duration) (*Ownership, error
 		return nil, err
 	}
 	if !isAllowedTempRoot(nmHome) {
-		return nil, fmt.Errorf("e2edaemon: nm_home %q is not an allowed temp root", nmHome)
+		return nil, fmt.Errorf("e2edaemon: alamino_home %q is not an allowed temp root", nmHome)
 	}
 	slot, err := inv.AcquireSlot(slotTimeout)
 	if err != nil {

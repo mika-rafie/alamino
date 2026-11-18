@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 func TestStartRunTrustedFetchFailureAdmitsThenFailsBeforeAgent(t *testing.T) {
@@ -103,7 +103,7 @@ func TestLoadRecoveredConfig_BoundsFetchAndFailsClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 	workDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(workDir, ".no-mistakes.yaml"), []byte("commands:\n  lint: echo pushed\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, ".alamino.yaml"), []byte("commands:\n  lint: echo pushed\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -152,7 +152,7 @@ func TestLoadTrustedRepoConfig_FailClosedOnFetchFailure(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(src, "README.md"), []byte("# test\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(src, ".no-mistakes.yaml"),
+	if err := os.WriteFile(filepath.Join(src, ".alamino.yaml"),
 		[]byte("commands:\n  lint: \"echo stale-command\"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +226,7 @@ func TestLoadTrustedRepoConfig_PinnedSHAReadsFreshDefaultBranch(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(src, "README.md"), []byte("# test\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(src, ".no-mistakes.yaml"),
+	if err := os.WriteFile(filepath.Join(src, ".alamino.yaml"),
 		[]byte("commands:\n  lint: \"echo stale-A\"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestLoadTrustedRepoConfig_PinnedSHAReadsFreshDefaultBranch(t *testing.T) {
 	gitCmd(t, src, "push", "origin", "HEAD:refs/heads/main")
 
 	// Advance the default branch to a fresh command and push.
-	if err := os.WriteFile(filepath.Join(src, ".no-mistakes.yaml"),
+	if err := os.WriteFile(filepath.Join(src, ".alamino.yaml"),
 		[]byte("commands:\n  lint: \"echo fresh-B\"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}

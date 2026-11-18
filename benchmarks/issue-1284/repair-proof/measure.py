@@ -14,9 +14,9 @@ root = Path(sys.argv[sys.argv.index('--out') + 1]).resolve() if '--out' in sys.a
 root.mkdir(parents=True, exist_ok=True)
 main = '9dc5ac8bc7fb277bef00991cd731a389a3cbca94'
 branch = '0c16c26c64fb5f35256ebecaf459bbe5365aa28c'
-real_pi = shutil.which(os.environ.get('NM_PROOF_REAL_PI', 'pi'))
+real_pi = shutil.which(os.environ.get('ALAMINO_PROOF_REAL_PI', 'pi'))
 if real_pi is None:
-    raise RuntimeError('the real Pi CLI is missing; put it on PATH or set NM_PROOF_REAL_PI')
+    raise RuntimeError('the real Pi CLI is missing; put it on PATH or set ALAMINO_PROOF_REAL_PI')
 
 def run(args, cwd=None, **kwargs):
     return subprocess.run(args, cwd=cwd, check=True, text=True, capture_output=True, **kwargs).stdout.strip()
@@ -89,9 +89,9 @@ for i, (arm, schema, repetition) in enumerate(sequence):
     log = prefix.with_suffix('.before.txt')
     log.write_text(before.stdout + before.stderr)
     env = os.environ.copy()
-    env.update(NM_PROOF_PREFIX=str(prefix), NM_PROOF_REAL_PI=real_pi,
-               NM_PROOF_IMPLEMENTATION=main if arm == 'main' else branch,
-               NM_PROOF_OBSERVER=str(source_root / 'observe.ts'), NM_PROOF_PI_WRAPPER=str(source_root / 'observe-pi.py'))
+    env.update(ALAMINO_PROOF_PREFIX=str(prefix), ALAMINO_PROOF_REAL_PI=real_pi,
+               ALAMINO_PROOF_IMPLEMENTATION=main if arm == 'main' else branch,
+               ALAMINO_PROOF_OBSERVER=str(source_root / 'observe.ts'), ALAMINO_PROOF_PI_WRAPPER=str(source_root / 'observe-pi.py'))
     low_load()
     call = subprocess.run([str(root / (arm + '-proof')), schema, str(fixture), head, head, str(log)],
                           env=env, text=True, capture_output=True, timeout=520)
@@ -116,10 +116,10 @@ for i, (arm, schema, repetition) in enumerate(sequence):
     row['final_stop_reason'] = final.get('stopReason')
     row['assistant_models'] = sorted({m.get('provider', '') + '/' + m.get('model', '') for m in messages})
     row['response_models'] = sorted({p['responseModel'] for p in provider if p['type'] == 'provider_model'})
-    outputs = [e for e in events if e['type'] == 'tool_execution_end' and e.get('toolName') == 'no_mistakes_output'
+    outputs = [e for e in events if e['type'] == 'tool_execution_end' and e.get('toolName') == 'alamino_output'
                and e.get('isError') is False and e.get('result', {}).get('terminate') is True]
     row['finished_output_tool_alone'] = (final.get('stopReason') == 'toolUse' and len(calls) == 1
-        and calls[0].get('name') == 'no_mistakes_output' and any(e.get('toolCallId') == calls[0].get('id') for e in outputs))
+        and calls[0].get('name') == 'alamino_output' and any(e.get('toolCallId') == calls[0].get('id') for e in outputs))
     raw_output = None
     if row['finished_output_tool_alone']:
         raw_output = json.dumps(calls[0]['arguments'])

@@ -10,17 +10,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // newAbortQuiescenceFixture drives the public abort surfaces against a fake
 // daemon that scripts the exact run-state reads: cancellation is always
 // accepted, but what the post-cancel terminal wait observes is controlled per
-// test. The registered repo, worktree, socket, and NM_HOME are all real, so
+// test. The registered repo, worktree, socket, and ALAMINO_HOME are all real, so
 // `axi abort` runs end to end through the CLI.
 func newAbortQuiescenceFixture(t *testing.T, getRun func(context.Context, int) (*ipc.RunInfo, error), cancelAfterRequest ...func()) {
 	t.Helper()
@@ -35,7 +35,7 @@ func newAbortQuiescenceFixtureWithCancel(t *testing.T, getRun func(context.Conte
 func newStopQuiescenceFixture(t *testing.T, method string, getRun func(context.Context, int) (*ipc.RunInfo, error), cancelErr error, cancelAfterRequest ...func()) {
 	t.Helper()
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	root := t.TempDir()
 	local := filepath.Join(root, "operator")
@@ -374,13 +374,13 @@ func TestAxiAbortByRunIDResolvesDurableTerminalTruth(t *testing.T) {
 	})
 }
 
-// newDaemonDownAbortFixture prepares NM_HOME with a durable run record and no
+// newDaemonDownAbortFixture prepares ALAMINO_HOME with a durable run record and no
 // daemon at all, so the daemon-unavailable abort treatment is decided by the
 // durable database truth alone.
 func newDaemonDownAbortFixture(t *testing.T, status *types.RunStatus) string {
 	t.Helper()
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p, err := paths.New()
 	if err != nil {
 		t.Fatal(err)

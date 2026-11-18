@@ -1,6 +1,6 @@
-// Command genskill renders the canonical no-mistakes SKILL.md from the
-// internal/skill package into skills/no-mistakes/SKILL.md. The same rendering
-// is what `no-mistakes init` installs into the user-level agent skill
+// Command genskill renders the canonical alamino SKILL.md from the
+// internal/skill package into skills/alamino/SKILL.md. The same rendering
+// is what `alamino init` installs into the user-level agent skill
 // directories, so the committed file and the installed copies never drift.
 //
 // Usage:
@@ -18,7 +18,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kunchenguid/no-mistakes/internal/skill"
+	"github.com/mika-rafie/alamino/internal/skill"
 )
 
 func main() {

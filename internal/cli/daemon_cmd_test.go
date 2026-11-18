@@ -7,13 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestParseSkipPushOptions(t *testing.T) {
 	got, err := parseSkipPushOptions([]string{
 		"ci.skip",
-		"no-mistakes.skip=test,lint",
+		"alamino.skip=test,lint",
 	})
 	if err != nil {
 		t.Fatalf("parseSkipPushOptions() error = %v", err)
@@ -25,7 +25,7 @@ func TestParseSkipPushOptions(t *testing.T) {
 }
 
 func TestParseSkipPushOptionsRejectsUnknownStep(t *testing.T) {
-	_, err := parseSkipPushOptions([]string{"no-mistakes.skip=test,deploy"})
+	_, err := parseSkipPushOptions([]string{"alamino.skip=test,deploy"})
 	if err == nil {
 		t.Fatal("expected unknown step to fail")
 	}
@@ -72,7 +72,7 @@ func TestNormalizeNotifyGatePathResolvesLegacyDotGate(t *testing.T) {
 
 func TestFormatSkipPushOptions(t *testing.T) {
 	got := formatSkipPushOptions([]types.StepName{types.StepTest, types.StepLint})
-	want := []string{"no-mistakes.skip=test,lint"}
+	want := []string{"alamino.skip=test,lint"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("formatSkipPushOptions() = %v, want %v", got, want)
 	}
@@ -86,7 +86,7 @@ func TestIntentPushOptionRoundTrip(t *testing.T) {
 	if opt == "" {
 		t.Fatal("formatIntentPushOption returned empty for a non-empty intent")
 	}
-	got, err := parseIntentPushOptions([]string{"no-mistakes.skip=test", opt})
+	got, err := parseIntentPushOptions([]string{"alamino.skip=test", opt})
 	if err != nil {
 		t.Fatalf("parseIntentPushOptions() error = %v", err)
 	}
@@ -102,7 +102,7 @@ func TestFormatIntentPushOptionEmpty(t *testing.T) {
 }
 
 func TestParseIntentPushOptionsNone(t *testing.T) {
-	got, err := parseIntentPushOptions([]string{"no-mistakes.skip=test", "ci.skip"})
+	got, err := parseIntentPushOptions([]string{"alamino.skip=test", "ci.skip"})
 	if err != nil {
 		t.Fatalf("parseIntentPushOptions() error = %v", err)
 	}
@@ -143,7 +143,7 @@ func TestReconciledPreviousHeadPushOptionRoundTrip(t *testing.T) {
 	if opt == "" {
 		t.Fatal("reconciled previous head produced no push option")
 	}
-	got, err := parseReconciledPreviousHeadPushOptions([]string{"no-mistakes.skip=review", opt})
+	got, err := parseReconciledPreviousHeadPushOptions([]string{"alamino.skip=review", opt})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestReconciledPreviousHeadPushOptionRoundTrip(t *testing.T) {
 	if got, err := parseReconciledPreviousHeadPushOptions(nil); err != nil || got != "" {
 		t.Fatalf("absent option = %q, %v", got, err)
 	}
-	if _, err := parseReconciledPreviousHeadPushOptions([]string{"no-mistakes.reconciled-previous-head=refs/heads/main"}); err == nil {
+	if _, err := parseReconciledPreviousHeadPushOptions([]string{"alamino.reconciled-previous-head=refs/heads/main"}); err == nil {
 		t.Fatal("a non-SHA previous head claim was accepted")
 	}
 }
@@ -173,7 +173,7 @@ func TestClosingIssueRefsPushOptionsRoundTrip(t *testing.T) {
 }
 
 func TestParseClosingIssueRefsPushOptionsRejectsInvalidValue(t *testing.T) {
-	_, err := parseClosingIssueRefsPushOptions([]string{"no-mistakes.closes=42 Fixes #99"})
+	_, err := parseClosingIssueRefsPushOptions([]string{"alamino.closes=42 Fixes #99"})
 	if err == nil {
 		t.Fatal("expected invalid closing issue references push option to fail")
 	}

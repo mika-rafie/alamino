@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	gitpkg "github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	gitpkg "github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func TestMain(m *testing.M) {
@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	// Fixtures must not inherit the developer's global git config: a
 	// commit.gpgsign=true there makes every fixture commit ask gpg to sign.
-	globalConfigDir, err := os.MkdirTemp("", "no-mistakes-gate-tests-")
+	globalConfigDir, err := os.MkdirTemp("", "alamino-gate-tests-")
 	if err != nil {
 		panic(err)
 	}
@@ -191,8 +191,8 @@ func TestInit(t *testing.T) {
 		t.Fatalf("receive.advertisePushOptions = %q, want true", got)
 	}
 
-	// Verify no-mistakes remote was added to working repo.
-	url, err := gitpkg.GetRemoteURL(ctx, workDir, "no-mistakes")
+	// Verify alamino remote was added to working repo.
+	url, err := gitpkg.GetRemoteURL(ctx, workDir, "alamino")
 	if err != nil {
 		t.Fatalf("get remote url: %v", err)
 	}
@@ -365,7 +365,7 @@ func TestInitIsIdempotent(t *testing.T) {
 		t.Error("post-receive hook missing after re-init")
 	}
 	if url, err := gitpkg.GetRemoteURL(ctx, workDir, RemoteName); err != nil {
-		t.Errorf("no-mistakes remote missing after re-init: %v", err)
+		t.Errorf("alamino remote missing after re-init: %v", err)
 	} else if url != bareDir {
 		t.Errorf("remote url = %q, want %q", url, bareDir)
 	}
@@ -557,10 +557,10 @@ func TestInitRefreshUsesPersistedRepoID(t *testing.T) {
 	legacyBareDir := p.RepoDir(legacyID)
 	url, err := gitpkg.GetRemoteURL(ctx, workDir, RemoteName)
 	if err != nil {
-		t.Fatalf("get no-mistakes remote: %v", err)
+		t.Fatalf("get alamino remote: %v", err)
 	}
 	if url != legacyBareDir {
-		t.Errorf("no-mistakes remote = %q, want %q", url, legacyBareDir)
+		t.Errorf("alamino remote = %q, want %q", url, legacyBareDir)
 	}
 	if out, err := exec.Command("git", "-C", legacyBareDir, "rev-parse", "--is-bare-repository").Output(); err != nil {
 		t.Errorf("legacy bare repo check failed: %v", err)
@@ -609,14 +609,14 @@ func TestInitRepairsBrokenGate(t *testing.T) {
 		t.Error("post-receive hook not restored after repair re-init")
 	}
 	if url, err := gitpkg.GetRemoteURL(ctx, workDir, RemoteName); err != nil {
-		t.Errorf("no-mistakes remote not restored after repair re-init: %v", err)
+		t.Errorf("alamino remote not restored after repair re-init: %v", err)
 	} else if url != bareDir {
 		t.Errorf("restored remote url = %q, want %q", url, bareDir)
 	}
 }
 
 // TestInitReattachesGateAfterWorkingDirRename verifies that renaming or moving
-// a working directory does not break init idempotency: the leftover no-mistakes
+// a working directory does not break init idempotency: the leftover alamino
 // remote identifies the existing gate, and re-running init from the new
 // location reattaches it (same repo ID, same bare repo, run history intact)
 // instead of failing with "remote already exists".
@@ -660,7 +660,7 @@ func TestInitReattachesGateAfterWorkingDirRename(t *testing.T) {
 	// The remote must still point at the original gate.
 	bareDir := p.RepoDir(first.ID)
 	if url, err := gitpkg.GetRemoteURL(ctx, renamed, RemoteName); err != nil {
-		t.Errorf("no-mistakes remote missing after reattach: %v", err)
+		t.Errorf("alamino remote missing after reattach: %v", err)
 	} else if url != bareDir {
 		t.Errorf("remote url = %q, want %q", url, bareDir)
 	}
@@ -691,7 +691,7 @@ func TestInitReattachesGateAfterWorkingDirRename(t *testing.T) {
 
 // TestInitCreatesFreshGateForCopiedWorkingDir verifies that when a working
 // directory is copied (the original still exists), init treats the copy as a
-// new repo: it gets its own gate and the copied no-mistakes remote is
+// new repo: it gets its own gate and the copied alamino remote is
 // repointed, while the original repo's gate is left untouched.
 func TestInitCreatesFreshGateForCopiedWorkingDir(t *testing.T) {
 	workDir := setupTestRepo(t)
@@ -724,14 +724,14 @@ func TestInitCreatesFreshGateForCopiedWorkingDir(t *testing.T) {
 
 	// The copy's remote must point at its own gate.
 	if url, err := gitpkg.GetRemoteURL(ctx, copyDir, RemoteName); err != nil {
-		t.Errorf("no-mistakes remote missing on copy: %v", err)
+		t.Errorf("alamino remote missing on copy: %v", err)
 	} else if url != p.RepoDir(second.ID) {
 		t.Errorf("copy remote url = %q, want %q", url, p.RepoDir(second.ID))
 	}
 
 	// The original must be untouched.
 	if url, err := gitpkg.GetRemoteURL(ctx, workDir, RemoteName); err != nil {
-		t.Errorf("original no-mistakes remote missing: %v", err)
+		t.Errorf("original alamino remote missing: %v", err)
 	} else if url != p.RepoDir(first.ID) {
 		t.Errorf("original remote url = %q, want %q", url, p.RepoDir(first.ID))
 	}
@@ -741,7 +741,7 @@ func TestInitCreatesFreshGateForCopiedWorkingDir(t *testing.T) {
 }
 
 // TestInitRepointsOrphanGateRemoteOnFreshInit verifies that a leftover
-// no-mistakes remote pointing into our repos dir with no matching DB record
+// alamino remote pointing into our repos dir with no matching DB record
 // (a half-ejected gate) is repointed to the fresh gate instead of failing.
 func TestInitRepointsOrphanGateRemoteOnFreshInit(t *testing.T) {
 	workDir := setupTestRepo(t)
@@ -775,13 +775,13 @@ func TestInitRepointsOrphanGateRemoteOnFreshInit(t *testing.T) {
 		t.Error("init with orphan remote should report created=true")
 	}
 	if url, err := gitpkg.GetRemoteURL(ctx, renamed, RemoteName); err != nil {
-		t.Errorf("no-mistakes remote missing: %v", err)
+		t.Errorf("alamino remote missing: %v", err)
 	} else if url != p.RepoDir(repo.ID) {
 		t.Errorf("remote url = %q, want %q", url, p.RepoDir(repo.ID))
 	}
 }
 
-func TestInitDoesNotOverwriteExistingNoMistakesRemoteOnFreshInit(t *testing.T) {
+func TestInitDoesNotOverwriteExistingAlaminoRemoteOnFreshInit(t *testing.T) {
 	workDir := setupTestRepo(t)
 	nmRoot := t.TempDir()
 	p := paths.WithRoot(nmRoot)
@@ -801,7 +801,7 @@ func TestInitDoesNotOverwriteExistingNoMistakesRemoteOnFreshInit(t *testing.T) {
 
 	_, _, err := Init(ctx, d, p, workDir)
 	if err == nil {
-		t.Fatal("expected init to fail when no-mistakes remote already exists")
+		t.Fatal("expected init to fail when alamino remote already exists")
 	}
 
 	url, err := gitpkg.GetRemoteURL(ctx, workDir, RemoteName)
@@ -809,7 +809,7 @@ func TestInitDoesNotOverwriteExistingNoMistakesRemoteOnFreshInit(t *testing.T) {
 		t.Fatalf("get custom remote: %v", err)
 	}
 	if url != customRemote {
-		t.Errorf("no-mistakes remote = %q, want %q", url, customRemote)
+		t.Errorf("alamino remote = %q, want %q", url, customRemote)
 	}
 }
 
@@ -964,9 +964,9 @@ func TestEject(t *testing.T) {
 	}
 
 	// Verify remote was removed.
-	_, err = gitpkg.GetRemoteURL(ctx, workDir, "no-mistakes")
+	_, err = gitpkg.GetRemoteURL(ctx, workDir, "alamino")
 	if err == nil {
-		t.Error("expected no-mistakes remote to be removed")
+		t.Error("expected alamino remote to be removed")
 	}
 
 	// Verify bare repo was deleted.
@@ -1160,7 +1160,7 @@ func TestInit_PostReceiveSurvivesHooksPathPoisoning(t *testing.T) {
 
 	// Push to the gate. The bare repo's own core.hookspath must still
 	// resolve to its hooks dir so post-receive fires.
-	if out, err := exec.Command("git", "-C", workDir, "push", "no-mistakes", "HEAD:refs/heads/test-branch").CombinedOutput(); err != nil {
+	if out, err := exec.Command("git", "-C", workDir, "push", "alamino", "HEAD:refs/heads/test-branch").CombinedOutput(); err != nil {
 		t.Fatalf("push: %v: %s", err, out)
 	}
 

@@ -8,7 +8,7 @@ import (
 
 func TestMain(m *testing.M) {
 	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
-	globalConfigDir, err := os.MkdirTemp("", "no-mistakes-pipeline-tests-")
+	globalConfigDir, err := os.MkdirTemp("", "alamino-pipeline-tests-")
 	if err != nil {
 		panic(err)
 	}

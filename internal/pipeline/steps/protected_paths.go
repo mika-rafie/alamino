@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // unfinishedGitOperationError refuses staging and CI repair commits while a

@@ -621,8 +621,8 @@ func TestClaudeAgent_LargePromptUsesExactStdinForColdAndResumedRuns(t *testing.T
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			observationPath := filepath.Join(t.TempDir(), "observation.json")
-			t.Setenv("NM_CLAUDE_STDIN_HELPER", "read")
-			t.Setenv("NM_CLAUDE_STDIN_OBSERVATION", observationPath)
+			t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "read")
+			t.Setenv("ALAMINO_CLAUDE_STDIN_OBSERVATION", observationPath)
 			a := newClaudeStdinHelperAgent(t)
 			opts := RunOpts{Prompt: prompt, CWD: t.TempDir(), JSONSchema: schema}
 			if tc.sessionID != "" {
@@ -675,7 +675,7 @@ func TestClaudeAgent_LargePromptUsesExactStdinForColdAndResumedRuns(t *testing.T
 }
 
 func TestClaudeAgent_EarlyExitWithoutReadingLargeStdinDoesNotLeakGoroutines(t *testing.T) {
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "exit-early")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "exit-early")
 	a := newClaudeStdinHelperAgent(t)
 	prompt := strings.Repeat("e", 2*1024*1024)
 	before := runtime.NumGoroutine()
@@ -704,10 +704,10 @@ func TestClaudeAgent_EarlyExitWithoutReadingLargeStdinDoesNotLeakGoroutines(t *t
 func TestClaudeAgent_CancellationWithBlockedStdinAndInheritedPipesIsBounded(t *testing.T) {
 	for _, mode := range []string{"block", "spawn-grandchild"} {
 		t.Run(mode, func(t *testing.T) {
-			t.Setenv("NM_CLAUDE_STDIN_HELPER", mode)
+			t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", mode)
 			ready := filepath.Join(t.TempDir(), "ready")
-			t.Setenv("NM_CLAUDE_STDIN_READY", ready)
-			t.Setenv("NM_CLAUDE_STDIN_PID", filepath.Join(t.TempDir(), "grandchild.pid"))
+			t.Setenv("ALAMINO_CLAUDE_STDIN_READY", ready)
+			t.Setenv("ALAMINO_CLAUDE_STDIN_PID", filepath.Join(t.TempDir(), "grandchild.pid"))
 			a := newClaudeStdinHelperAgent(t)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -809,9 +809,9 @@ func TestClaudeAgent_RetriesOnlyATerminalTransientAPIError(t *testing.T) {
 				}
 				fixture = abs
 			}
-			t.Setenv("NM_CLAUDE_STDIN_HELPER", "replay-then-fail")
-			t.Setenv("NM_CLAUDE_STDIN_FIXTURE", fixture)
-			t.Setenv("NM_CLAUDE_STDIN_BANNER", tc.banner)
+			t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "replay-then-fail")
+			t.Setenv("ALAMINO_CLAUDE_STDIN_FIXTURE", fixture)
+			t.Setenv("ALAMINO_CLAUDE_STDIN_BANNER", tc.banner)
 			a := newClaudeStdinHelperAgent(t)
 
 			attempts := 0
@@ -836,10 +836,10 @@ func TestClaudeAgent_RetriesOnlyATerminalTransientAPIError(t *testing.T) {
 func TestClaudeAgent_RetriesEAIAGAINThenSucceeds(t *testing.T) {
 	defer withFastBackoff(t)()
 
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "transient-then-succeed")
-	t.Setenv("NM_CLAUDE_STDIN_COUNT_FILE", filepath.Join(t.TempDir(), "attempts"))
-	t.Setenv("NM_CLAUDE_STDIN_TRANSIENT_REMAIN", "1")
-	t.Setenv("NM_CLAUDE_STDIN_BANNER", "API Error: Can't reach the API server — check your internet or DNS (EAI_AGAIN)\n")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "transient-then-succeed")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_COUNT_FILE", filepath.Join(t.TempDir(), "attempts"))
+	t.Setenv("ALAMINO_CLAUDE_STDIN_TRANSIENT_REMAIN", "1")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_BANNER", "API Error: Can't reach the API server — check your internet or DNS (EAI_AGAIN)\n")
 	a := newClaudeStdinHelperAgent(t)
 
 	attempts := 0
@@ -881,14 +881,14 @@ func TestClaudeAgent_RetriesTerminalNetworkErrors(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				t.Setenv("NM_CLAUDE_STDIN_HELPER", "transient-then-succeed")
-				t.Setenv("NM_CLAUDE_STDIN_COUNT_FILE", filepath.Join(t.TempDir(), "attempts"))
-				t.Setenv("NM_CLAUDE_STDIN_TRANSIENT_REMAIN", "1")
-				t.Setenv("NM_CLAUDE_STDIN_BANNER", `{"type":"result","subtype":"success","is_error":true,"terminal_reason":"api_error","api_error_status":`+status+`,"result":`+string(text)+"}\n")
+				t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "transient-then-succeed")
+				t.Setenv("ALAMINO_CLAUDE_STDIN_COUNT_FILE", filepath.Join(t.TempDir(), "attempts"))
+				t.Setenv("ALAMINO_CLAUDE_STDIN_TRANSIENT_REMAIN", "1")
+				t.Setenv("ALAMINO_CLAUDE_STDIN_BANNER", `{"type":"result","subtype":"success","is_error":true,"terminal_reason":"api_error","api_error_status":`+status+`,"result":`+string(text)+"}\n")
 				wantAttempts := 2
 				wantFailure := mode == "exhausted" || mode == "permanent"
 				if mode == "exhausted" {
-					t.Setenv("NM_CLAUDE_STDIN_TRANSIENT_REMAIN", "10")
+					t.Setenv("ALAMINO_CLAUDE_STDIN_TRANSIENT_REMAIN", "10")
 					wantAttempts = 4 // Initial invocation plus three bounded retries.
 				} else if mode == "permanent" {
 					wantAttempts = 1
@@ -901,7 +901,7 @@ func TestClaudeAgent_RetriesTerminalNetworkErrors(t *testing.T) {
 				}
 				if mode == "resume" {
 					opts.Session = &SessionRef{ID: "helper-session"}
-					t.Setenv("NM_CLAUDE_STDIN_EXPECT_RESUME", "helper-session")
+					t.Setenv("ALAMINO_CLAUDE_STDIN_EXPECT_RESUME", "helper-session")
 				}
 				res, err := newClaudeStdinHelperAgent(t).Run(context.Background(), opts)
 				if attempts != wantAttempts {
@@ -920,7 +920,7 @@ func TestClaudeAgent_RetriesTerminalNetworkErrors(t *testing.T) {
 }
 
 func TestClaudeAgent_NonzeroExitAfterUsableResultFinalizesIt(t *testing.T) {
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "result-then-fail")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "result-then-fail")
 	a := newClaudeStdinHelperAgent(t)
 
 	res, err := a.Run(context.Background(), RunOpts{
@@ -937,7 +937,7 @@ func TestClaudeAgent_NonzeroExitAfterUsableResultFinalizesIt(t *testing.T) {
 }
 
 func TestClaudeAgent_NonzeroExitAfterTextResultIsAcceptedAndNoted(t *testing.T) {
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "result-then-fail")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "result-then-fail")
 	a := newClaudeStdinHelperAgent(t)
 
 	var chunks []string
@@ -958,7 +958,7 @@ func TestClaudeAgent_NonzeroExitAfterTextResultIsAcceptedAndNoted(t *testing.T) 
 }
 
 func TestClaudeAgent_NonzeroExitAfterResultMissingStructuredOutputFails(t *testing.T) {
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "unstructured-result-then-fail")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "unstructured-result-then-fail")
 	a := newClaudeStdinHelperAgent(t)
 
 	_, err := a.runOnce(context.Background(), RunOpts{
@@ -1002,7 +1002,7 @@ func TestClaudeStdoutTail(t *testing.T) {
 }
 
 func TestClaudeAgent_NonzeroExitStillFailsWhenNativeChildrenMustComplete(t *testing.T) {
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "result-then-fail")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "result-then-fail")
 	a := newClaudeStdinHelperAgent(t)
 
 	_, err := a.runOnce(context.Background(), RunOpts{
@@ -1020,7 +1020,7 @@ func TestClaudeAgent_NonzeroExitStillFailsWhenNativeChildrenMustComplete(t *test
 // budget while background work holds the session open. The 10s context stands
 // in for the step budget; the helper's background work outlasts it.
 func TestClaudeAgent_BackgroundWorkAfterResult(t *testing.T) {
-	t.Setenv("NM_CLAUDE_STDIN_HELPER", "result-background-result")
+	t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "result-background-result")
 	old := claudeResultGrace
 	claudeResultGrace = 200 * time.Millisecond
 	t.Cleanup(func() { claudeResultGrace = old })
@@ -1073,8 +1073,8 @@ func TestClaudeAgent_NonzeroExitWithoutUsableResultStillFails(t *testing.T) {
 			if tc.fixture != "" {
 				fixture, _ = filepath.Abs(filepath.Join("testdata", tc.fixture))
 			}
-			t.Setenv("NM_CLAUDE_STDIN_HELPER", "replay-then-fail")
-			t.Setenv("NM_CLAUDE_STDIN_FIXTURE", fixture)
+			t.Setenv("ALAMINO_CLAUDE_STDIN_HELPER", "replay-then-fail")
+			t.Setenv("ALAMINO_CLAUDE_STDIN_FIXTURE", fixture)
 			a := newClaudeStdinHelperAgent(t)
 			_, err := a.runOnce(context.Background(), RunOpts{
 				Prompt:     "review",
@@ -1102,7 +1102,7 @@ func newClaudeStdinHelperAgent(t *testing.T) *claudeAgent {
 }
 
 func TestClaudeStdinHelper(t *testing.T) {
-	mode := os.Getenv("NM_CLAUDE_STDIN_HELPER")
+	mode := os.Getenv("ALAMINO_CLAUDE_STDIN_HELPER")
 	if mode == "" {
 		return
 	}
@@ -1111,20 +1111,20 @@ func TestClaudeStdinHelper(t *testing.T) {
 	case "exit-early":
 		os.Exit(0)
 	case "block":
-		_ = os.WriteFile(os.Getenv("NM_CLAUDE_STDIN_READY"), []byte("ready"), 0o644)
+		_ = os.WriteFile(os.Getenv("ALAMINO_CLAUDE_STDIN_READY"), []byte("ready"), 0o644)
 		for {
 			time.Sleep(time.Second)
 		}
 	case "spawn-grandchild":
 		child := exec.Command(os.Args[0], "-test.run=^TestClaudeStdinHelper$")
-		child.Env = append(os.Environ(), "NM_CLAUDE_STDIN_HELPER=grandchild")
+		child.Env = append(os.Environ(), "ALAMINO_CLAUDE_STDIN_HELPER=grandchild")
 		child.Stdout = os.Stdout
 		child.Stderr = os.Stderr
 		if err := child.Start(); err != nil {
 			os.Exit(2)
 		}
-		_ = os.WriteFile(os.Getenv("NM_CLAUDE_STDIN_PID"), []byte(strconv.Itoa(child.Process.Pid)), 0o644)
-		_ = os.WriteFile(os.Getenv("NM_CLAUDE_STDIN_READY"), []byte("ready"), 0o644)
+		_ = os.WriteFile(os.Getenv("ALAMINO_CLAUDE_STDIN_PID"), []byte(strconv.Itoa(child.Process.Pid)), 0o644)
+		_ = os.WriteFile(os.Getenv("ALAMINO_CLAUDE_STDIN_READY"), []byte("ready"), 0o644)
 		emitClaudeHelperResult()
 		return
 	case "grandchild":
@@ -1132,35 +1132,35 @@ func TestClaudeStdinHelper(t *testing.T) {
 			time.Sleep(time.Second)
 		}
 	case "replay-then-fail":
-		if fixture := os.Getenv("NM_CLAUDE_STDIN_FIXTURE"); fixture != "" {
+		if fixture := os.Getenv("ALAMINO_CLAUDE_STDIN_FIXTURE"); fixture != "" {
 			stream, err := os.ReadFile(fixture)
 			if err != nil {
 				os.Exit(6)
 			}
 			_, _ = os.Stdout.Write(stream)
 		}
-		_, _ = io.WriteString(os.Stdout, os.Getenv("NM_CLAUDE_STDIN_BANNER"))
+		_, _ = io.WriteString(os.Stdout, os.Getenv("ALAMINO_CLAUDE_STDIN_BANNER"))
 		os.Exit(1)
 	case "transient-then-succeed":
 		// Validate each subprocess invocation, including retries, against the
 		// caller's requested conversation before emitting any result.
-		if session := os.Getenv("NM_CLAUDE_STDIN_EXPECT_RESUME"); session != "" && !claudeArgsContainPair(args, "--resume", session) {
+		if session := os.Getenv("ALAMINO_CLAUDE_STDIN_EXPECT_RESUME"); session != "" && !claudeArgsContainPair(args, "--resume", session) {
 			t.Fatalf("argv %v missing --resume %s", args, session)
 		}
-		// Fails NM_CLAUDE_STDIN_TRANSIENT_REMAIN invocations (banner on stdout,
-		// exit 1), counted through NM_CLAUDE_STDIN_COUNT_FILE because every
+		// Fails ALAMINO_CLAUDE_STDIN_TRANSIENT_REMAIN invocations (banner on stdout,
+		// exit 1), counted through ALAMINO_CLAUDE_STDIN_COUNT_FILE because every
 		// retry attempt is a fresh process, then emits a success result.
 		remain := 0
-		if v := os.Getenv("NM_CLAUDE_STDIN_TRANSIENT_REMAIN"); v != "" {
+		if v := os.Getenv("ALAMINO_CLAUDE_STDIN_TRANSIENT_REMAIN"); v != "" {
 			remain, _ = strconv.Atoi(v)
 		}
 		count := 0
-		if data, err := os.ReadFile(os.Getenv("NM_CLAUDE_STDIN_COUNT_FILE")); err == nil {
+		if data, err := os.ReadFile(os.Getenv("ALAMINO_CLAUDE_STDIN_COUNT_FILE")); err == nil {
 			count, _ = strconv.Atoi(strings.TrimSpace(string(data)))
 		}
 		if count < remain {
-			_ = os.WriteFile(os.Getenv("NM_CLAUDE_STDIN_COUNT_FILE"), []byte(strconv.Itoa(count+1)), 0o644)
-			_, _ = io.WriteString(os.Stdout, os.Getenv("NM_CLAUDE_STDIN_BANNER"))
+			_ = os.WriteFile(os.Getenv("ALAMINO_CLAUDE_STDIN_COUNT_FILE"), []byte(strconv.Itoa(count+1)), 0o644)
+			_, _ = io.WriteString(os.Stdout, os.Getenv("ALAMINO_CLAUDE_STDIN_BANNER"))
 			os.Exit(1)
 		}
 		emitClaudeHelperResult()
@@ -1192,7 +1192,7 @@ func TestClaudeStdinHelper(t *testing.T) {
 			EOF:    true,
 		}
 		data, _ := json.Marshal(observation)
-		if err := os.WriteFile(os.Getenv("NM_CLAUDE_STDIN_OBSERVATION"), data, 0o644); err != nil {
+		if err := os.WriteFile(os.Getenv("ALAMINO_CLAUDE_STDIN_OBSERVATION"), data, 0o644); err != nil {
 			os.Exit(4)
 		}
 		emitClaudeHelperResult()

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
 )
 
 // The Jev review pre-brief (jev.review_assist, with its optional
@@ -19,7 +19,7 @@ import (
 // prompt must carry no pre-brief section - even when a TYPESAFE_API_KEY is
 // still present in the environment, the step must not consult TypeSafe.
 func TestReviewStep_RunsColdWithoutTheRetiredJevPrebrief(t *testing.T) {
-	t.Setenv("TYPESAFE_API_KEY", "nm-retired-prebrief-must-not-be-used")
+	t.Setenv("TYPESAFE_API_KEY", "alamino-retired-prebrief-must-not-be-used")
 
 	dir, baseSHA, headSHA := setupGitRepo(t)
 	var prompt string

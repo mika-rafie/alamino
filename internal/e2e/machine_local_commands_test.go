@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const (
@@ -75,22 +75,22 @@ func TestMachineLocalCommandOverridesJourney(t *testing.T) {
 		expectedNice := strings.TrimSpace(string(priority))
 		h := NewHarness(t, SetupOpts{Agent: "claude"})
 		marker := filepath.Join(t.TempDir(), "marker")
-		writeMachineLocalScript(t, filepath.Join(h.BinDir, "nm-team-test"),
+		writeMachineLocalScript(t, filepath.Join(h.BinDir, "alamino-team-test"),
 			`printf 'team nice=%s\n' "$(ps -o nice= -p $$ | tr -d ' ')" >> "`+marker+`"
 exit 0
 `)
-		writeMachineLocalScript(t, filepath.Join(h.BinDir, "nm-local-smoke"),
+		writeMachineLocalScript(t, filepath.Join(h.BinDir, "alamino-local-smoke"),
 			`printf 'local nice=%s\n' "$(ps -o nice= -p $$ | tr -d ' ')" >> "`+marker+`"
 exit 0
 `)
 		setupMachineLocalCommands(t, h, `    commands:
       test:
         additional:
-          - nm-local-smoke
+          - alamino-local-smoke
         nice: 7
 `)
 		const branch = "feature/local-overrides"
-		h.CommitChange(branch, ".no-mistakes.yaml", "commands:\n  test: nm-team-test\n", "configure team test command")
+		h.CommitChange(branch, ".alamino.yaml", "commands:\n  test: alamino-team-test\n", "configure team test command")
 		h.CommitChange(branch, "feature.txt", "hello\n", "add feature")
 		h.PushToGate(branch)
 		run := h.WaitForRun(branch, 120*time.Second)
@@ -115,9 +115,9 @@ exit 0
 		testLog := readStepLog(t, h, run.ID, string(types.StepTest))
 		t.Logf("test step log:\n%s", testLog)
 		for _, want := range []string{
-			`machine-local overrides applied to commands.test: nice 7; additional checks "nm-local-smoke"`,
-			"running tests: nm-team-test",
-			"running machine-local test check: nm-local-smoke",
+			`machine-local overrides applied to commands.test: nice 7; additional checks "alamino-local-smoke"`,
+			"running tests: alamino-team-test",
+			"running machine-local test check: alamino-local-smoke",
 		} {
 			if !strings.Contains(testLog, want) {
 				t.Errorf("test step log missing %q", want)
@@ -133,9 +133,9 @@ exit 0
 		}
 		for _, prompt := range prompts {
 			for _, want := range []string{
-				"Baseline ran with machine-local overrides applied to commands.test: nice 7; additional checks \"nm-local-smoke\"",
-				"Configured test command already ran successfully as baseline: `nm-team-test`",
-				"Machine-local test check (the operator's addition, not the repository's command) already ran successfully as baseline: `nm-local-smoke`",
+				"Baseline ran with machine-local overrides applied to commands.test: nice 7; additional checks \"alamino-local-smoke\"",
+				"Configured test command already ran successfully as baseline: `alamino-team-test`",
+				"Machine-local test check (the operator's addition, not the repository's command) already ran successfully as baseline: `alamino-local-smoke`",
 			} {
 				if !strings.Contains(prompt, want) {
 					t.Errorf("test prompt missing %q", want)
@@ -177,7 +177,7 @@ exit 0
 			override := record.EffectiveConfig.CommandOverrides["test"]
 			t.Logf("command-config record event=%s commands=%v test override=%+v", record.Event, record.EffectiveConfig.Commands, override)
 			if record.Event != "start" || override.Nice != 7 ||
-				len(override.Additional) != 1 || override.Additional[0] != "nm-local-smoke" {
+				len(override.Additional) != 1 || override.Additional[0] != "alamino-local-smoke" {
 				t.Errorf("unexpected command config record: %s", scanner.Text())
 			}
 		}
@@ -188,11 +188,11 @@ exit 0
 
 	t.Run("failing_additional_check_is_attributed_by_name_even_without_team_command", func(t *testing.T) {
 		h := NewHarness(t, SetupOpts{Agent: "claude"})
-		writeMachineLocalScript(t, filepath.Join(h.BinDir, "nm-local-fail"), "echo local smoke broke\nexit 3\n")
+		writeMachineLocalScript(t, filepath.Join(h.BinDir, "alamino-local-fail"), "echo local smoke broke\nexit 3\n")
 		setupMachineLocalCommands(t, h, `    commands:
       test:
         additional:
-          - nm-local-fail
+          - alamino-local-fail
 `)
 		const branch = "feature/local-failure"
 		h.CommitChange(branch, "feature.txt", "hello\n", "add feature")
@@ -212,7 +212,7 @@ exit 0
 			if strings.Contains(finding.Description, "configured test command failed") {
 				t.Errorf("local failure attributed to the team command: %q", finding.Description)
 			}
-			if finding.Description == "machine-local test check failed with exit code 3: nm-local-fail" {
+			if finding.Description == "machine-local test check failed with exit code 3: alamino-local-fail" {
 				found = true
 			}
 		}
@@ -223,12 +223,12 @@ exit 0
 		if len(prompts) == 0 {
 			t.Fatal("test step never invoked the agent")
 		}
-		if !strings.Contains(prompts[0], "Machine-local test check (the operator's addition, not the repository's command) failed with exit code 3: `nm-local-fail`") {
+		if !strings.Contains(prompts[0], "Machine-local test check (the operator's addition, not the repository's command) failed with exit code 3: `alamino-local-fail`") {
 			t.Errorf("test prompt does not name the failing machine-local check")
 		}
 		testLog := readStepLog(t, h, run.ID, string(types.StepTest))
 		t.Logf("test step log:\n%s", testLog)
-		if !strings.Contains(testLog, "machine-local test check failed: nm-local-fail") || strings.Contains(testLog, "no test command configured") {
+		if !strings.Contains(testLog, "machine-local test check failed: alamino-local-fail") || strings.Contains(testLog, "no test command configured") {
 			t.Errorf("test log misattributes the local failure")
 		}
 		h.CancelRun(run.ID)
@@ -236,15 +236,15 @@ exit 0
 
 	t.Run("failing_additional_lint_check_parks_lint", func(t *testing.T) {
 		h := NewHarness(t, SetupOpts{Agent: "claude"})
-		writeMachineLocalScript(t, filepath.Join(h.BinDir, "nm-local-policy"), "echo policy violated\nexit 4\n")
+		writeMachineLocalScript(t, filepath.Join(h.BinDir, "alamino-local-policy"), "echo policy violated\nexit 4\n")
 		setupMachineLocalCommands(t, h, `    commands:
       lint:
         additional:
-          - nm-local-policy
+          - alamino-local-policy
         nice: 5
 `)
 		const branch = "feature/local-lint"
-		h.CommitChange(branch, ".no-mistakes.yaml", "commands:\n  lint: 'true'\n", "configure team lint")
+		h.CommitChange(branch, ".alamino.yaml", "commands:\n  lint: 'true'\n", "configure team lint")
 		h.CommitChange(branch, "feature.txt", "hello\n", "add feature")
 		h.PushToGate(branch)
 		run := waitForStepStatus(t, h, branch, types.StepLint, types.StepStatusAwaitingApproval, 120*time.Second)
@@ -253,12 +253,12 @@ exit 0
 			t.Fatal("lint findings missing")
 		}
 		t.Logf("lint findings: %s", *step.FindingsJSON)
-		if !strings.Contains(*step.FindingsJSON, "machine-local lint check failed with exit code 4: nm-local-policy") {
+		if !strings.Contains(*step.FindingsJSON, "machine-local lint check failed with exit code 4: alamino-local-policy") {
 			t.Errorf("lint finding does not name the machine-local check")
 		}
 		lintLog := readStepLog(t, h, run.ID, string(types.StepLint))
 		t.Logf("lint step log:\n%s", lintLog)
-		const lintDeclaration = `machine-local overrides applied to commands.lint: nice 5; additional checks "nm-local-policy"`
+		const lintDeclaration = `machine-local overrides applied to commands.lint: nice 5; additional checks "alamino-local-policy"`
 		if got := strings.Count(lintLog, "machine-local overrides applied to commands.lint"); got != 1 {
 			t.Errorf("lint step log declares the overrides %d times, want once", got)
 		}
@@ -271,12 +271,12 @@ exit 0
 	t.Run("repository_config_cannot_declare_machine_local_checks", func(t *testing.T) {
 		h := NewHarness(t, SetupOpts{Agent: "claude"})
 		marker := filepath.Join(t.TempDir(), "marker")
-		writeMachineLocalScript(t, filepath.Join(h.BinDir, "nm-pushed-check"), `echo ran >> "`+marker+`"
+		writeMachineLocalScript(t, filepath.Join(h.BinDir, "alamino-pushed-check"), `echo ran >> "`+marker+`"
 exit 0
 `)
 		setupMachineLocalCommands(t, h, "")
 		const branch = "feature/pushed-overrides"
-		h.CommitChange(branch, ".no-mistakes.yaml", "repository_overrides:\n  "+machineLocalRemote+":\n    commands:\n      test:\n        additional:\n          - nm-pushed-check\n", "try to declare a machine-local check from the repository")
+		h.CommitChange(branch, ".alamino.yaml", "repository_overrides:\n  "+machineLocalRemote+":\n    commands:\n      test:\n        additional:\n          - alamino-pushed-check\n", "try to declare a machine-local check from the repository")
 		h.CommitChange(branch, "feature.txt", "hello\n", "add feature")
 		h.PushToGate(branch)
 		run := h.WaitForRun(branch, 120*time.Second)
@@ -291,10 +291,10 @@ exit 0
 
 	t.Run("no_override_behaves_as_today", func(t *testing.T) {
 		h := NewHarness(t, SetupOpts{Agent: "claude"})
-		writeMachineLocalScript(t, filepath.Join(h.BinDir, "nm-team-test"), "exit 0\n")
+		writeMachineLocalScript(t, filepath.Join(h.BinDir, "alamino-team-test"), "exit 0\n")
 		setupMachineLocalCommands(t, h, "")
 		const branch = "feature/no-override"
-		h.CommitChange(branch, ".no-mistakes.yaml", "commands:\n  test: nm-team-test\n", "configure team test command")
+		h.CommitChange(branch, ".alamino.yaml", "commands:\n  test: alamino-team-test\n", "configure team test command")
 		h.CommitChange(branch, "feature.txt", "hello\n", "add feature")
 		h.PushToGate(branch)
 		run := h.WaitForRun(branch, 120*time.Second)

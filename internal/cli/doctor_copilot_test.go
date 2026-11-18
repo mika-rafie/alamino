@@ -6,21 +6,16 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
 )
 
-// TestDoctorListsCopilotAgent exercises the user-facing `no-mistakes doctor`
+// TestDoctorListsCopilotAgent exercises the user-facing `alamino doctor`
 // report and verifies the GitHub Copilot CLI now appears in the Agents section
 // and is detected (LookPath) when its binary is on PATH, just like the other
 // first-class agents. The full rendered report is logged so it can be captured
 // as reviewer-visible evidence.
 func TestDoctorListsCopilotAgent(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 
 	binDir := t.TempDir()
 	copilotPath := writeFakeCopilotBinary(t, binDir)
@@ -35,7 +30,7 @@ func TestDoctorListsCopilotAgent(t *testing.T) {
 		t.Fatalf("doctor failed: %v\n%s", err, out)
 	}
 
-	t.Logf("rendered `no-mistakes doctor` report:\n%s", out)
+	t.Logf("rendered `alamino doctor` report:\n%s", out)
 
 	if !strings.Contains(out, "copilot") {
 		t.Fatalf("doctor report missing copilot agent entry:\n%s", out)

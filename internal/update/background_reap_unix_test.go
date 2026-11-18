@@ -43,7 +43,7 @@ func directChildren(t *testing.T) map[int]bool {
 // the CLI must not block on it, but the CLI is still the child's only possible
 // wait owner and must collect its exit status.
 //
-// Without that, every no-mistakes CLI process carries a permanent <defunct>
+// Without that, every alamino CLI process carries a permanent <defunct>
 // child. A short-lived command hides it; a run-following `axi run` or
 // `axi respond` lives for tens of minutes, so an operator triaging that process
 // sees a zero-CPU process whose only child is defunct and reads it as wedged.

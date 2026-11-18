@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // baseAttributionMaxListed bounds each attributed failure list, and
@@ -142,7 +142,7 @@ func (a *baseAttribution) classify(headOutput, baseOutput string) {
 // Test budget (test_agent_timeout): a base run that outlives it is stopped
 // and reported unavailable rather than holding the head's finding back.
 func runTestCommandOnBase(sctx *pipeline.StepContext, testCmd, baseSHA string) (string, int, error) {
-	scratch, err := os.MkdirTemp("", "no-mistakes-test-base-")
+	scratch, err := os.MkdirTemp("", "alamino-test-base-")
 	if err != nil {
 		return "", 0, fmt.Errorf("create base checkout directory: %w", err)
 	}

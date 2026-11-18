@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	gatepkg "github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	gatepkg "github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // PushStep force-pushes the worktree state to the configured push remote.
@@ -61,7 +61,7 @@ func (s *PushStep) Execute(sctx *pipeline.StepContext) (*pipeline.StepOutcome, e
 		// A configured commit.fix_message renders this subject too; the
 		// built-in template keeps the historical subject. Rendering first
 		// leaves nothing staged when the template rejects the branch.
-		message := "no-mistakes: apply agent fixes"
+		message := "alamino: apply agent fixes"
 		if tmpl := sctx.Config.Commit.FixMessage; tmpl != "" && tmpl != config.DefaultFixMessageTemplate {
 			if message, err = sctx.Config.Commit.RenderFixMessageForBranch(s.Name(), "apply agent fixes", sctx.Run.Branch); err != nil {
 				return nil, fmt.Errorf("render push commit message: %w", err)
@@ -219,7 +219,7 @@ func publishRunHead(sctx *pipeline.StepContext, headBeingPushed, localRefUpdate 
 	}
 	// Settle the gate mirror BEFORE recording the publication. The remote
 	// already has the head, but a run is only "published" once the gate mirror
-	// carries it too: `no-mistakes rerun` resolves its starting head from the
+	// carries it too: `alamino rerun` resolves its starting head from the
 	// gate, so a head recorded as published while the gate is behind is a head
 	// a later rerun silently omits.
 	//

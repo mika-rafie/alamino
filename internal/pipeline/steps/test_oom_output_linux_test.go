@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv/memscopetest"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv/memscopetest"
 )
 
 // TestTestStep_OutOfMemoryKeepsTheCommandOutputInTheStepLog runs under a
@@ -23,7 +23,7 @@ import (
 // is OOM-killed after printing a marker.
 func TestTestStep_OutOfMemoryKeepsTheCommandOutputInTheStepLog(t *testing.T) {
 	t.Parallel()
-	if os.Getenv("NM_STEPS_OOM_INNER") == "1" {
+	if os.Getenv("ALAMINO_STEPS_OOM_INNER") == "1" {
 		runTestStepOOMInner(t)
 		return
 	}
@@ -37,7 +37,7 @@ func TestTestStep_OutOfMemoryKeepsTheCommandOutputInTheStepLog(t *testing.T) {
 		"-p", "OOMPolicy=continue",
 		"--",
 		os.Args[0], "-test.run", "^TestTestStep_OutOfMemoryKeepsTheCommandOutputInTheStepLog$", "-test.count=1", "-test.v")
-	cmd.Env = append(os.Environ(), "NM_STEPS_OOM_INNER=1")
+	cmd.Env = append(os.Environ(), "ALAMINO_STEPS_OOM_INNER=1")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("scoped run: %v\n%s", err, out)

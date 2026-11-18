@@ -3,16 +3,15 @@ package cli
 import (
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/eval"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/eval"
+	"github.com/mika-rafie/alamino/internal/paths"
 	"github.com/spf13/cobra"
 )
 
-// newEvalCmd deliberately does not call trackCommand. Eval cases and candidate
-// results are local code data, so this command surface has no remote telemetry
-// event and does not use the daemon.
+// Eval cases and candidate results are local code data, so this command
+// surface does not use the daemon.
 func newEvalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "eval",

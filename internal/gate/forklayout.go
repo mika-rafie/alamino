@@ -6,11 +6,11 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/github"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/github"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 // resolveForkParent is github.RepoParent wired to a real gh invocation. It is
@@ -29,7 +29,7 @@ var resolveForkParent = func(ctx context.Context, remoteURL string) (parentSlug 
 // refuseForkOriginMisrouting detects the fork layout `gh repo fork --clone`
 // leaves behind - `origin` is the contributor's own fork and a separate
 // `upstream` remote already names the real parent repository - and refuses
-// loudly instead of letting a plain `no-mistakes init` (no --fork-url) treat
+// loudly instead of letting a plain `alamino init` (no --fork-url) treat
 // the fork as the parent (issue #1178). Left undetected, that layout opens
 // scratch PRs inside the contributor's fork and no attestation ever binds to
 // their real PR against the parent.
@@ -46,7 +46,7 @@ var resolveForkParent = func(ctx context.Context, remoteURL string) (parentSlug 
 //
 // It only runs when fork routing is not already configured (no --fork-url on
 // this call and no previously recorded fork), because a contributor who
-// already named their fork has already told no-mistakes which remote is
+// already named their fork has already told alamino which remote is
 // which; running it unconditionally would also refuse a deliberately
 // configured origin=parent, --fork-url=fork setup that happens to also carry
 // an unrelated "upstream" remote.
@@ -107,11 +107,11 @@ func refuseForkOriginMisrouting(ctx context.Context, absRoot string) error {
 
 	return fmt.Errorf(
 		"origin (%s/%s) is a GitHub fork of %s, and your 'upstream' remote already points at that parent repository\n\n"+
-			"no-mistakes needs 'origin' pointed at the parent repository, with your fork configured as a separate push target - "+
+			"alamino needs 'origin' pointed at the parent repository, with your fork configured as a separate push target - "+
 			"otherwise it opens pull requests and binds pipeline attestations inside your own fork instead of %s.\n\n"+
 			"Fix:\n"+
 			"  git remote set-url origin %s\n"+
-			"  no-mistakes init --fork-url %s\n\n"+
+			"  alamino init --fork-url %s\n\n"+
 			"See CONTRIBUTING.md for the full fork workflow.",
 		originOwner, originName, parentSlug, parentSlug,
 		safeurl.Redact(upstreamRemoteURL), safeurl.Redact(originURL))

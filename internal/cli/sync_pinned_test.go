@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/branchsync"
 )
 
 func TestHumanSyncSummaryPinnedHeadKeepLocalDoesNotClaimAnArchive(t *testing.T) {

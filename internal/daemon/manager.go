@@ -17,30 +17,29 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/callerrestrictions"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/eval"
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/integration"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
-	"github.com/kunchenguid/no-mistakes/internal/procreap"
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/callerrestrictions"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/eval"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/integration"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/procreap"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 )
 
 // StepFactory creates pipeline steps for a run. Defaults to steps.AllSteps.
@@ -571,7 +570,6 @@ func (m *RunManager) resumeRecoveredRun(plan recoveredRunPlan) {
 	spawn := func() {
 		m.wg.Add(1)
 		go func() {
-			startedAt := time.Now()
 			defer m.wg.Done()
 			defer close(done)
 			parkedAtShutdown := false
@@ -622,21 +620,6 @@ func (m *RunManager) resumeRecoveredRun(plan recoveredRunPlan) {
 				}
 				slog.Error("recovered pipeline failed", "run_id", plan.run.ID, "error", err)
 			}
-			fields := telemetry.Fields{
-				"action":      "finished",
-				"trigger":     "recovery",
-				"agent":       string(plan.cfg.Agent),
-				"branch_role": telemetryBranchRole(plan.run.Branch, plan.repo.DefaultBranch),
-				"status":      string(plan.run.Status),
-				"duration_ms": time.Since(startedAt).Milliseconds(),
-				"step_count":  len(plan.steps),
-				"pr_created":  plan.run.PRURL != nil && *plan.run.PRURL != "",
-			}
-			if failedStep := telemetryFailedStepName(m.db, plan.run.ID); failedStep != "" {
-				fields["failed_step"] = failedStep
-			}
-			addRunPerformanceSummary(m.db, plan.run.ID, fields)
-			telemetry.Track("run", fields)
 			m.autoIngestCIFalseNegatives(runCtx, plan.cfg, plan.run.ID)
 		}()
 	}
@@ -868,7 +851,7 @@ func (m *RunManager) closeSubscribers(runID string) {
 // direct IPC client - would otherwise re-resolve that id under this daemon's
 // own root, admitting or validating a foreign repository's push against local
 // state. The --gate value arrives absolute and symlink-resolved from git
-// rev-parse while the owned path is built from NM_HOME exactly as spelled, so
+// rev-parse while the owned path is built from ALAMINO_HOME exactly as spelled, so
 // compare through sameGateDir - canonicalRoot's "same root" (relative against
 // absolute, symlinked against real, /var -> /private/var on macOS, case on
 // Windows) plus a filesystem identity check for spellings that differ only in
@@ -922,7 +905,7 @@ func branchFromRef(ref string) string {
 	return strings.TrimPrefix(ref, "refs/heads/")
 }
 
-// loadTrustedRepoConfig reads .no-mistakes.yaml from the trusted
+// loadTrustedRepoConfig reads .alamino.yaml from the trusted
 // default-branch commit (trustedSHA - the exact SHA startRun just fetched and
 // resolved) in the worktree and parses it. Reading at a pinned SHA, rather
 // than the origin/<defaultBranch> remote-tracking ref, closes the stale-ref
@@ -941,7 +924,7 @@ func loadTrustedRepoConfig(ctx context.Context, wtDir, trustedSHA, runID string)
 		// potentially stale origin/<defaultBranch> ref.
 		return nil
 	}
-	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".no-mistakes.yaml")
+	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".alamino.yaml")
 	if err != nil {
 		// Path absent on the default branch is the common "repo has no
 		// trusted commands" case; log at debug so it isn't noisy. Other
@@ -959,21 +942,21 @@ func loadTrustedRepoConfig(ctx context.Context, wtDir, trustedSHA, runID string)
 }
 
 // assertGateTrustedConfigReadable fails a run LOUD when the trusted
-// default-branch copy of .no-mistakes.yaml could not be READ at all. This is the
+// default-branch copy of .alamino.yaml could not be READ at all. This is the
 // security correction for disable_project_settings: that field is a boundary
 // honored only from the trusted copy, so an unreadable trusted config must NOT
-// be silently treated as "not opted out" - no-mistakes cannot know whether the
+// be silently treated as "not opted out" - alamino cannot know whether the
 // repo relies on the boundary, so it refuses to run rather than risk launching a
 // gate agent with the project instructions loaded.
 //
 // It distinguishes "could not read the trusted config at all" (abort) from
-// "read the trusted tree fine, there is simply no .no-mistakes.yaml on the
+// "read the trusted tree fine, there is simply no .alamino.yaml on the
 // default branch" (the common ordinary-repo case, which is NOT opted out and
 // must proceed). Abort cases:
 //   - no known default branch to read a trusted copy from,
 //   - the default branch could not be fetched/resolved to a pinned SHA,
 //   - the pinned commit or tree is not readable (missing object / partial fetch),
-//   - the trusted .no-mistakes.yaml is present but unreadable or unparseable.
+//   - the trusted .alamino.yaml is present but unreadable or unparseable.
 func assertGateTrustedConfigReadable(ctx context.Context, wtDir, defaultBranch, trustedSHA string) error {
 	return assertTrustedConfigReadable(ctx, wtDir, defaultBranch, trustedSHA, "disable_project_settings")
 }
@@ -991,19 +974,19 @@ func assertTrustedConfigReadable(ctx context.Context, wtDir, defaultBranch, trus
 	if _, err := git.Run(ctx, wtDir, "rev-parse", "-q", "--verify", trustedSHA+"^{commit}"); err != nil {
 		return fmt.Errorf("cannot evaluate %s: trusted default-branch commit %s is not readable: %w", policy, trustedSHA, err)
 	}
-	entry, err := git.Run(ctx, wtDir, "ls-tree", trustedSHA, "--", ".no-mistakes.yaml")
+	entry, err := git.Run(ctx, wtDir, "ls-tree", trustedSHA, "--", ".alamino.yaml")
 	if err != nil {
 		return fmt.Errorf("cannot evaluate %s: trusted default-branch tree at %s is not readable: %w", policy, trustedSHA, err)
 	}
 	if entry == "" {
 		return nil
 	}
-	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".no-mistakes.yaml")
+	content, err := git.ShowFile(ctx, wtDir, trustedSHA, ".alamino.yaml")
 	if err != nil {
-		return fmt.Errorf("cannot evaluate %s: trusted .no-mistakes.yaml at %s is present but not readable: %w", policy, trustedSHA, err)
+		return fmt.Errorf("cannot evaluate %s: trusted .alamino.yaml at %s is present but not readable: %w", policy, trustedSHA, err)
 	}
 	if _, err := config.LoadRepoFromBytes([]byte(content)); err != nil {
-		return fmt.Errorf("cannot evaluate %s: trusted .no-mistakes.yaml at %s is present but unparseable: %w", policy, trustedSHA, err)
+		return fmt.Errorf("cannot evaluate %s: trusted .alamino.yaml at %s is present but unparseable: %w", policy, trustedSHA, err)
 	}
 	return nil
 }
@@ -1428,7 +1411,7 @@ func (m *RunManager) handleRerun(ctx context.Context, repoID, branch, previousRu
 		return "", err
 	}
 	if callerHeadSHA != "" && callerHeadSHA != headSHA {
-		return "", fmt.Errorf("refusing rerun: selected head %s differs from clean local head %s; inspect `no-mistakes axi status` and reconcile custody before using `no-mistakes axi run` to submit the local head", headSHA, callerHeadSHA)
+		return "", fmt.Errorf("refusing rerun: selected head %s differs from clean local head %s; inspect `alamino axi status` and reconcile custody before using `alamino axi run` to submit the local head", headSHA, callerHeadSHA)
 	}
 	selectedRun := latestForBranch
 	if previousRunID != "" {
@@ -1555,10 +1538,10 @@ func resolveRerunHead(ctx context.Context, gateDir, branch string, latest *db.Ru
 	if refExists {
 		preserved, preserveErr := git.Run(ctx, gateDir, "rev-parse", recoveryRef+"^{commit}")
 		if preserveErr != nil {
-			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at non-commit object %s; inspect with `no-mistakes axi status` and reconcile custody first", latest.ID, refTarget)
+			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at non-commit object %s; inspect with `alamino axi status` and reconcile custody first", latest.ID, refTarget)
 		}
 		if preserved != latest.HeadSHA {
-			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at %s, not recorded unpublished head %s; inspect with `no-mistakes axi status` and reconcile custody first", latest.ID, preserved, latest.HeadSHA)
+			return "", fmt.Errorf("refusing rerun: terminal recovery ref for run %s points at %s, not recorded unpublished head %s; inspect with `alamino axi status` and reconcile custody first", latest.ID, preserved, latest.HeadSHA)
 		}
 		return preserved, nil
 	}
@@ -1568,7 +1551,7 @@ func resolveRerunHead(ctx context.Context, gateDir, branch string, latest *db.Ru
 		}
 		return preserved, nil
 	}
-	return "", fmt.Errorf("refusing rerun from stale gate head %s: terminal run %s recorded unpublished head %s, but that head is unavailable; inspect with `no-mistakes axi status` and reconcile custody first", gateHead, latest.ID, latest.HeadSHA)
+	return "", fmt.Errorf("refusing rerun from stale gate head %s: terminal run %s recorded unpublished head %s, but that head is unavailable; inspect with `alamino axi status` and reconcile custody first", gateHead, latest.ID, latest.HeadSHA)
 }
 
 // fetchRunDefaultBranch uses a selected destination's private ref when pinned.
@@ -1603,7 +1586,7 @@ func fetchTrustedDefaultBranchSHA(ctx context.Context, gateDir string, repo *db.
 	if strings.TrimSpace(repo.DefaultBranch) == "" {
 		return "", fmt.Errorf("cannot evaluate %s: repository has no known default branch to read trusted config from", purpose)
 	}
-	privateRef := fmt.Sprintf("refs/no-mistakes/pi-profile/%d-%d", os.Getpid(), time.Now().UnixNano())
+	privateRef := fmt.Sprintf("refs/alamino/pi-profile/%d-%d", os.Getpid(), time.Now().UnixNano())
 	defer func() {
 		_, _ = git.Run(context.WithoutCancel(ctx), gateDir, "update-ref", "--no-deref", "-d", privateRef)
 	}()
@@ -1671,19 +1654,19 @@ func applyPinnedIntentCheck(cfg *config.Config, run *db.Run) error {
 
 func (m *RunManager) effectiveIntentCheckBeforeRun(ctx context.Context, repo *db.Repo, global *config.GlobalConfig, trustedSHA string) (config.IntentCheck, error) {
 	gateDir := m.paths.RepoDir(repo.ID)
-	entry, err := git.Run(ctx, gateDir, "ls-tree", trustedSHA, "--", ".no-mistakes.yaml")
+	entry, err := git.Run(ctx, gateDir, "ls-tree", trustedSHA, "--", ".alamino.yaml")
 	if err != nil {
 		return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted tree is unreadable: %w", err)
 	}
 	trusted := config.IntentCheck{Mode: config.IntentCheckOff}
 	if entry != "" {
-		content, err := git.ShowFile(ctx, gateDir, trustedSHA, ".no-mistakes.yaml")
+		content, err := git.ShowFile(ctx, gateDir, trustedSHA, ".alamino.yaml")
 		if err != nil {
 			return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted config is unreadable: %w", err)
 		}
 		trusted, err = config.ParseIntentCheckYAML([]byte(content))
 		if err != nil {
-			return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted .no-mistakes.yaml is invalid: %w", err)
+			return config.IntentCheck{}, fmt.Errorf("cannot evaluate intent check: trusted .alamino.yaml is invalid: %w", err)
 		}
 	}
 	return config.MergeIntentChecks(global.Intent.Check, trusted), nil
@@ -1727,20 +1710,20 @@ func loadRepoConfigAtSHA(ctx context.Context, dir, sha, purpose string) (*config
 	if _, err := git.Run(ctx, dir, "rev-parse", "-q", "--verify", sha+"^{commit}"); err != nil {
 		return nil, fmt.Errorf("cannot evaluate %s: submitted commit %s is not readable: %w", purpose, sha, err)
 	}
-	entry, err := git.Run(ctx, dir, "ls-tree", sha, "--", ".no-mistakes.yaml")
+	entry, err := git.Run(ctx, dir, "ls-tree", sha, "--", ".alamino.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("cannot evaluate %s: submitted tree at %s is not readable: %w", purpose, sha, err)
 	}
 	if entry == "" {
 		return &config.RepoConfig{}, nil
 	}
-	content, err := git.ShowFile(ctx, dir, sha, ".no-mistakes.yaml")
+	content, err := git.ShowFile(ctx, dir, sha, ".alamino.yaml")
 	if err != nil {
-		return nil, fmt.Errorf("cannot evaluate %s: submitted .no-mistakes.yaml at %s is present but not readable: %w", purpose, sha, err)
+		return nil, fmt.Errorf("cannot evaluate %s: submitted .alamino.yaml at %s is present but not readable: %w", purpose, sha, err)
 	}
 	cfg, err := config.LoadRepoFromBytes([]byte(content))
 	if err != nil {
-		return nil, fmt.Errorf("cannot evaluate %s: submitted .no-mistakes.yaml at %s is present but unparseable: %w", purpose, sha, err)
+		return nil, fmt.Errorf("cannot evaluate %s: submitted .alamino.yaml at %s is present but unparseable: %w", purpose, sha, err)
 	}
 	return cfg, nil
 }
@@ -1785,28 +1768,15 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	sequence := m.reserveAdmission()
 	defer m.releaseAdmission(sequence)
-	branchRole := telemetryBranchRole(branch, repo.DefaultBranch)
-	trackStartFailure := func(stage string) {
-		telemetry.Track("run", telemetry.Fields{
-			"action":      "start_failed",
-			"trigger":     trigger,
-			"branch_role": branchRole,
-			"stage":       stage,
-		})
-	}
-
 	if m.shuttingDown.Load() {
-		trackStartFailure("daemon_shutdown")
 		return "", fmt.Errorf("daemon is shutting down")
 	}
 	if m.restartPending() {
-		trackStartFailure("restart_pending")
 		return "", errRestartPending
 	}
 	// Refuse invalid supplied PR text before any active run is superseded.
 	prText, prTextErr := normalizeRunPRText(prText)
 	if prTextErr != nil {
-		trackStartFailure("invalid_pr_text")
 		return "", prTextErr
 	}
 	// Best-effort only: a clone's remotes may change after init. Refresh the
@@ -1876,7 +1846,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		}
 	}
 	if globalCfgErr != nil && strings.Contains(globalCfgErr.Error(), "intent.check") {
-		trackStartFailure("intent_check_config")
 		return "", fmt.Errorf("load intent check policy: %w", globalCfgErr)
 	}
 	var intentCheckJSON string
@@ -1890,7 +1859,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		if trustedFetchErr == nil {
 			check, err = m.effectiveIntentCheckBeforeRun(ctx, repo, globalCfg, trustedSHA)
 			if err != nil {
-				trackStartFailure("intent_check_config")
 				return "", err
 			}
 		} else {
@@ -1909,7 +1877,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 			if matches := check.Match(policyIntent); len(matches) > 0 {
 				switch check.Mode {
 				case config.IntentCheckReject:
-					trackStartFailure("intent_check_rejected")
 					return "", fmt.Errorf("intent rejected by configured rules: %s", strings.Join(matches, ", "))
 				case config.IntentCheckWarn:
 					slog.Warn("run intent matched configured rules", "rules", strings.Join(matches, ", "))
@@ -1918,7 +1885,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		}
 		policy, err := json.Marshal(check)
 		if err != nil {
-			trackStartFailure("intent_check_snapshot")
 			return "", fmt.Errorf("serialize intent check policy: %w", err)
 		}
 		intentCheckJSON = string(policy)
@@ -1927,17 +1893,14 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	var pin *agentcfg.PiProfile
 	if request := agentcfg.OptionalPiProfile(profiles); request != nil {
 		if globalCfgErr != nil {
-			trackStartFailure("load_global_config")
 			return "", fmt.Errorf("load global config: %w", globalCfgErr)
 		}
 		var err error
 		pin, err = globalCfg.ResolvePiProfile(request)
 		if err != nil {
-			trackStartFailure("invalid_pi_profile")
 			return "", err
 		}
 		if err := m.validatePiProfileAgentsBeforeCancel(ctx, repo, headSHA, globalCfg, reviewer); err != nil {
-			trackStartFailure("invalid_pi_profile")
 			return "", err
 		}
 	}
@@ -1986,7 +1949,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 
 	storedPRBaseBranch, err := normalizeRunPRBaseBranch(prBaseBranch)
 	if err != nil {
-		trackStartFailure("invalid_pr_base_branch")
 		return "", err
 	}
 	// The caller-side omit decision is the OR of the explicit per-run request
@@ -1997,7 +1959,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 
 	run, err := m.db.InsertRunWithDestinationAndCallerRestrictions(repo.ID, branch, headSHA, baseSHA, runIntent, launchNonce, validationGeneration, intentDigest, storedPRBaseBranch, storedOmitIntent, plan, prText, homes, destination, restrictions, pin, reviewer)
 	if err != nil {
-		trackStartFailure("create_run")
 		return "", fmt.Errorf("create run: %w", err)
 	}
 	if err := m.db.BindRunCommitIdentity(run.ID, identity); err != nil {
@@ -2007,7 +1968,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	if intentCheckJSON != "" {
 		if err := m.db.SetRunIntentCheck(run.ID, intentCheckJSON); err != nil {
 			m.db.UpdateRunError(run.ID, fmt.Sprintf("pin intent check: %s", err))
-			trackStartFailure("pin_intent_check")
 			return "", fmt.Errorf("pin intent check: %w", err)
 		}
 		run.IntentCheckJSON = &intentCheckJSON
@@ -2015,7 +1975,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	if inherited := strings.TrimSpace(inheritedPRURL); inherited != "" {
 		if err := m.db.UpdateRunPRURL(run.ID, inherited); err != nil {
 			m.db.UpdateRunError(run.ID, fmt.Sprintf("inherit PR URL: %s", err))
-			trackStartFailure("inherit_pr_url")
 			return "", fmt.Errorf("inherit PR URL: %w", err)
 		}
 		run.PRURL = &inherited
@@ -2024,7 +1983,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		if err := m.db.UpdateRunClosingIssueRefs(run.ID, closingIssues); err != nil {
 			msg := fmt.Sprintf("persist closing issue references: %s", err)
 			m.db.UpdateRunError(run.ID, msg)
-			trackStartFailure("persist_closing_issue_refs")
 			return "", fmt.Errorf("persist closing issue references: %w", err)
 		}
 	}
@@ -2032,7 +1990,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	// global config. Explicit profiles already resolved before supersession.
 	if globalCfgErr != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("load config: %s", globalCfgErr))
-		trackStartFailure("load_global_config")
 		return "", fmt.Errorf("load global config: %w", globalCfgErr)
 	}
 
@@ -2047,18 +2004,15 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	checkouts, err := registeredCheckouts(m.db)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("list registered checkouts: %s", err))
-		trackStartFailure("list_registered_checkouts")
 		return "", fmt.Errorf("list registered checkouts: %w", err)
 	}
 	if err := layout.ValidateCheckout(repo.WorkingPath, checkouts...); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("worktree placement: %s", err))
-		trackStartFailure("invalid_worktree_placement")
 		return "", fmt.Errorf("worktree placement: %w", err)
 	}
 	wtDir := layout.Dir(repo.ID, repo.WorkingPath, run.ID)
 	if err := m.db.SetRunWorktreeDir(run.ID, wtDir); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record worktree placement: %s", err))
-		trackStartFailure("record_worktree_placement")
 		return "", fmt.Errorf("record worktree placement: %w", err)
 	}
 	if shared := retry.sharedEvidenceDir(); shared != "" {
@@ -2067,19 +2021,16 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		m.evidencePinMu.Unlock()
 		if err != nil {
 			m.db.UpdateRunError(run.ID, fmt.Sprintf("record evidence dir: %s", err))
-			trackStartFailure("record_evidence_dir")
 			return "", fmt.Errorf("record evidence dir: %w", err)
 		}
 		run.EvidenceDir = &shared
 	}
 	if err := m.pinRunEvidenceDir(run, globalCfg); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record evidence dir: %s", err))
-		trackStartFailure("record_evidence_dir")
 		return "", fmt.Errorf("record evidence dir: %w", err)
 	}
 	if err := git.WorktreeAdd(ctx, gateDir, wtDir, headSHA); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("create worktree: %s", err))
-		trackStartFailure("create_worktree")
 		return "", fmt.Errorf("create worktree: %w", err)
 	}
 
@@ -2097,13 +2048,11 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 
 	if err := git.CopyLocalUserIdentity(ctx, wtDir, identity); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("configure worktree git identity: %s", err))
-		trackStartFailure("configure_worktree_identity")
 		return "", fmt.Errorf("configure worktree git identity: %w", err)
 	}
 	if storedPRBaseBranch != "" && destination == nil {
 		if err := steps.VerifyRemoteBranchExists(ctx, wtDir, storedPRBaseBranch); err != nil {
 			m.db.UpdateRunError(run.ID, err.Error())
-			trackStartFailure("pr_base_branch_missing")
 			return "", err
 		}
 	}
@@ -2130,11 +2079,10 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	repoCfg, err := config.LoadRepo(wtDir)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("load config: %s", err))
-		trackStartFailure("load_repo_config")
 		return "", fmt.Errorf("load repo config: %w", err)
 	}
 	// SECURITY: load the code-executing selection fields (commands.* and
-	// agent) from the trusted default-branch copy of .no-mistakes.yaml rather
+	// agent) from the trusted default-branch copy of .alamino.yaml rather
 	// than the pushed SHA. The worktree is checked out at headSHA (the
 	// contributor's branch), so reading repoCfg above would honor a
 	// contributor's commands/agent and let any pushed SHA run arbitrary shell
@@ -2154,7 +2102,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := assertGateTrustedConfigReadable(ctx, wtDir, repo.DefaultBranch, trustedSHA); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("trusted_config_unreadable")
 		return "", err
 	}
 	trustedRepoCfg := loadTrustedRepoConfig(ctx, wtDir, trustedSHA, run.ID)
@@ -2184,7 +2131,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := applyPinnedIntentCheck(cfg, run); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("pinned_intent_check")
 		return "", err
 	}
 	policyIntent := ""
@@ -2195,7 +2141,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		switch cfg.Intent.Check.Mode {
 		case config.IntentCheckReject:
 			m.db.UpdateRunError(run.ID, "intent rejected by configured rules")
-			trackStartFailure("intent_check_rejected")
 			return "", fmt.Errorf("intent rejected by configured rules: %s", strings.Join(matches, ", "))
 		case config.IntentCheckWarn:
 			slog.Warn("run intent matched configured rules", "rules", strings.Join(matches, ", "))
@@ -2203,18 +2148,15 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := cfg.Review.ValidatePathInstructionsBudget(); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("review_path_instructions_budget")
 		return "", err
 	}
 	if retry != nil {
 		if err := retry.proveAtLaunch(ctx, m, globalCfg, cfg, effectiveRepoCfg, run.ID); err != nil {
 			m.discardRefusedRetryRun(run.ID, cfg, retry)
-			trackStartFailure("retry_proof")
 			return "", err
 		}
 		if err := retry.record(m.db, run); err != nil {
 			m.discardRefusedRetryRun(run.ID, cfg, retry)
-			trackStartFailure("record_retry")
 			return "", err
 		}
 	}
@@ -2239,14 +2181,12 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := m.paths.ValidateEvidenceRoot(cfg.Test.Evidence.LocalRoot); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("evidence_root")
 		return "", err
 	}
 	cfg.TrustedConfigSHA = trustedSHA
 	if globalCfg.Eval.CaptureProvenance {
 		if err := cfg.EnableEvalProvenance(globalCfg, effectiveRepoCfg); err != nil {
 			m.db.UpdateRunError(run.ID, err.Error())
-			trackStartFailure("eval_provenance")
 			return "", err
 		}
 	}
@@ -2256,7 +2196,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("resolve forge profile: %s", err))
-		trackStartFailure("resolve_forge_profile")
 		return "", fmt.Errorf("resolve forge profile: %w", err)
 	}
 
@@ -2267,13 +2206,11 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	ag, quotaRecord, err := newPipelineAgent(ctx, cfg, pipelineEvidenceRoot(m.paths, cfg, run), exec.LookPath, forgeEnvironment(forgeCtx), nil)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("create_agent")
 		return "", err
 	}
 	if err := persistQuotaRoutingRecord(m.db, run.ID, quotaRecord); err != nil {
 		_ = ag.Close()
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("record_quota_routing")
 		return "", err
 	}
 
@@ -2286,25 +2223,14 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	pinnedGates, err := config.MarshalGates(cfg.Gates)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record gates: %s", err))
-		trackStartFailure("record_gates")
 		return "", fmt.Errorf("record gates: %w", err)
 	}
 	if err := m.db.SetRunGates(run.ID, pinnedGates); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record gates: %s", err))
-		trackStartFailure("record_gates")
 		return "", fmt.Errorf("record gates: %w", err)
 	}
 
 	execSteps := steps.WithCustomGates(m.steps(), cfg.Gates)
-	telemetry.Track("run", telemetry.Fields{
-		"action":      "started",
-		"trigger":     trigger,
-		"agent":       string(cfg.Agent),
-		"branch_role": branchRole,
-		"step_count":  len(execSteps),
-		"demo_mode":   steps.IsDemoMode(),
-	})
-
 	// Create executor with event broadcast.
 	runCtx, cancel := context.WithCancelCause(context.Background())
 	executor := pipeline.NewExecutor(m.db, m.paths, cfg, ag, execSteps, m.broadcast)
@@ -2335,7 +2261,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		// Launch pipeline in background.
 		m.wg.Add(1)
 		go func() {
-			startedAt := time.Now()
 			defer m.wg.Done()
 			defer close(done)
 			parkedAtShutdown := false
@@ -2345,21 +2270,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 					slog.Error("panic in pipeline goroutine", "run_id", run.ID, "panic", r)
 					run.Status = types.RunFailed
 					run.Error = &errMsg
-					fields := telemetry.Fields{
-						"action":      "finished",
-						"trigger":     trigger,
-						"agent":       string(cfg.Agent),
-						"branch_role": branchRole,
-						"status":      string(run.Status),
-						"duration_ms": time.Since(startedAt).Milliseconds(),
-						"step_count":  len(execSteps),
-						"pr_created":  run.PRURL != nil && *run.PRURL != "",
-					}
-					if failedStep := telemetryFailedStepName(m.db, run.ID); failedStep != "" {
-						fields["failed_step"] = failedStep
-					}
-					addRunPerformanceSummary(m.db, run.ID, fields)
-					telemetry.Track("run", fields)
 					verifiedHead, verified := preserveRunHead(m.db, wtDir, run)
 					var dbErr error
 					if verified {
@@ -2397,35 +2307,8 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 				slog.Info("run left parked for resume after daemon restart", "run_id", run.ID)
 				return
 			} else if err != nil {
-				fields := telemetry.Fields{
-					"action":      "finished",
-					"trigger":     trigger,
-					"agent":       string(cfg.Agent),
-					"branch_role": branchRole,
-					"status":      string(run.Status),
-					"duration_ms": time.Since(startedAt).Milliseconds(),
-					"step_count":  len(execSteps),
-					"pr_created":  run.PRURL != nil && *run.PRURL != "",
-				}
-				if failedStep := telemetryFailedStepName(m.db, run.ID); failedStep != "" {
-					fields["failed_step"] = failedStep
-				}
-				addRunPerformanceSummary(m.db, run.ID, fields)
-				telemetry.Track("run", fields)
 				slog.Error("pipeline failed", "run_id", run.ID, "error", err)
 			} else {
-				fields := telemetry.Fields{
-					"action":      "finished",
-					"trigger":     trigger,
-					"agent":       string(cfg.Agent),
-					"branch_role": branchRole,
-					"status":      string(run.Status),
-					"duration_ms": time.Since(startedAt).Milliseconds(),
-					"step_count":  len(execSteps),
-					"pr_created":  run.PRURL != nil && *run.PRURL != "",
-				}
-				addRunPerformanceSummary(m.db, run.ID, fields)
-				telemetry.Track("run", fields)
 				slog.Info("pipeline completed", "run_id", run.ID)
 			}
 			// Collection runs here, on the finished run, because a case is only
@@ -2580,43 +2463,6 @@ func (m *RunManager) relabelEvalRun(ctx context.Context, cfg *config.Config, run
 	}
 }
 
-// addRunPerformanceSummary attaches the bounded per-run performance rollup
-// to the terminal "run finished" event: low-cardinality counts only. The
-// detailed per-invocation evidence (session keys, models, timings, tokens)
-// stays in the local agent_invocations table and is never sent remotely.
-func addRunPerformanceSummary(database *db.DB, runID string, fields telemetry.Fields) {
-	summary, err := database.AgentInvocationSummaryForRun(runID)
-	if err != nil {
-		return
-	}
-	fields["agent_invocations"] = summary.Count
-	fields["resumed_invocations"] = summary.Resumed
-	fields["fallback_invocations"] = summary.Fallback
-}
-
-func telemetryBranchRole(branch, defaultBranch string) string {
-	if branch == "" {
-		return "unknown"
-	}
-	if defaultBranch != "" && branch == defaultBranch {
-		return "default"
-	}
-	return "feature"
-}
-
-func telemetryFailedStepName(database *db.DB, runID string) string {
-	steps, err := database.GetStepsByRun(runID)
-	if err != nil {
-		return ""
-	}
-	for _, step := range steps {
-		if step.Status == types.StepStatusFailed {
-			return telemetry.StepName(step.StepName)
-		}
-	}
-	return ""
-}
-
 // HandleRespond routes a gate response to the executor for the given run.
 func (m *RunManager) HandleRespond(runID string, step types.StepName, action types.ApprovalAction, findingIDs []string) error {
 	_, err := m.HandleRespondWithOverrides(runID, step, action, findingIDs, nil, nil, nil, "")
@@ -2702,7 +2548,7 @@ func (m *RunManager) HandleAnswerReviewQuestion(runID, questionID, answer, answe
 	dir := exec.ReviewConversationAnswerDir(runID)
 	if dir == "" {
 		if !exec.ReviewConversationEnabled() {
-			return nil, fmt.Errorf("run %s has no review conversation: set review.conversation: true in .no-mistakes.yaml on the default branch to let the reviewer ask questions", runID)
+			return nil, fmt.Errorf("run %s has no review conversation: set review.conversation: true in .alamino.yaml on the default branch to let the reviewer ask questions", runID)
 		}
 		return nil, fmt.Errorf("run %s has no review conversation directory", runID)
 	}
@@ -2746,7 +2592,7 @@ func (m *RunManager) HandleAnswerReviewQuestion(runID, questionID, answer, answe
 	// answer that closed nothing, which reads fine, stays recorded and is
 	// deliberately not an error.
 	if before.QuestionsIncomplete {
-		return nil, fmt.Errorf("run %s's review question history could not be read to the end (%s), so an answer cannot be bound to the ask it settles; nothing was recorded - read that file for the questions asked, and resolve the parked review with `no-mistakes axi respond` instead", runID, filepath.Join(dir, reviewqa.QuestionsFile))
+		return nil, fmt.Errorf("run %s's review question history could not be read to the end (%s), so an answer cannot be bound to the ask it settles; nothing was recorded - read that file for the questions asked, and resolve the parked review with `alamino axi respond` instead", runID, filepath.Join(dir, reviewqa.QuestionsFile))
 	}
 	wasOpen := false
 	askOrdinal := 0

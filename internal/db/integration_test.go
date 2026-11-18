@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/integration"
+	"github.com/mika-rafie/alamino/internal/integration"
 )
 
 func TestIntegrationRemotePinPersistsAndBindsReceipt(t *testing.T) {

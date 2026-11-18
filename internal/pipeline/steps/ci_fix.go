@@ -9,15 +9,15 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/intent"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/testguidance"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/intent"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/testguidance"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 var errCIAttestationUnsettled = errors.New("CI repair attestation is unsettled")
@@ -37,13 +37,13 @@ var errAttestationWriteFailed = errors.New("pipeline attestation write failed")
 // ciFixerClassRules is shared by every CI-repair prompt path so failing-check,
 // combined, and merge-conflict-only repairs follow the Review fixer's same
 // invariant-complete discipline.
-const ciFixerClassRules = `- Do not watch or poll CI runs. Never run gh run watch (including --exit-status), gh-axi run watch, or an equivalent command. Never repeatedly query run, job, or check status in a polling loop. You may retrieve a failing job's logs once when that helps diagnose the failure. Finish with your fix as local changes in the worktree and return. Never push, force-push, or otherwise publish: the no-mistakes pipeline commits and publishes the repair through its guarded path, and its own CI monitoring then takes over. Do not wait for CI to finish.
+const ciFixerClassRules = `- Do not watch or poll CI runs. Never run gh run watch (including --exit-status), gh-axi run watch, or an equivalent command. Never repeatedly query run, job, or check status in a polling loop. You may retrieve a failing job's logs once when that helps diagnose the failure. Finish with your fix as local changes in the worktree and return. Never push, force-push, or otherwise publish: the alamino pipeline commits and publishes the repair through its guarded path, and its own CI monitoring then takes over. Do not wait for CI to finish.
 - Before changing code, state for each finding the invariant it violates (what must always hold, in one sentence) and enumerate every place in the changed area where that same invariant must hold: every axis, direction, and representation; every sibling call path, command, action, and state transition; every consumer of the same input, field, or record. Fix the invariant at all of those places in this round, with the same small correction, or at the one shared boundary that makes all of them hold. A fix that closes only the reported site and leaves a sibling site reachable is incomplete; the next review will report the sibling.
 - Do not grow the fix into machinery: closing sibling sites with the same small edit, or moving a check to one shared boundary, is the fix; adding handling, state, fallbacks, retries, or a subsystem to manage symptoms is not. Prefer addressing a deeper architectural reason and simplifying it, than introducing machinery to handle the symptoms.
 - After applying the fixes and before verification, re-trace for each finding the concrete failing sequence it describes through the code as it now is, and trace the ordinary successful path through every function you changed, including each of its callers. Remove any alias, branch, parameter, or helper your fix made unreachable. A fix that makes the reported sequence pass while breaking the ordinary path, a caller's assumption, or a sibling site is a regression the next review will report.`
 
 const ciFailingCheckFixRules = `- If a failing check is caused by this PR's code (a broken test, build, lint, or similar defect in the change), you MUST produce file changes that fix it and set code_change_needed to true. A real failing test or build must still be fixed.
-		- If a failing check is not caused by the code under review (a stale or superseded check run, an infrastructure or attestation check such as "PR must be raised via no-mistakes" that fails only because a later pipeline push moved the head, or any failure external to the code), you MAY conclude that no code change is warranted. Set code_change_needed to false and report that conclusion in summary instead of editing files. Do not invent work to satisfy a check the code did not cause.
+		- If a failing check is not caused by the code under review (a stale or superseded check run, an infrastructure or attestation check such as "PR must be raised via alamino" that fails only because a later pipeline push moved the head, or any failure external to the code), you MAY conclude that no code change is warranted. Set code_change_needed to false and report that conclusion in summary instead of editing files. Do not invent work to satisfy a check the code did not cause.
 		- If a test fails only on a specific OS (e.g. Windows CRLF, path separators), fix the test to be cross-platform.
 		- If a test is flaky, make it deterministic.
 		- Make the smallest correct root-cause fix.
@@ -994,7 +994,7 @@ func (s *CIStep) publishRepair(sctx *pipeline.StepContext, headSHA string) (ciRe
 // the push can ever observe a legitimate head without a matching
 // attestation. See publishRunHead for why this ordering - not a post-push
 // write - is the fix for the push-then-attest race: every known consumer of
-// the shared require-no-mistakes action pins an immutable revision whose
+// the shared require-alamino action pins an immutable revision whose
 // verifier reads the PR body from the frozen `synchronize` event payload, so
 // no post-push write, however fast, can ever land before that payload is
 // read. Attesting first means the payload already carries the correct
@@ -1013,7 +1013,7 @@ func (s *CIStep) publishRepair(sctx *pipeline.StepContext, headSHA string) (ciRe
 // PR there either, see effectivePRBaseBranch); the SCM host is unavailable
 // (matches the PR step's own skip semantics); or no PR exists yet for this
 // branch. It never mints an attestation for a PR that was not raised through
-// no-mistakes - restampPRAttestationWithSteps already enforces that. Any
+// alamino - restampPRAttestationWithSteps already enforces that. Any
 // other failure (PR discovery errors, a provider plugin whose status
 // handshake broke its contract - the PR step fails on that too, see
 // pluginContractBroken - or a discoverable PR whose write does not

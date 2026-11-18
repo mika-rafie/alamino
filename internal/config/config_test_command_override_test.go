@@ -6,7 +6,7 @@ import (
 )
 
 // TestEffectiveRepoConfig_AllowApproveOverFailureTrustedOnly proves a feature
-// branch cannot waive the require-no-mistakes check for an approved-over-failure
+// branch cannot waive the require-alamino check for an approved-over-failure
 // commands.test: the opt-in reason comes only from the trusted default-branch
 // copy, and allow_repo_commands does not leak a pushed waiver.
 func TestEffectiveRepoConfig_AllowApproveOverFailureTrustedOnly(t *testing.T) {

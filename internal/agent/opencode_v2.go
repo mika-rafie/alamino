@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
 )
 
 // V2 admits prompts asynchronously. Its event stream is volatile, not a proof

@@ -1,12 +1,12 @@
 ---
 title: Global Config Reference
-description: All fields for ~/.no-mistakes/config.yaml.
+description: All fields for ~/.alamino/config.yaml.
 ---
 
-Global configuration lives at `~/.no-mistakes/config.yaml`. Set `NM_HOME` to relocate the config directory.
+Global configuration lives at `~/.alamino/config.yaml`. Set `ALAMINO_HOME` to relocate the config directory.
 
 ```yaml
-# ~/.no-mistakes/config.yaml
+# ~/.alamino/config.yaml
 
 agent: auto
 
@@ -71,7 +71,7 @@ forge_profiles:
 
 provider_plugins:
   ssm:
-    command: ~/bin/nm-ssm-plugin
+    command: ~/bin/alamino-ssm-plugin
     hosts: ["*.sourcemanager.dev"]
 
 auto_fix:
@@ -98,13 +98,13 @@ review:
   path_instructions: []
 
 commit:
-  fix_message: "chore(no-mistakes-{{.Step}}): {{.Summary}}"
+  fix_message: "chore(alamino-{{.Step}}): {{.Summary}}"
   # branch_pattern: '^PROJ/([0-9]+)$'
   # branch_replacement: 'PROJ-${1}'
   # To use the captured identifier in the subject:
   # fix_message: "{{.Branch}}: {{.Summary}}"
   # trailers:
-  #   - "Assisted-by: no-mistakes:{{.Agent}}:{{.Model}}"
+  #   - "Assisted-by: alamino:{{.Agent}}:{{.Model}}"
 
 intent:
   enabled: true
@@ -122,9 +122,9 @@ test:
     store_in_repo: false
     attach_media: true
     compact: true
-    dir: .no-mistakes/evidence
-    branch: no-mistakes/evidence
-    commit_message: "no-mistakes: evidence for {{.Branch}} (run {{.RunID}})"
+    dir: .alamino/evidence
+    branch: alamino/evidence
+    commit_message: "alamino: evidence for {{.Branch}} (run {{.RunID}})"
     retention: 336h
     max_runs: 200
 
@@ -160,7 +160,7 @@ With default paths, `auto` only selects an alias when both its command binary (`
 Arbitrary `acp:<target>` agents are opt-in and are not considered by `agent: auto`.
 The effective agent configuration must resolve to a runnable runner before a new validation gate starts.
 If an explicit agent is unavailable, `auto` finds no native agent or ACP alias, or no fallback-list entry is available, the gate fails before its first pipeline step rather than reporting a partial command-only validation as passed.
-`no-mistakes doctor` checks the global configuration, while every run repeats resolution after applying any trusted repository-level `agent` override.
+`alamino doctor` checks the global configuration, while every run repeats resolution after applying any trusted repository-level `agent` override.
 
 You can also set an ordered fallback list:
 
@@ -171,7 +171,7 @@ agent: [codex, grok]
 The list is filtered to entries available to the daemon at run startup. By default, the first available entry becomes the primary agent; opt-in [quota-aware routing](#quota_routing) can reorder that resolved list.
 After resolving `auto`, entries that resolve to the same ACP target are deduplicated in list order, so `cursor` and `acp:cursor` (or `devin` and `acp:devin`) provide one fallback and preserve whichever spelling appears first.
 If no entry is available, the gate fails before its first pipeline step.
-If a pipeline invocation fails because that agent process cannot start or exits with an error, no-mistakes retries that invocation with the next available fallback.
+If a pipeline invocation fails because that agent process cannot start or exits with an error, alamino retries that invocation with the next available fallback.
 Fallback candidates share the invocation's existing bounded context and use only its remaining time; once that context expires or is cancelled, no further candidate is announced or started.
 Structured findings and validation failures in an agent's returned output do not trigger fallback. A recognized Codex provider rejection of the requested structured-output schema does trigger fallback.
 
@@ -193,12 +193,12 @@ Executable used for Forgejo PR and CI operations.
 | Type    | `string`      |
 | Default | `forgejo-axi` |
 
-A bare name is resolved from the daemon's effective `PATH`; an explicit path is executed directly. See [Provider Integration](/no-mistakes/guides/provider-integration/#forgejo) for setup and the [environment reference](/no-mistakes/reference/environment/#forgejo_base_url) for host and token configuration.
+A bare name is resolved from the daemon's effective `PATH`; an explicit path is executed directly. See [Provider Integration](/alamino/guides/provider-integration/#forgejo) for setup and the [environment reference](/alamino/reference/environment/#forgejo_base_url) for host and token configuration.
 
 ### acp_registry_overrides
 
 Map an ACP target name to a raw ACP agent command.
-When `agent: acp:<target>` matches an override key, no-mistakes runs `acpx --agent <command>` instead of `acpx <target>`.
+When `agent: acp:<target>` matches an override key, alamino runs `acpx --agent <command>` instead of `acpx <target>`.
 ACP aliases use the same target keys. For example, `agent: cursor` and `agent: acp:cursor` resolve to the `cursor` target, so set `cursor` to override the default `cursor-agent acp` command; `devin` likewise overrides the default `devin acp` command.
 Values are trimmed; a blank or whitespace-only value behaves as no override, so an alias keeps its default command.
 Availability checks always resolve `acpx_path`. They also probe the executable named first in the effective non-blank raw command when it is a bare command name or clean absolute path. Relative, quoted, or escaped raw commands are not pre-probed; `acpx` executes them from the worktree. These checks do not invoke the ACP target or test its credentials.
@@ -227,7 +227,7 @@ acp_registry_overrides:
 ### agent_path_override
 
 Custom binary paths for native agents.
-When set, `no-mistakes` uses this path instead of looking up the binary on `PATH`.
+When set, `alamino` uses this path instead of looking up the binary on `PATH`.
 ACP agents and aliases use `acpx_path` for the bridge; use `acp_registry_overrides` to replace a raw target command such as `cursor-agent acp`.
 
 |         |                                   |
@@ -250,7 +250,7 @@ Default native binary names when no override is set:
 
 ### agent_config
 
-Model and reasoning effort per agent, in one common spelling. no-mistakes maps each field down to whatever mechanism that harness actually uses, so you no longer have to know each CLI's own flag.
+Model and reasoning effort per agent, in one common spelling. alamino maps each field down to whatever mechanism that harness actually uses, so you no longer have to know each CLI's own flag.
 
 |         |                                                                                     |
 | ------- | ----------------------------------------------------------------------------------- |
@@ -295,9 +295,9 @@ Neither version receives model flags in the launch command, because `opencode se
 
 An entry may also declare `quota_provider`, the quota-axi provider ID used as routing input when `quota_routing.enabled` is on. It does not set a harness option. See [quota-aware routing](#quota_routing) for provider defaults, Pi's explicit-provider requirement, and account selection.
 
-`rovodev` and `antigravity` have no mechanism no-mistakes can set - `acli rovodev serve` plus its REST session API take no model parameter, and the `agy` CLI parses flags strictly - so setting `model` or `effort` for them is a config error. An entry containing only `quota_provider` is valid. Reach for [`agent_args_override`](#agent_args_override) there if your build of the CLI accepts a flag. Reasoning effort is likewise unavailable for ACP targets: no-mistakes drives them through `acpx`, which exposes `--model` but no effort surface. acpx also accepts only the model ids a target advertises over ACP; for `devin` that is a subset of `devin models list`, and [`acp_registry_overrides`](#acp_registry_overrides) is the escape hatch for the rest.
+`rovodev` and `antigravity` have no mechanism alamino can set - `acli rovodev serve` plus its REST session API take no model parameter, and the `agy` CLI parses flags strictly - so setting `model` or `effort` for them is a config error. An entry containing only `quota_provider` is valid. Reach for [`agent_args_override`](#agent_args_override) there if your build of the CLI accepts a flag. Reasoning effort is likewise unavailable for ACP targets: alamino drives them through `acpx`, which exposes `--model` but no effort surface. acpx also accepts only the model ids a target advertises over ACP; for `devin` that is a subset of `devin models list`, and [`acp_registry_overrides`](#acp_registry_overrides) is the escape hatch for the rest.
 
-`agent_config` is global-only. Like `agent_args_override`, it decides which model runs with your credentials, so an `agent_config` block in a repository's `.no-mistakes.yaml` is ignored. For first-class ACP aliases, `cursor` and `acp:cursor` share a profile, as do `devin` and `acp:devin`: the selected spelling's entry wins when both are configured; otherwise the other spelling's entry applies. This also applies to review-agent profiles.
+`agent_config` is global-only. Like `agent_args_override`, it decides which model runs with your credentials, so an `agent_config` block in a repository's `.alamino.yaml` is ignored. For first-class ACP aliases, `cursor` and `acp:cursor` share a profile, as do `devin` and `acp:devin`: the selected spelling's entry wins when both are configured; otherwise the other spelling's entry applies. This also applies to review-agent profiles.
 
 **Precedence for unpinned runs.** `agent_args_override` wins. Opt-in [per-run Pi profiles](#per-run-pi-profiles) and [reviewer profiles](#per-run-reviewer-profiles) have separate, immutable selection contracts. If a raw flag already pins a knob natively - for example, `-m`, `--model`, or a `-c`/`--config` assignment whose exact key is `model` or `model_reasoning_effort` for Codex, plus the other harnesses' `--effort`, `--reasoning-effort`, or `--thinking` forms - then `agent_config` does not emit its value for that knob. Text such as `model=` nested inside an unrelated option's value is not a pin. Any knob the raw flags leave alone still comes from `agent_config`, so adding `agent_config` to an existing configuration never changes the arguments that configuration already supplied:
 
@@ -317,7 +317,7 @@ agent_args_override:
 Choose a reviewer independently of the primary author/fixer:
 
 ```sh
-no-mistakes axi run --intent "the user's goal" \
+alamino axi run --intent "the user's goal" \
   --reviewer codex --reviewer-model gpt-5.4 --reviewer-effort high
 ```
 
@@ -357,8 +357,8 @@ reviewer unless `--reviewer` explicitly selects a replacement for the new run.
 A fresh `axi run` without reviewer flags uses current configuration, including
 any newly requested Pi profile, and never inherits the previous run's reviewer
 pin, even when the push is up to date. Requested profiles are visible in
-[`axi status`](/no-mistakes/reference/cli/#no-mistakes-axi-status) and
-[`stats --run <id>`](/no-mistakes/reference/cli/#no-mistakes-stats).
+[`axi status`](/alamino/reference/cli/#alamino-axi-status) and
+[`stats --run <id>`](/alamino/reference/cli/#alamino-stats).
 This does not infer model families or select a fallback reviewer.
 
 ### Per-run Pi profiles
@@ -366,7 +366,7 @@ This does not infer model families or select a fallback reviewer.
 Select a profile when creating a validation run, without editing global config:
 
 ```sh
-no-mistakes axi run --intent "the user's goal" \
+alamino axi run --intent "the user's goal" \
   --model openai-codex/gpt-5.4 --effort high
 ```
 
@@ -384,7 +384,7 @@ unless an explicit per-run reviewer profile overrides the reviewer.
 The effective agent selection must be Pi-only (no `auto`, non-Pi fallbacks, or
 non-Pi `review_agents`, except reviewer entries replaced by an explicit per-run
 reviewer). Under the default trust policy, a nonempty `agent` in
-the freshly fetched, trusted default-branch `.no-mistakes.yaml` replaces the
+the freshly fetched, trusted default-branch `.alamino.yaml` replaces the
 global scalar or fallback list for this check, just as it does for an ordinary
 run. This lets one project opt into Pi profiles with trusted `agent: pi` while
 other projects keep a global `agent: auto` or another global selection. When the
@@ -418,7 +418,7 @@ remain unpinned and keep the previous global-config behavior. Concurrent runs
 hold independent pins without modifying shared configuration.
 
 Structured AXI status and daemon run/receipt responses expose `pi_profile:
-{model, effort}` only for pinned runs. `no-mistakes stats --run <id>` shows that
+{model, effort}` only for pinned runs. `alamino stats --run <id>` shows that
 requested profile alongside per-invocation served-model and usage evidence;
 a pin is not a claim that a provider reported usage. These values stay local,
 not in remote analytics. The CLI checks daemon support before a fresh pinned
@@ -427,7 +427,7 @@ submission, so an older daemon cannot silently launch it without a pin.
 ### review_agents
 
 Optional, **global-only** harness and model/effort overrides for the review loop.
-Repository `.no-mistakes.yaml` cannot set these profiles; a matching
+Repository `.alamino.yaml` cannot set these profiles; a matching
 [`repository_overrides`](#machine-local-review-agents) entry in this file can
 replace individual roles for one repository. Omitted roles keep the
 normal `agent` selection and fallback chain; other pipeline steps are unchanged.
@@ -472,7 +472,7 @@ using that role stay on its selected reviewer rather than retrying exhausted
 candidates. The base and later-round reviewer roles have separate fallback chains.
 If all configured reviewers exhaust their quota, review fails without approval.
 The fallback log names both configured candidates, including same-harness profiles.
-See [local invocation evidence](/no-mistakes/reference/environment/#what-stays-local-and-what-leaves-the-machine)
+See [local invocation evidence](/alamino/reference/environment/#local-performance-records)
 for the recorded identities.
 An OpenCode turn that ran tools, or whose tool activity is unknown, cannot fall
 back to a fresh reviewer session.
@@ -515,7 +515,7 @@ a value below 1, is a configuration error. Because a later-round fixer may be a
 harness that cannot resume sessions, fixer session reuse is reported for every
 fixer a run can use: configuring a non-resumable `fixer_after_round` turns fix
 turns cold for the whole run rather than handing round 3 a session it cannot
-resume. `no-mistakes stats --run <id>` shows the agent and served model per
+resume. `alamino stats --run <id>` shows the agent and served model per
 invocation alongside its round, so which tier served which round is visible
 after the fact.
 
@@ -532,7 +532,7 @@ authoritative.
 ### agent_args_override
 
 Extra CLI flags to pass to each native agent.
-Use this for anything [`agent_config`](#agent_config) does not cover - service tier, permission mode, profiles, or any other flag the underlying agent supports - and as the escape hatch for a harness whose model or effort flag no-mistakes cannot map. For model and reasoning effort on a mapped harness, prefer `agent_config`: one spelling instead of seven.
+Use this for anything [`agent_config`](#agent_config) does not cover - service tier, permission mode, profiles, or any other flag the underlying agent supports - and as the escape hatch for a harness whose model or effort flag alamino cannot map. For model and reasoning effort on a mapped harness, prefer `agent_config`: one spelling instead of seven.
 
 |         |                                                           |
 | ------- | --------------------------------------------------------- |
@@ -540,7 +540,7 @@ Use this for anything [`agent_config`](#agent_config) does not cover - service t
 | Keys    | `claude`, `codex`, `grok`, `rovodev`, `opencode`, `pi`, `copilot`, `antigravity` |
 | Default | Empty (no extra flags)                                    |
 
-User-supplied flags are normally inserted ahead of no-mistakes' managed flags, so your choices usually take precedence. Security suppression selected by trusted [`disable_project_settings`](/no-mistakes/reference/repo-config/#disable_project_settings) may be placed first while preserving a compatible operator pin. A few flags are reserved because no-mistakes depends on them to communicate with the agent - setting any of these returns a config error on load:
+User-supplied flags are normally inserted ahead of alamino's managed flags, so your choices usually take precedence. Security suppression selected by trusted [`disable_project_settings`](/alamino/reference/repo-config/#disable_project_settings) may be placed first while preserving a compatible operator pin. A few flags are reserved because alamino depends on them to communicate with the agent - setting any of these returns a config error on load:
 
 | Agent      | Reserved flags                                                                                              |
 | ---------- | ----------------------------------------------------------------------------------------------------------- |
@@ -553,11 +553,11 @@ User-supplied flags are normally inserted ahead of no-mistakes' managed flags, s
 | `copilot`  | `-p`, `--prompt`, `--output-format`, `--no-color`                                                          |
 | `antigravity` | `--dangerously-skip-permissions`, `--print`, `--json-schema`, `--output-format`, `--conversation`, `-c`, `--continue` |
 
-For structured `codex` runs, no-mistakes also appends its own `--output-schema <tempfile>` after your overrides. Treat that flag as managed even though config validation does not currently reject it.
+For structured `codex` runs, alamino also appends its own `--output-schema <tempfile>` after your overrides. Treat that flag as managed even though config validation does not currently reject it.
 
 The selected Codex profile/model's provider must accept that schema. A recognized provider schema rejection lets the next eligible configured fallback agent take over. Without one, the run stops with `codex structured-output incompatibility` and preserves the provider diagnostic. The Codex schema incompatibility is not retried by the adapter or by automatic crash retries. A Review or Test analyzer rerun restarts the agent chain, so Codex may be called again and fail fast before the fallback runs. Review is neither skipped nor retried without the schema. Select a compatible Codex profile/model or configure a different agent route, then rerun the pipeline so review can complete. A profile that works for plain prompts, such as Rebase, can still reject structured review requests.
 
-The Claude, Codex, Grok, Pi, and Antigravity session-control forms are reserved so no-mistakes can keep review-loop conversations deterministic: review turns stay session-free while the fixer keeps its own isolated durable session.
+The Claude, Codex, Grok, Pi, and Antigravity session-control forms are reserved so alamino can keep review-loop conversations deterministic: review turns stay session-free while the fixer keeps its own isolated durable session.
 
 Smart defaults:
 
@@ -566,7 +566,7 @@ Smart defaults:
 - For `grok`, supplying `--permission-mode` or `--always-approve` suppresses the default `--permission-mode bypassPermissions`. No model flag is added: Grok uses its current configured default unless you explicitly set `-m` or `--model`.
 - For `antigravity`, supplying `-t` or `--print-timeout` suppresses the default `--print-timeout 24h`.
 
-Permission and sandbox flags affect the underlying agent, but they do not disable no-mistakes' pipeline prompt steering.
+Permission and sandbox flags affect the underlying agent, but they do not disable alamino's pipeline prompt steering.
 Pipeline agents are still told to keep intentional writes inside the worktree and avoid mutating system state outside it.
 
 Example:
@@ -598,7 +598,7 @@ agent_args_override:
 
 Do not put a model flag under `opencode` here: these flags go to `opencode serve`, which exits with usage on an unknown option. Use `agent_config.opencode.model` instead.
 
-For Codex, `service_tier` and reasoning effort tune different things: `service_tier` selects the speed or priority lane, while reasoning depth is what [`agent_config`](#agent_config)'s `effort` sets (as `-c model_reasoning_effort`). For immutable selection rules, see [per-run Pi profiles](#per-run-pi-profiles) and [reviewer profiles](#per-run-reviewer-profiles). For repeatable profiles, use separately initialized `NM_HOME` directories; each has its own `config.yaml` and no-mistakes state.
+For Codex, `service_tier` and reasoning effort tune different things: `service_tier` selects the speed or priority lane, while reasoning depth is what [`agent_config`](#agent_config)'s `effort` sets (as `-c model_reasoning_effort`). For immutable selection rules, see [per-run Pi profiles](#per-run-pi-profiles) and [reviewer profiles](#per-run-reviewer-profiles). For repeatable profiles, use separately initialized `ALAMINO_HOME` directories; each has its own `config.yaml` and alamino state.
 
 ### forge_profiles
 
@@ -619,11 +619,11 @@ forge_profiles:
 
 Paths must be absolute or begin with `~/`; environment variables and other shell expansion are not supported. Host keys are case-insensitive.
 
-`forge_profiles` is read from the global config only. Repository config, including the pushed branch's `.no-mistakes.yaml`, can never add, select, or change a profile, because a profile decides whose credentials the run executes with.
+`forge_profiles` is read from the global config only. Repository config, including the pushed branch's `.alamino.yaml`, can never add, select, or change a profile, because a profile decides whose credentials the run executes with.
 
-When a repository matches a profile, no-mistakes validates it before starting the pipeline and applies an immutable environment to every subprocess in that run: built-in provider commands, custom shell commands, agents, managed agent servers, and the run's Git commands together with any hooks or credential helpers they spawn. A GitHub profile sets `GH_CONFIG_DIR` (or, for a `gh_user` profile, the selected login's token, described below) and removes higher-precedence GitHub token, host, and repository variables; a GitLab profile does the equivalent for `GLAB_CONFIG_DIR` and GitLab variables. The daemon process environment is never changed.
+When a repository matches a profile, alamino validates it before starting the pipeline and applies an immutable environment to every subprocess in that run: built-in provider commands, custom shell commands, agents, managed agent servers, and the run's Git commands together with any hooks or credential helpers they spawn. A GitHub profile sets `GH_CONFIG_DIR` (or, for a `gh_user` profile, the selected login's token, described below) and removes higher-precedence GitHub token, host, and repository variables; a GitLab profile does the equivalent for `GLAB_CONFIG_DIR` and GitLab variables. The daemon process environment is never changed.
 
-Each selected GitHub config directory (`gh_config_dir`) must contain the target host and exactly one account for it, with that account active. A selected GitLab config must contain the target host. An optional `expected_login` pins the account name the profile must be signed in as; resolution fails closed when the config's active login differs or is missing, so a swapped or re-authenticated config directory can never route a run through the wrong account. It carries an account name only, never credentials. `no-mistakes doctor` validates every configured profile and its online authentication.
+Each selected GitHub config directory (`gh_config_dir`) must contain the target host and exactly one account for it, with that account active. A selected GitLab config must contain the target host. An optional `expected_login` pins the account name the profile must be signed in as; resolution fails closed when the config's active login differs or is missing, so a swapped or re-authenticated config directory can never route a run through the wrong account. It carries an account name only, never credentials. `alamino doctor` validates every configured profile and its online authentication.
 
 #### Choosing one of several gh accounts with `gh_user`
 
@@ -635,7 +635,7 @@ forge_profiles:
     gh_user: remicaesar
 ```
 
-At run setup, no-mistakes runs `gh auth token --hostname <host> --user <gh_user>` once, against the ambient gh configuration, and gives that token to every subprocess in the run as `GH_TOKEN` (`GH_ENTERPRISE_TOKEN` on a GitHub Enterprise Server host). The other GitHub token, host, and repository variables are removed as for any GitHub profile. gh prefers that variable over its active account, and `gh auth git-credential` returns it, so HTTPS pushes through the gh credential helper authenticate as the same login. The token is held in memory for the run only: it never appears in arguments, logs, files, or the run record, and a recovered run reads it again. A profile never stores a token itself.
+At run setup, alamino runs `gh auth token --hostname <host> --user <gh_user>` once, against the ambient gh configuration, and gives that token to every subprocess in the run as `GH_TOKEN` (`GH_ENTERPRISE_TOKEN` on a GitHub Enterprise Server host). The other GitHub token, host, and repository variables are removed as for any GitHub profile. gh prefers that variable over its active account, and `gh auth git-credential` returns it, so HTTPS pushes through the gh credential helper authenticate as the same login. The token is held in memory for the run only: it never appears in arguments, logs, files, or the run record, and a recovered run reads it again. A profile never stores a token itself.
 
 If gh has no token for that login on the host (the login is unknown or signed out), the run fails at setup with the gh error; it never falls back to the active account. `gh_user` cannot be combined with `gh_config_dir`, `glab_config_dir`, or `expected_login` (the login it names is already the pin).
 
@@ -643,23 +643,23 @@ An owner-scoped key is looked up before its plain host key, and a repository who
 
 Profile activation is provider-specific and fail-closed: after at least one plain host-keyed GitHub profile is configured, a GitHub repository must match a GitHub profile; GitLab remains ambient unless a GitLab profile is also configured, and vice versa. With no `forge_profiles`, provider detection and ambient CLI authentication behave exactly as before.
 
-For a GitHub fork, no-mistakes considers both the parent and fork remotes. A match on either side is sufficient. If one side matches an owner-scoped key and the other only a plain host key, the owner-scoped profile wins, so a contributor's fork owner selects the account that pushes to the fork and opens the PR. Otherwise, if both match, they must select the same account: the same effective provider config directory, the same `expected_login` pin, *and* the same `gh_user`. Otherwise startup fails as ambiguous, so two host tokens sharing a config directory while pinning different logins can never silently resolve to one of them. Fork PR topology itself is unchanged.
+For a GitHub fork, alamino considers both the parent and fork remotes. A match on either side is sufficient. If one side matches an owner-scoped key and the other only a plain host key, the owner-scoped profile wins, so a contributor's fork owner selects the account that pushes to the fork and opens the PR. Otherwise, if both match, they must select the same account: the same effective provider config directory, the same `expected_login` pin, *and* the same `gh_user`. Otherwise startup fails as ambiguous, so two host tokens sharing a config directory while pinning different logins can never silently resolve to one of them. Fork PR topology itself is unchanged.
 
 Deliberate scope boundaries, so profiles never duplicate what other layers own:
 
-- **Commit identity is independent of forge profiles.** Profiles carry no name/email fields. See the [pipeline commit identity policy](/no-mistakes/reference/pipeline-steps/) for submission binding and author preservation.
+- **Commit identity is independent of forge profiles.** Profiles carry no name/email fields. See the [pipeline commit identity policy](/alamino/reference/pipeline-steps/) for submission binding and author preservation.
 - **Two accounts on the same host are distinguished by remote host token or repository owner.** Either give each account its own SSH alias (`github-personal`, `github-work`) and key a profile per alias, or key GitHub profiles by `host/owner` with `gh_user`; a profile cannot disambiguate two accounts behind one identical remote URL.
 - **Executable selection stays with the machine.** Which `gh`, `glab`, or `git` runs is owned by `PATH` and the existing command resolution, not by profile configuration.
 - **Credential-helper context stays with Git configuration.** Profiles point at provider CLI config directories or name a login, and never model or store credential material; credentials remain in the CLI's own store, and a `gh_user` token is only read from it for the run.
 
 ### provider_plugins
 
-Optional machine-local PR and CI support for hosts no-mistakes does not ship a provider for, such as a company-internal forge or Google Cloud Secure Source Manager. Each entry names an AXI-shaped CLI that implements the [provider plugin protocol](/no-mistakes/reference/provider-plugin-protocol/) and the hosts it serves:
+Optional machine-local PR and CI support for hosts alamino does not ship a provider for, such as a company-internal forge or Google Cloud Secure Source Manager. Each entry names an AXI-shaped CLI that implements the [provider plugin protocol](/alamino/reference/provider-plugin-protocol/) and the hosts it serves:
 
 ```yaml
 provider_plugins:
   ssm:
-    command: ~/bin/nm-ssm-plugin
+    command: ~/bin/alamino-ssm-plugin
     args: ["--location", "us-central1"]
     hosts: ["*.sourcemanager.dev"]
     timeout: 2m
@@ -678,9 +678,9 @@ Names are 1-63 lowercase letters, digits, `-`, or `_` and must not reuse a built
 
 Selection happens per run, before built-in detection and forge profiles: the remote's literal host token is matched first, then its SSH `HostName` resolution. An exact pattern beats a wildcard, and a longer wildcard beats a shorter one. Two plugins (or one plugin twice) may not list the same pattern, and a host that a [`forge_profiles`](#forge_profiles) entry claims may not also be claimed by a plugin; both are configuration errors. Because a forge profile matches the remote's literal host while a plugin also matches its SSH `HostName`, an overlap that only appears after alias resolution (a profile keyed by an SSH alias whose `HostName` a plugin claims) is refused when the run starts, with an error naming both.
 
-`provider_plugins` is global-only. A plugin runs with your credentials for every repository on its hosts, so a repository `.no-mistakes.yaml` can never add, change, or redirect one; a `provider_plugins` block there is ignored.
+`provider_plugins` is global-only. A plugin runs with your credentials for every repository on its hosts, so a repository `.alamino.yaml` can never add, change, or redirect one; a `provider_plugins` block there is ignored.
 
-Plugins run through the same environment as built-in provider CLIs (the daemon's login-shell environment plus any forge-profile overlay) with the run worktree as the working directory. A plugin whose `status` exits non-zero (for example, not authenticated) makes the PR and CI steps skip with its message, reported under `run.automatic_skips`; a plugin that breaks the protocol (unreadable output, wrong protocol version, timeout) fails the step instead, in its `status` handshake or in any later call (a timeout during the CI step's repeated polls or log retrieval is handled like any failed read instead). `no-mistakes doctor` lists configured plugins and checks that each command resolves; it does not run the plugin, because the handshake is per repository.
+Plugins run through the same environment as built-in provider CLIs (the daemon's login-shell environment plus any forge-profile overlay) with the run worktree as the working directory. A plugin whose `status` exits non-zero (for example, not authenticated) makes the PR and CI steps skip with its message, reported under `run.automatic_skips`; a plugin that breaks the protocol (unreadable output, wrong protocol version, timeout) fails the step instead, in its `status` handshake or in any later call (a timeout during the CI step's repeated polls or log retrieval is handled like any failed read instead). `alamino doctor` lists configured plugins and checks that each command resolves; it does not run the plugin, because the handshake is per repository.
 
 ### ci_timeout
 
@@ -701,7 +701,7 @@ A genuinely idle/abandoned PR still parks at an approval gate after the timeout 
 While that CI gate is parked, the daemon continues bounded read-only PR-state checks.
 If the PR is merged or closed externally, the stale gate completes automatically; an open, unknown, or temporarily unreachable PR remains parked for a user decision.
 
-Set it to `unlimited` (`none`, `off`, and `never` are accepted aliases), `0`, or any non-positive duration to disable this timeout. A run still ends when the PR is merged, closed, or declined, when green monitoring is explicitly handed off, or at readiness under `ci.release_after_checks_pass`. You can end it explicitly with `no-mistakes axi handoff` or cancel it with `no-mistakes axi abort --run <id>`.
+Set it to `unlimited` (`none`, `off`, and `never` are accepted aliases), `0`, or any non-positive duration to disable this timeout. A run still ends when the PR is merged, closed, or declined, when green monitoring is explicitly handed off, or at readiness under `ci.release_after_checks_pass`. You can end it explicitly with `alamino axi handoff` or cancel it with `alamino axi abort --run <id>`.
 
 Legacy alias: `babysit_timeout`.
 
@@ -768,7 +768,7 @@ With the cap unset, the turn stops at this budget.
 There is no hidden multiple of this budget.
 When the invocation is cancelled, it returns a timeout diagnostic instead of remaining active indefinitely.
 Most agent-driven mutation steps fail the run, CI auto-fix parks for a user decision, and PR drafting follows its existing agent-error fallback and continues with deterministic content.
-The [CI step reference](/no-mistakes/reference/pipeline-steps/#ci) owns the approval behavior.
+The [CI step reference](/alamino/reference/pipeline-steps/#ci) owns the approval behavior.
 A late successful return after cancellation is rejected, so post-agent commits and PR content cannot use work from a timed-out turn.
 
 The diagnostic names which bound cut the invocation and how long it ran, and separately reports what activity was actually measured.
@@ -830,7 +830,7 @@ A silent invocation is cancelled when this budget expires.
 A still-working invocation continues only when [`review_agent_working_timeout`](#review_agent_working_timeout) is set, under the same idle rule as [`agent_working_timeout`](#agent_working_timeout).
 When the invocation is cancelled, the review agent fails the run with a diagnostic naming the bound that cut it instead of remaining active indefinitely.
 That diagnostic carries the same measured evidence and adapter report described under [`agent_timeout`](#agent_timeout).
-A repository can tighten this value for itself with the trusted [`review.agent_timeout`](/no-mistakes/reference/repo-config/#reviewagent_timeout) key; the smaller of the two applies, and a repository can never raise it.
+A repository can tighten this value for itself with the trusted [`review.agent_timeout`](/alamino/reference/repo-config/#reviewagent_timeout) key; the smaller of the two applies, and a repository can never raise it.
 
 |         |                        |
 | ------- | ---------------------- |
@@ -910,7 +910,7 @@ Maximum time a CLI client waits for an existing daemon socket to accept a connec
 | Type    | `string` (Go duration) |
 | Default | `3s`                   |
 
-Accepts any positive Go `time.ParseDuration` string. Overridable per-invocation with the `NM_DAEMON_CONNECT_TIMEOUT` environment variable; see [Environment Variables](/no-mistakes/reference/environment/#nm_daemon_connect_timeout).
+Accepts any positive Go `time.ParseDuration` string. Overridable per-invocation with the `ALAMINO_DAEMON_CONNECT_TIMEOUT` environment variable; see [Environment Variables](/alamino/reference/environment/#alamino_daemon_connect_timeout).
 
 ### branch_sync_remote_timeout
 
@@ -923,29 +923,29 @@ Maximum time guarded branch synchronization (`sync`, `axi sync`, and the TUI's s
 
 Accepts any positive Go `time.ParseDuration` string.
 
-Raise this if your environment's Git credential helper (for example `gh auth git-credential`, invoked by Git as a child process against a private remote) legitimately takes longer than the default - this is a real, non-outage latency characteristic that has been observed taking 19-22s in some environments, not a hang. It is a machine/environment setting, not a per-repository one: it is read only from global config and has no matching field in a repository's `.no-mistakes.yaml`, so a pushed branch cannot widen or narrow how long the local service waits before failing closed. It never changes the fail-closed guarantee itself - a timeout or unknown remote state still always refuses synchronization without changing files or refs, whatever this value is set to.
+Raise this if your environment's Git credential helper (for example `gh auth git-credential`, invoked by Git as a child process against a private remote) legitimately takes longer than the default - this is a real, non-outage latency characteristic that has been observed taking 19-22s in some environments, not a hang. It is a machine/environment setting, not a per-repository one: it is read only from global config and has no matching field in a repository's `.alamino.yaml`, so a pushed branch cannot widen or narrow how long the local service waits before failing closed. It never changes the fail-closed guarantee itself - a timeout or unknown remote state still always refuses synchronization without changing files or refs, whatever this value is set to.
 
 ### gate_reconcile_interval
 
-How often the daemon rechecks a parked approval gate while waiting for user approval. Today this applies to the CI step's parked gate, which re-probes provider availability (including `gh auth status`) and clears the gate when the PR was merged or closed, and to a [review gate parked on its reviewer's own questions](/no-mistakes/concepts/review-conversation/), which resumes the reviewer once none are open.
+How often the daemon rechecks a parked approval gate while waiting for user approval. Today this applies to the CI step's parked gate, which re-probes provider availability (including `gh auth status`) and clears the gate when the PR was merged or closed, and to a [review gate parked on its reviewer's own questions](/alamino/concepts/review-conversation/), which resumes the reviewer once none are open.
 
 |         |                        |
 | ------- | ---------------------- |
 | Type    | `string` (Go duration) |
 | Default | `2m`                   |
 
-Accepts any positive Go `time.ParseDuration` string. Global-only: there is no matching field in a repository's `.no-mistakes.yaml`.
+Accepts any positive Go `time.ParseDuration` string. Global-only: there is no matching field in a repository's `.alamino.yaml`.
 
 ### gate_reconcile_timeout
 
-Maximum wall time one parked approval-gate reconcile attempt may spend before the attempt stops, the gate stays parked, and the next interval wait begins. Covers host probes such as `gh auth status` that can hang without returning. The same bound applies to the live verification an approve response runs at a parked CI gate; a verification that times out counts as unverifiable, so it is refused while a [`ci.required_reviews`](/no-mistakes/reference/repo-config/#cirequired_reviews) requirement applies and otherwise recorded as an explicit override.
+Maximum wall time one parked approval-gate reconcile attempt may spend before the attempt stops, the gate stays parked, and the next interval wait begins. Covers host probes such as `gh auth status` that can hang without returning. The same bound applies to the live verification an approve response runs at a parked CI gate; a verification that times out counts as unverifiable, so it is refused while a [`ci.required_reviews`](/alamino/reference/repo-config/#cirequired_reviews) requirement applies and otherwise recorded as an explicit override.
 
 |         |                        |
 | ------- | ---------------------- |
 | Type    | `string` (Go duration) |
 | Default | `30s`                  |
 
-Accepts any positive Go `time.ParseDuration` string. Global-only: there is no matching field in a repository's `.no-mistakes.yaml`. Raise this if a legitimate credential helper or network path routinely needs longer than the default for auth probes during reconcile. Timeout and interruption are reported distinctly from authentication failure; that distinction does not require raising this value.
+Accepts any positive Go `time.ParseDuration` string. Global-only: there is no matching field in a repository's `.alamino.yaml`. Raise this if a legitimate credential helper or network path routinely needs longer than the default for auth probes during reconcile. Timeout and interruption are reported distinctly from authentication failure; that distinction does not require raising this value.
 
 ### log_level
 
@@ -967,11 +967,11 @@ Per-run agent session reuse for the review loop's fixer role.
 | Default | `true` |
 
 When enabled and every fixer that can serve the run supports native session resume (Claude or Grok via `--resume`, Codex via `exec resume`, Pi via `--session <UUID>`, Antigravity via `--conversation <id>`), each run keeps one durable fixer session across its review-fix turns. A configured later-round fixer that cannot resume therefore makes all fixer turns cold for that run; see [later-round role overrides](#later-round-role-overrides).
-Review turns - the initial full review and every full rereview - always run as fresh invocations regardless of this setting. They are also session-free, unless the run has a [review conversation](/no-mistakes/reference/repo-config/#reviewconversation) AND this setting is on, in which case one reviewer session spans exactly one review pass - the asking turn and the finalize turn that receives its answers - and never a code change; with `session_reuse: false` that finalize turn runs cold, which costs a re-read rather than the answers, because the finalize prompt is the complete review prompt plus the answers. Either way a rereview certifies fixes that implement the previous review turn's findings, so it must never resume the session that prescribed them; cross-round review context travels only in the explicit sanitized round history.
+Review turns - the initial full review and every full rereview - always run as fresh invocations regardless of this setting. They are also session-free, unless the run has a [review conversation](/alamino/reference/repo-config/#reviewconversation) AND this setting is on, in which case one reviewer session spans exactly one review pass - the asking turn and the finalize turn that receives its answers - and never a code change; with `session_reuse: false` that finalize turn runs cold, which costs a re-read rather than the answers, because the finalize prompt is the complete review prompt plus the answers. Either way a rereview certifies fixes that implement the previous review turn's findings, so it must never resume the session that prescribed them; cross-round review context travels only in the explicit sanitized round history.
 The fixer session is never lent to review turns, other pipeline steps stay session-isolated in their own cold invocations, and different runs never reuse identities.
 When resume is unavailable or fails, the fix turn falls back to a cold run or a fresh fixer session and the fallback is recorded in the local `agent_invocations` performance record. Pi emits per-invocation usage after a resume, unlike Codex's cumulative session counters.
 Session identities are persisted only as minimum local resume metadata, never as prompts or transcripts; Pi's own session directory retains its native transcript. Keep Pi's session directory private, and keep any `--session-dir` or `PI_CODING_AGENT_SESSION_DIR` setting stable while a run is active so a daemon restart can find the fixer session.
-The [daemon crash-recovery reference](/no-mistakes/concepts/daemon/#crash-recovery) owns which parked gates can resume or reconcile after a restart.
+The [daemon crash-recovery reference](/alamino/concepts/daemon/#crash-recovery) owns which parked gates can resume or reconcile after a restart.
 Set `false` to force every agent invocation cold.
 
 ### quota_routing
@@ -983,7 +983,7 @@ Opt-in, quota-aware agent ordering at run start.
 | Type    | `map[string]{enabled, expected_run_length, read_timeout, quota_axi_path}` |
 | Default | `enabled: false` (the feature is opt-in) |
 
-When `enabled: true`, no-mistakes reads **one** snapshot with the locally installed `quota-axi --full --json` at the start of each run and reorders the resolved agent list by quota evidence before the run picks its head agent. Explicit [`review_agents`](#review_agents) overrides do not use quota routing. Ordering follows these rules:
+When `enabled: true`, alamino reads **one** snapshot with the locally installed `quota-axi --full --json` at the start of each run and reorders the resolved agent list by quota evidence before the run picks its head agent. Explicit [`review_agents`](#review_agents) overrides do not use quota routing. Ordering follows these rules:
 
 - An agent with concrete proof of exhaustion - runway `exhausted_now`, or a known `0%` remaining - is moved to the back of the list (it stays in the list, so the existing launch-failure fallback still has somewhere to go).
 - An agent whose runway is `projected_exhaustion` must have a reported usable runway greater than `expected_run_length`; otherwise it is treated like an exhausted one.
@@ -993,7 +993,7 @@ When `enabled: true`, no-mistakes reads **one** snapshot with the locally instal
 
 Native `claude` and `codex` retain account, profile, and model-scope matching. All other agents, including Pi, use only provider-level `all_models` or `all_products` scopes for their declared provider. Vendor-specific and named-model scopes do not affect their routing. Without provider-wide evidence, quota is unknown: the agent stays eligible and retains its configured order among unknown candidates.
 
-Each agent keeps its own [`agent_config`](#agent_config) model and effort: only the order changes. A missing, slow, or unreadable `quota-axi` keeps your configured order, logs the reason, and never blocks a run. The mid-run quota switch remains enabled in this case. Inspect the recorded outcome with `no-mistakes axi status` or [`no-mistakes stats`](/no-mistakes/reference/cli/#no-mistakes-stats). See [local telemetry](/no-mistakes/reference/environment/#what-stays-local-and-what-leaves-the-machine) for storage and privacy.
+Each agent keeps its own [`agent_config`](#agent_config) model and effort: only the order changes. A missing, slow, or unreadable `quota-axi` keeps your configured order, logs the reason, and never blocks a run. The mid-run quota switch remains enabled in this case. Inspect the recorded outcome with `alamino axi status` or [`alamino stats`](/alamino/reference/cli/#alamino-stats). See [local performance records](/alamino/reference/environment/#local-performance-records) for storage and privacy.
 
 Mid-run, a recognised quota-exhaustion error advances to the next agent in the chosen order with a fresh session, dropping any resumed session. This can happen once per agent, and later invocations do not return to earlier agents. If no successor remains, the error is returned. The existing agent-unavailable fallback is unchanged. Daemon recovery reuses the recorded order and last recorded switch without reading another snapshot, even if the global opt-in setting has since changed.
 
@@ -1004,7 +1004,7 @@ Subkeys:
 - `read_timeout` (positive duration, default `15s`): bound on the single quota-axi read at run start. Quota-axi may delegate an expired session's renewal to the vendor CLI that owns it, so a slow read waits up to this long before the run proceeds on the configured order.
 - `quota_axi_path` (string, default `quota-axi` on `PATH`): the executable to run.
 
-`quota_routing` is global-only: it decides which of this machine's credential-bearing agents a run spends, so a `quota_routing` block in a repository's `.no-mistakes.yaml` is a config error rather than an ignored key.
+`quota_routing` is global-only: it decides which of this machine's credential-bearing agents a run spends, so a `quota_routing` block in a repository's `.alamino.yaml` is a config error rather than an ignored key.
 
 Provider mapping: `claude` and `codex` map to their same-named quota-axi providers by default. Any agent can declare [`quota_provider`](#agent_config) under `agent_config` to select a provider explicitly. An unmapped non-Pi agent ranks as unknown quota. A `pi` without an explicit provider disables reordering for the whole run with one warning: the configured order stands, the mid-run switch stays off, and the run record says why. Model names never infer a provider. For Pi with `quota_provider: codex`, the model prefix selects the published credential key (`codex-native/…` reads `codex-home`; `openai-codex-work/…` reads that Pi credential). For `quota_provider: claude`, explicit `profile:…` and `claude-swap:…` prefixes select that published profile. Other providers use their default account; a Pi provider prefix such as `kimi-coding` is not an account key. Routing checks published `accountKeys` membership in both quota schemas. A named credential missing from the report stays unknown rather than borrowing another account’s evidence.
 
@@ -1015,33 +1015,33 @@ Where a repository's pipeline run worktrees are created.
 |         |                                                 |
 | ------- | ----------------------------------------------- |
 | Type    | `map[string]string`                             |
-| Keys    | Absolute registered checkout paths (what you ran `no-mistakes init` in) |
+| Keys    | Absolute registered checkout paths (what you ran `alamino init` in) |
 | Values  | Absolute directory paths                        |
-| Default | Empty (`<NM_HOME>/worktrees/<repo id>/<run id>`) |
+| Default | Empty (`<ALAMINO_HOME>/worktrees/<repo id>/<run id>`) |
 
-By default a run worktree is created under `NM_HOME`, outside every checkout, so directory-scoped toolchain configuration (mise, direnv) never reaches it: those tools resolve their settings by path ancestry.
+By default a run worktree is created under `ALAMINO_HOME`, outside every checkout, so directory-scoped toolchain configuration (mise, direnv) never reaches it: those tools resolve their settings by path ancestry.
 Point a checkout at a directory of your own and its runs are created at `<value>/<run id>` instead, inheriting whatever that directory configures.
 A relative value is rejected at load time, because the daemon that reads it has an unrelated working directory.
 
-The directory stays yours. no-mistakes never enumerates it: the only directories it touches there are the exact ones its own run records name, which is what startup cleanup, orphan-process reaping, and `no-mistakes eject` all go by. Anything else in it - your files, your scratch checkouts, and a directory that merely looks like a run worktree but no run created - is never read, never swept, never signalled, and never removed.
+The directory stays yours. alamino never enumerates it: the only directories it touches there are the exact ones its own run records name, which is what startup cleanup, orphan-process reaping, and `alamino eject` all go by. Anything else in it - your files, your scratch checkouts, and a directory that merely looks like a run worktree but no run created - is never read, never swept, never signalled, and never removed.
 
 Each checkout needs its own root: two entries pointing at the same directory, two spellings of one checkout, or a root equal to its checkout are rejected at load time, and `init --worktree-root` refuses a directory another checkout already claims.
 
 Two more values are refused at daemon startup, because they cannot work:
 
-- **Inside `NM_HOME`.** It collides with no-mistakes' own state - under `worktrees` a run worktree is indistinguishable from the per-repository directories the default placement owns, and under `logs` a run's worktree *is* its log directory, so removing the worktree at run end would take the run's logs with it.
-- **Inside any checkout.** The run worktree is then an untracked directory in that checkout while the run executes, so the checkout is dirty and [branch synchronization](/no-mistakes/reference/cli/#no-mistakes-sync) refuses to move it until the run finishes. That holds whether the victim is the checkout whose own runs land there or an unrelated gated one, so the daemon refuses a root inside any repository it has registered. Registering a repository *around* an already configured root is refused by `no-mistakes init` itself, so you can still place that checkout elsewhere or repoint the entry; anything that reaches the configuration another way is caught at the next daemon start.
+- **Inside `ALAMINO_HOME`.** It collides with alamino's own state - under `worktrees` a run worktree is indistinguishable from the per-repository directories the default placement owns, and under `logs` a run's worktree *is* its log directory, so removing the worktree at run end would take the run's logs with it.
+- **Inside any checkout.** The run worktree is then an untracked directory in that checkout while the run executes, so the checkout is dirty and [branch synchronization](/alamino/reference/cli/#alamino-sync) refuses to move it until the run finishes. That holds whether the victim is the checkout whose own runs land there or an unrelated gated one, so the daemon refuses a root inside any repository it has registered. Registering a repository *around* an already configured root is refused by `alamino init` itself, so you can still place that checkout elsewhere or repoint the entry; anything that reaches the configuration another way is caught at the next daemon start.
 
 Changing an entry affects new runs only.
 Each run records the directory it was created in, so editing, adding, or removing an entry never retargets a run that already exists - resuming it after a restart, reading its diff, cleaning it up, reaping processes left standing in it, and ejecting its repository all keep using the directory that run actually has, including after you point the checkout somewhere else.
 
-The key is matched against the checkout path recorded at `init`. After moving a checkout, re-run `no-mistakes init` from the new path and update the key; a key that matches no registered repository is reported in the daemon log at startup and otherwise does nothing.
+The key is matched against the checkout path recorded at `init`. After moving a checkout, re-run `alamino init` from the new path and update the key; a key that matches no registered repository is reported in the daemon log at startup and otherwise does nothing.
 
-`no-mistakes init --worktree-root <dir>` prints the exact entry to add for the checkout you are initializing. The global config is hand-maintained, so init never rewrites it for you.
+`alamino init --worktree-root <dir>` prints the exact entry to add for the checkout you are initializing. The global config is hand-maintained, so init never rewrites it for you.
 
 ### worktree
 
-Retention for leftover run-worktree directories under the default `<NM_HOME>/worktrees/<repo id>/<run id>` tree.
+Retention for leftover run-worktree directories under the default `<ALAMINO_HOME>/worktrees/<repo id>/<run id>` tree.
 
 |      |          |
 | ---- | -------- |
@@ -1052,9 +1052,9 @@ Retention for leftover run-worktree directories under the default `<NM_HOME>/wor
 | `worktree.retention` | `string` | `24h`            | How long a leftover run worktree survives; `unlimited`/`none`/`off`/`never` or a non-positive duration disables the bound |
 | `worktree.max_runs`  | `int`    | `20`             | How many leftover worktree directories survive regardless of age; `0` disables the bound |
 
-A run's own worktree is already removed the instant its pipeline finishes, so this budget is a safety net rather than the normal path: it only ever governs the directory left behind by a `git worktree remove` failure (for example a vendored `.git` nested somewhere under a large `node_modules` tree) or a [protected-path](/no-mistakes/reference/repo-config/#protected_paths) refusal that later became removable. Without it, a leftover like that survived indefinitely on a long-running daemon that never restarts, since the crash-recovery sweep that also reclaims it (see the daemon's [worktree cleanup](/no-mistakes/concepts/daemon/#what-it-does)) runs only at startup.
+A run's own worktree is already removed the instant its pipeline finishes, so this budget is a safety net rather than the normal path: it only ever governs the directory left behind by a `git worktree remove` failure (for example a vendored `.git` nested somewhere under a large `node_modules` tree) or a [protected-path](/alamino/reference/repo-config/#protected_paths) refusal that later became removable. Without it, a leftover like that survived indefinitely on a long-running daemon that never restarts, since the crash-recovery sweep that also reclaims it (see the daemon's [worktree cleanup](/alamino/concepts/daemon/#what-it-does)) runs only at startup.
 
-This reap runs after every finished run and again at daemon startup, the same cadence `test.evidence.retention` uses. Only the default `<NM_HOME>/worktrees` tree is bounded; a checkout you placed with [`worktree_roots`](#worktree_roots) is your own directory, and only the directories no-mistakes' own run records name there are ever touched, per that section's rules.
+This reap runs after every finished run and again at daemon startup, the same cadence `test.evidence.retention` uses. Only the default `<ALAMINO_HOME>/worktrees` tree is bounded; a checkout you placed with [`worktree_roots`](#worktree_roots) is your own directory, and only the directories alamino's own run records name there are ever touched, per that section's rules.
 
 Global-only, for the same reason `test.evidence`'s local storage fields are: it governs this machine's local disk, so a repository does not get to set the retention budget for a directory every repository on the machine shares.
 
@@ -1100,17 +1100,17 @@ ci:
 Each rerun is another provider-side workflow run billed to the repository being contributed to.
 Set `0` here to never spend someone else's CI minutes; this is the only place to make that choice for a repository whose default branch you do not control.
 
-The per-repo [`ci.rerun_transient`](/no-mistakes/reference/repo-config/#cirerun_transient) overrides this value and owns the classification, the trust boundary, and every case that skips the rerun.
+The per-repo [`ci.rerun_transient`](/alamino/reference/repo-config/#cirerun_transient) overrides this value and owns the classification, the trust boundary, and every case that skips the rerun.
 
 ### ci.required_reviews
 
-The operator-level fallback for [`ci.required_reviews`](/no-mistakes/reference/repo-config/#cirequired_reviews).
+The operator-level fallback for [`ci.required_reviews`](/alamino/reference/repo-config/#cirequired_reviews).
 That reference owns supported reviewer profiles, completion evidence, and the trust boundary.
 Defaults to `[]`; the trusted repository list overrides it, including an explicit empty list. `ci.required_review_app_id` may pin the GHES CodeRabbit App ID; `ci.required_review_bot_id` may pin the GitLab CodeRabbit account ID. These are identifiers, not credentials, and must match the configured forge.
 
 ### ci.revalidate_repairs
 
-The operator-level fallback for [`ci.revalidate_repairs`](/no-mistakes/reference/repo-config/#cirevalidate_repairs), whose per-repository reference owns the repair-delivery semantics, safety rationale, and trust boundary.
+The operator-level fallback for [`ci.revalidate_repairs`](/alamino/reference/repo-config/#cirevalidate_repairs), whose per-repository reference owns the repair-delivery semantics, safety rationale, and trust boundary.
 
 | | |
 |---|---|
@@ -1126,7 +1126,7 @@ A value in the trusted repository config overrides this global value in both dir
 
 ### ci.review_bot_comments
 
-The operator-level fallback for [`ci.review_bot_comments`](/no-mistakes/reference/repo-config/#cireview_bot_comments), whose per-repository reference owns the semantics and the trust boundary.
+The operator-level fallback for [`ci.review_bot_comments`](/alamino/reference/repo-config/#cireview_bot_comments), whose per-repository reference owns the semantics and the trust boundary.
 
 | | |
 |---|---|
@@ -1142,7 +1142,7 @@ A value in the trusted repository config overrides this global value. An unrecog
 
 ### ci.rebase_behind
 
-The operator-level fallback for [`ci.rebase_behind`](/no-mistakes/reference/repo-config/#cirebase_behind), whose per-repository reference owns the semantics, the cost, and the trust boundary.
+The operator-level fallback for [`ci.rebase_behind`](/alamino/reference/repo-config/#cirebase_behind), whose per-repository reference owns the semantics, the cost, and the trust boundary.
 
 | | |
 |---|---|
@@ -1158,7 +1158,7 @@ A value in the trusted repository config overrides this global value in both dir
 
 ### ci.carry_review_on_replay
 
-The operator-level fallback for [`ci.carry_review_on_replay`](/no-mistakes/reference/repo-config/#cicarry_review_on_replay), whose per-repository reference owns the pure-replay proof, its limits, and the trust boundary.
+The operator-level fallback for [`ci.carry_review_on_replay`](/alamino/reference/repo-config/#cicarry_review_on_replay), whose per-repository reference owns the pure-replay proof, its limits, and the trust boundary.
 
 | | |
 |---|---|
@@ -1174,7 +1174,7 @@ A value in the trusted repository config overrides this global value in both dir
 
 ### ci.release_after_checks_pass
 
-The operator-level fallback for [`ci.release_after_checks_pass`](/no-mistakes/reference/repo-config/#cirelease_after_checks_pass), whose per-repository reference owns the semantics, the cost, and the trust boundary.
+The operator-level fallback for [`ci.release_after_checks_pass`](/alamino/reference/repo-config/#cirelease_after_checks_pass), whose per-repository reference owns the semantics, the cost, and the trust boundary.
 
 | | |
 |---|---|
@@ -1190,7 +1190,7 @@ A value in the trusted repository config overrides this global value in both dir
 
 ### rebase.strategy
 
-The operator-level default for [`rebase.strategy`](/no-mistakes/reference/repo-config/#rebasestrategy), whose per-repository reference owns the semantics, the trade-off, and the trust boundary.
+The operator-level default for [`rebase.strategy`](/alamino/reference/repo-config/#rebasestrategy), whose per-repository reference owns the semantics, the trade-off, and the trust boundary.
 
 | | |
 |---|---|
@@ -1207,7 +1207,7 @@ A value in the trusted repository config overrides this global value in both dir
 ### review.path_instructions
 
 Machine-local review guidance that applies to every repository this machine gates.
-Use it for house rules you hold in every repository, including ones you do not control and so cannot commit a [`review.path_instructions`](/no-mistakes/reference/repo-config/#reviewpath_instructions) to.
+Use it for house rules you hold in every repository, including ones you do not control and so cannot commit a [`review.path_instructions`](/alamino/reference/repo-config/#reviewpath_instructions) to.
 For a rule that holds in one repository only, use a matching [`repository_overrides`](#repository_overrides) entry instead.
 
 | | |
@@ -1240,12 +1240,12 @@ Changes apply to the next run, and to a run recovered after a daemon restart, wh
 ### commit.fix_message
 
 Template for the subject of commits created by the Review, Test, Document, Lint, and CI repair paths, plus operator-authorized repository gate repairs.
-When set to anything other than the default, it also renders the Push step's catch-all commit for remaining uncommitted changes, with `{{.Step}}` as `push` and `{{.Summary}}` as `apply agent fixes`; at the default, that commit keeps its `no-mistakes: apply agent fixes` subject.
+When set to anything other than the default, it also renders the Push step's catch-all commit for remaining uncommitted changes, with `{{.Step}}` as `push` and `{{.Summary}}` as `apply agent fixes`; at the default, that commit keeps its `alamino: apply agent fixes` subject.
 
 | | |
 | --- | --- |
 | Type | `string` |
-| Default | `no-mistakes({{.Step}}): {{.Summary}}` |
+| Default | `alamino({{.Step}}): {{.Summary}}` |
 
 The template supports literal text and three Go-style placeholders:
 
@@ -1257,8 +1257,8 @@ The template supports literal text and three Go-style placeholders:
 
 The value must be a valid UTF-8 template that renders to a non-empty, single-line commit subject.
 The template source is limited to 1,024 bytes and 16 placeholders.
-The fix-agent summary is limited to 4,096 bytes, and the final rendered subject is held to 4,096 bytes. When the summary would push the subject past that limit, no-mistakes truncates the summary without splitting a UTF-8 character. The summary keeps the largest whole-character prefix that fits alongside an ellipsis (`…`), removing any trailing space before the ellipsis. Repeated `{{.Summary}}` placeholders share the remaining byte budget equally and render the same truncated summary. If exactly three bytes remain per summary placeholder, only the ellipsis is emitted; if fewer than three bytes remain, the summary is dropped entirely without a marker. Literal template text, `{{.Step}}`, and `{{.Branch}}` are never truncated, so a template that overflows without any summary still fails.
-Before rendering, no-mistakes predicts the subject size from the validated literal text and placeholders, then rejects a subject whose non-summary text alone overflows, without allocating the expanded message.
+The fix-agent summary is limited to 4,096 bytes, and the final rendered subject is held to 4,096 bytes. When the summary would push the subject past that limit, alamino truncates the summary without splitting a UTF-8 character. The summary keeps the largest whole-character prefix that fits alongside an ellipsis (`…`), removing any trailing space before the ellipsis. Repeated `{{.Summary}}` placeholders share the remaining byte budget equally and render the same truncated summary. If exactly three bytes remain per summary placeholder, only the ellipsis is emitted; if fewer than three bytes remain, the summary is dropped entirely without a marker. Literal template text, `{{.Step}}`, and `{{.Branch}}` are never truncated, so a template that overflows without any summary still fails.
+Before rendering, alamino predicts the subject size from the validated literal text and placeholders, then rejects a subject whose non-summary text alone overflows, without allocating the expanded message.
 Template functions, control actions, named templates, unknown placeholders, malformed syntax, control characters, unsafe Unicode format characters, and Unicode line or paragraph separators cause configuration loading to fail.
 The blocked format set includes every Unicode `Bidi_Control` code point plus `U+00AD`, `U+180E`, `U+200B`, `U+2060` through `U+2064`, the deprecated bidi controls `U+206A` through `U+206F`, `U+FEFF`, `U+FFF9` through `U+FFFB`, and Unicode tag characters in `U+E0000` through `U+E007F`.
 Legitimate `U+200C` zero-width non-joiner and `U+200D` zero-width joiner text shaping remains allowed.
@@ -1266,7 +1266,7 @@ The final rendered subject is validated again, so unsafe characters in an agent-
 Each fix prompt, including CI repair, tells the agent how many characters the summary may use so the subject stays within 72: 72 minus the rendered text around the summary, divided by the number of times the template uses `{{.Summary}}`, with a floor of 20. The 72-character target is guidance only; summaries exceeding that target remain unchanged when the rendered subject fits the 4,096-byte limit.
 CI repair prompts direct the agent to keep detailed diagnosis and verification evidence in its explanatory output, recorded in the run log, rather than in the summary.
 The setting does not change commit subjects created by the Rebase step or the evidence-branch commit; see [`test.evidence`](#testevidence) for the latter.
-A per-repo [`commit.fix_message`](/no-mistakes/reference/repo-config/#commitfix_message) value overrides this global setting.
+A per-repo [`commit.fix_message`](/alamino/reference/repo-config/#commitfix_message) value overrides this global setting.
 
 ### commit.branch_pattern
 
@@ -1289,11 +1289,11 @@ commit:
 ```
 
 When a template uses `{{.Branch}}` and the pattern does not find a non-empty identifier, rendering fails safely instead of producing an empty prefix.
-A per-repo [`commit.branch_pattern`](/no-mistakes/reference/repo-config/#commitbranch_pattern) value overrides this global setting.
+A per-repo [`commit.branch_pattern`](/alamino/reference/repo-config/#commitbranch_pattern) value overrides this global setting.
 
 ### commit.branch_replacement
 
-Optional expression that adds literal text around the branch pattern's capture group before exposing it as `{{.Branch}}`. Set it under global `commit` for the machine-wide default, or under a matching [`repository_overrides`](#repository_overrides) entry for one remote. It is not available in a repository's `.no-mistakes.yaml`.
+Optional expression that adds literal text around the branch pattern's capture group before exposing it as `{{.Branch}}`. Set it under global `commit` for the machine-wide default, or under a matching [`repository_overrides`](#repository_overrides) entry for one remote. It is not available in a repository's `.alamino.yaml`.
 
 | | |
 | --- | --- |
@@ -1305,7 +1305,7 @@ Under global `commit`, the replacement must be configured with `commit.branch_pa
 It is limited to 1,024 bytes, must be valid UTF-8, and must exclude the same control and unsafe Unicode format characters as `commit.fix_message`.
 Malformed replacement syntax fails configuration loading with an actionable error.
 The expanded identifier is subject to the existing UTF-8, control-character, unsafe-Unicode, and rendered-subject validation.
-A `commit.branch_pattern` in `.no-mistakes.yaml` takes precedence and clears any inherited machine-wide replacement, including one from a matching repository override, so a replacement cannot be applied to a different pattern.
+A `commit.branch_pattern` in `.alamino.yaml` takes precedence and clears any inherited machine-wide replacement, including one from a matching repository override, so a replacement cannot be applied to a different pattern.
 
 ### commit.trailers
 
@@ -1323,13 +1323,13 @@ Each entry renders to one trailer line. It supports literal text and two Go-styl
 | `{{.Agent}}` | The agent that actually ran the invocation; with an `agent` fallback list, the one that answered, not the first configured |
 | `{{.Model}}` | The model the agent reported serving the invocation, or `unknown` when it reports none |
 
-For example, this renders `Assisted-by: no-mistakes:codex:gpt-5.5` on a fix made by Codex after a fallback from Claude:
+For example, this renders `Assisted-by: alamino:codex:gpt-5.5` on a fix made by Codex after a fallback from Claude:
 
 ```yaml
 commit:
   trailers:
-    - "Co-Authored-By: no-mistakes {{.Agent}} <noreply@example.com>"
-    - "Assisted-by: no-mistakes:{{.Agent}}:{{.Model}}"
+    - "Co-Authored-By: alamino {{.Agent}} <noreply@example.com>"
+    - "Assisted-by: alamino:{{.Agent}}:{{.Model}}"
 ```
 
 `{{.Agent}}` and `{{.Model}}` come from agent output, so each is cut to its first whitespace-separated token, reduced to letters, digits, and `-_.:/`, and limited to 64 bytes; a value with nothing left renders as `unknown`.
@@ -1341,7 +1341,7 @@ The 1,024-byte limit also applies to the rendered line, checked when configurati
 An invalid entry fails configuration loading, and a render failure at commit time leaves the changes unstaged.
 
 Trailers are added to Review, Test, Document, and Lint fix commits, operator-authorized repository gate repairs, and CI repair commits. Commits that no single invocation produced get none rather than a guessed agent: the Push step's catch-all commit, a CI repair retried after a protected-path refusal, and rebase or merge commits that an agent writes itself.
-A per-repo [`commit.trailers`](/no-mistakes/reference/repo-config/#committrailers) list or a matching [`repository_overrides`](#repository_overrides) entry replaces this list rather than extending it; an empty list clears it.
+A per-repo [`commit.trailers`](/alamino/reference/repo-config/#committrailers) list or a matching [`repository_overrides`](#repository_overrides) entry replaces this list rather than extending it; an empty list clears it.
 
 ### pr.appendix
 
@@ -1359,7 +1359,7 @@ layer. The pushed branch cannot choose the appendix mode, even with
 `allow_repo_commands: true`.
 
 All modes retain the pipeline attestation. See the repository
-[`pr.appendix`](/no-mistakes/reference/repo-config/#prappendix) reference for
+[`pr.appendix`](/alamino/reference/repo-config/#prappendix) reference for
 rendering behavior and provider caveats. Invalid modes fail config loading.
 `pr.template`, `pr.publish_intent`, and `pr.intent` are not machine-wide settings.
 
@@ -1388,13 +1388,13 @@ repository_overrides:
 
 Formatting fields are `commit.branch_pattern`, `commit.branch_replacement`, `commit.fix_message`, `commit.trailers`, and `pr.title_format`; each retains the same fail-closed validation as its global or repository-config equivalent.
 A `commit.branch_replacement` must be paired with `commit.branch_pattern` in the same override.
-Precedence for these formatting fields is explicit: `.no-mistakes.yaml` wins for every field it sets, then a matching machine-local override, then the plain global value, then the built-in default.
+Precedence for these formatting fields is explicit: `.alamino.yaml` wins for every field it sets, then a matching machine-local override, then the plain global value, then the built-in default.
 As with the global replacement, a repository `commit.branch_pattern` replaces the matching machine-local pattern and clears its replacement.
 Repositories matching no block keep existing global and built-in behavior.
 
 #### Machine-local PR publication defaults
 
-A matching entry can select a repository's existing PR template without committing `.no-mistakes.yaml`:
+A matching entry can select a repository's existing PR template without committing `.alamino.yaml`:
 
 ```yaml
 repository_overrides:
@@ -1405,9 +1405,9 @@ repository_overrides:
       update_text: keep # keep | regenerate (default)
 ```
 
-`pr.template` selects a repository-relative file, never local template contents. It uses the same [path and file validation](/no-mistakes/reference/repo-config/#prtemplate) as the repository setting, and its bytes are read only from the pinned trusted default-branch tree, never from the pushed branch or worktree.
-`pr.appendix` accepts `full`, `collapsed`, or `minimal` and can be set with or without `pr.template`; it uses the same [appendix and attestation behavior](/no-mistakes/reference/repo-config/#prappendix) as the repository setting. When template mode is active, author-edited narrative is preserved on later updates.
-`pr.update_text` accepts `keep` or `regenerate`. The default is `regenerate`, also used when the key is absent. `regenerate` replaces the title and body on update, as today, but only while the live body carries no owned appendix markers. Once `keep` has created or updated a PR, that PR keeps its title and narrative even after the key changes back to `regenerate` or is removed, the same rule that stops removing `pr.template` from switching an owned body back. `keep` leaves the live title unchanged and keeps the narrative above the appendix byte for byte, the same preservation [`pr.template`](/no-mistakes/reference/repo-config/#prtemplate) already uses, including when that repository has no template file. The step still creates the pull request when none exists: the ordinary drafter supplies the title and narrative, and the evidence is stored as that owned appendix. Every later update refreshes the appendix, or the `minimal` risk line, and the attestation, so they match the current head. If that narrative and the evidence cannot fit the publication budget, the step fails instead of truncating them. A configured `pr.title_format` still redrafts the bare title. A description freshly supplied with [`axi run --pr-body-file`](/no-mistakes/reference/cli/#supplied-pr-title-and-description) is published as that same owned narrative whatever this key says, including when updating an existing PR. Inherited text on a plain rerun does not override this setting. Without a freshly supplied replacement description, an existing body that already carries an unowned attestation is refused until that generated evidence is separated from the narrative, the same adoption rule as template mode. To prepare an already open PR that an earlier `regenerate` run published, move its generated evidence out of the body by hand once before enabling `keep`. Any other value fails config loading. A repository `.no-mistakes.yaml` cannot set this key, and it is not a machine-wide `pr` setting.
+`pr.template` selects a repository-relative file, never local template contents. It uses the same [path and file validation](/alamino/reference/repo-config/#prtemplate) as the repository setting, and its bytes are read only from the pinned trusted default-branch tree, never from the pushed branch or worktree.
+`pr.appendix` accepts `full`, `collapsed`, or `minimal` and can be set with or without `pr.template`; it uses the same [appendix and attestation behavior](/alamino/reference/repo-config/#prappendix) as the repository setting. When template mode is active, author-edited narrative is preserved on later updates.
+`pr.update_text` accepts `keep` or `regenerate`. The default is `regenerate`, also used when the key is absent. `regenerate` replaces the title and body on update, as today, but only while the live body carries no owned appendix markers. Once `keep` has created or updated a PR, that PR keeps its title and narrative even after the key changes back to `regenerate` or is removed, the same rule that stops removing `pr.template` from switching an owned body back. `keep` leaves the live title unchanged and keeps the narrative above the appendix byte for byte, the same preservation [`pr.template`](/alamino/reference/repo-config/#prtemplate) already uses, including when that repository has no template file. The step still creates the pull request when none exists: the ordinary drafter supplies the title and narrative, and the evidence is stored as that owned appendix. Every later update refreshes the appendix, or the `minimal` risk line, and the attestation, so they match the current head. If that narrative and the evidence cannot fit the publication budget, the step fails instead of truncating them. A configured `pr.title_format` still redrafts the bare title. A description freshly supplied with [`axi run --pr-body-file`](/alamino/reference/cli/#supplied-pr-title-and-description) is published as that same owned narrative whatever this key says, including when updating an existing PR. Inherited text on a plain rerun does not override this setting. Without a freshly supplied replacement description, an existing body that already carries an unowned attestation is refused until that generated evidence is separated from the narrative, the same adoption rule as template mode. To prepare an already open PR that an earlier `regenerate` run published, move its generated evidence out of the body by hand once before enabling `keep`. Any other value fails config loading. A repository `.alamino.yaml` cannot set this key, and it is not a machine-wide `pr` setting.
 For `pr.template`, a non-empty trusted repository value wins over the matching machine-local value. For appendix inheritance, see [`pr.appendix` precedence](#prappendix).
 `pr.template` is available only under `repository_overrides`, not as a machine-wide PR setting. `pr.publish_intent` and `pr.intent` remain trusted-repository-only.
 
@@ -1432,8 +1432,8 @@ repository_overrides:
 ```
 
 `review.path_instructions` behaves like the [global list](#reviewpath_instructions): its rules render in their own labeled section after the global rules and before the repository's trusted rules, and they count toward the same combined limits.
-`document.instructions` is added to the document step's prompt in a labeled section before the repository's trusted [`document.instructions`](/no-mistakes/reference/repo-config/#documentinstructions), and like that field it augments the built-in placement policy and cannot weaken it.
-`test.instructions` is added to the Test step's repair and evidence prompts in a labeled section before the repository's trusted [`test.instructions`](/no-mistakes/reference/repo-config/#testinstructions) runbook.
+`document.instructions` is added to the document step's prompt in a labeled section before the repository's trusted [`document.instructions`](/alamino/reference/repo-config/#documentinstructions), and like that field it augments the built-in placement policy and cannot weaken it.
+`test.instructions` is added to the Test step's repair and evidence prompts in a labeled section before the repository's trusted [`test.instructions`](/alamino/reference/repo-config/#testinstructions) runbook.
 All three are additive only: the repository's trusted values still apply in full, and a pushed branch can supply none of them.
 Under `review` only `path_instructions` is accepted, under `document` only `instructions`, and under `test` only `instructions`; settings that could weaken a gate, such as `no_ci`, `allow_repo_commands`, or `pr.base_branch`, are not accepted here.
 Changes apply to the next run, and to a run recovered after a daemon restart, which re-reads this file.
@@ -1458,14 +1458,14 @@ repository_overrides:
 
 Each role the entry names replaces the global entry for that role whole, including its `fallback` and `after_round`; roles it omits keep the global value. Above, `acme/widget` reviews on OpenCode and still fixes on Codex, and every other repository keeps both global roles. An entry without `review_agents` changes nothing.
 Entries are validated at load with the same rules and messages as the global block, prefixed with the override's normalized remote.
-The entry is matched against the registered repository's remote, so a pushed branch can never select it, and the repository's own `.no-mistakes.yaml` still cannot set `review_agents`.
+The entry is matched against the registered repository's remote, so a pushed branch can never select it, and the repository's own `.alamino.yaml` still cannot set `review_agents`.
 For run-pin precedence and eligibility, see [per-run Pi profiles](#per-run-pi-profiles) and [per-run reviewer profiles](#per-run-reviewer-profiles).
 
 #### Machine-local commands
 
 A matching `commands` block supplements the repository's trusted commands; it never changes their strings or removes them.
 Repository command selection still comes from the trusted default branch, or the pushed branch only with trusted `allow_repo_commands: true`.
-Only the operator's global config can supply these local settings, never a repository's `.no-mistakes.yaml`.
+Only the operator's global config can supply these local settings, never a repository's `.alamino.yaml`.
 With no matching command override, execution remains unchanged.
 
 ```yaml
@@ -1500,13 +1500,13 @@ Overrides are always declared, never silent: whenever a command runs under any o
 These settings are scoped to configured shell commands and their local checks, not agents, built-in Git operations, forge commands, or repository-declared extra gates.
 
 There is no per-command environment override.
-Toolchain paths (such as `PATH`) and parallelism settings (such as `GOMAXPROCS`) come from the operator's own environment, which the daemon captures at startup and passes to every configured command; [Environment the daemon sees](/no-mistakes/reference/environment/#environment-the-daemon-sees) owns where to set them.
+Toolchain paths (such as `PATH`) and parallelism settings (such as `GOMAXPROCS`) come from the operator's own environment, which the daemon captures at startup and passes to every configured command; [Environment the daemon sees](/alamino/reference/environment/#environment-the-daemon-sees) owns where to set them.
 
 `nice: 10` invokes the POSIX `nice -n 10` utility around the command shell, adding ten to its inherited niceness, not setting an absolute priority.
 Positive niceness is refused on Windows; set resource limits in the operator's own environment there.
 A missing `nice` utility fails the command rather than silently ignoring the request.
 
-Before executing an opted-in run, no-mistakes records the full resolved configuration in `<NM_HOME>/logs/<run-id>/command-config.ndjson`, including the unchanged team command strings, added checks, niceness, trusted-config SHA, and tool build.
+Before executing an opted-in run, alamino records the full resolved configuration in `<ALAMINO_HOME>/logs/<run-id>/command-config.ndjson`, including the unchanged team command strings, added checks, niceness, trusted-config SHA, and tool build.
 It also records the values configured commands inherit from the daemon's environment for `PATH`, `GOMAXPROCS`, `MAKEFLAGS`, `CARGO_BUILD_JOBS`, and `CMAKE_BUILD_PARALLEL_LEVEL`, omitting any that are unset; these values appear only in this file, never in step logs, agent prompts, findings, or the PR.
 This record is independent of optional eval capture.
 Recovery appends a new snapshot of the configuration it resolves, including removal of a previously active local override.
@@ -1516,7 +1516,7 @@ The file is private local evidence, restricted to owner-only permissions on POSI
 ### intent
 
 Transcript-based user-intent extraction settings.
-When enabled and no intent was supplied directly for the run, no-mistakes can read recent local agent transcripts, match the session that produced the change, summarize the author's intent, and pass that summary to rebase, review, test, document, lint, CI auto-fix, repository gate repair, and PR prompts. For publication of the generated Intent section, see [`pr.publish_intent`](/no-mistakes/reference/repo-config/#prpublish_intent).
+When enabled and no intent was supplied directly for the run, alamino can read recent local agent transcripts, match the session that produced the change, summarize the author's intent, and pass that summary to rebase, review, test, document, lint, CI auto-fix, repository gate repair, and PR prompts. For publication of the generated Intent section, see [`pr.publish_intent`](/alamino/reference/repo-config/#prpublish_intent).
 
 |      |          |
 | ---- | -------- |
@@ -1533,7 +1533,7 @@ When enabled and no intent was supplied directly for the run, no-mistakes can re
 
 Valid `disabled_readers` values are `claude`, `codex`, `opencode`, `rovodev`, `pi`, and `copilot`.
 
-`intent.publish_intent: false` is a global, operator-side default that keeps the generated `## Intent` section out of the PR body for runs started without an explicit override. It is the caller-side counterpart of the repository's trusted [`pr.publish_intent`](/no-mistakes/reference/repo-config/#prpublish_intent): both are tighten-only, the repository's trusted policy remains the ceiling a caller can never exceed, and review, test, document, lint, and CI auto-fix prompts keep the full intent. Under the caller-side omission the PR-drafting turns receive no intent text at all and draft from the diff and commit messages only; the intent is withheld from them, never scanned out of their output. A run records the folded decision (the `axi run --no-publish-intent` flag OR this global default) at start; reruns inherit it, and a mid-run config change never re-publishes. This field is global-only: a pushed branch's `.no-mistakes.yaml` cannot express it.
+`intent.publish_intent: false` is a global, operator-side default that keeps the generated `## Intent` section out of the PR body for runs started without an explicit override. It is the caller-side counterpart of the repository's trusted [`pr.publish_intent`](/alamino/reference/repo-config/#prpublish_intent): both are tighten-only, the repository's trusted policy remains the ceiling a caller can never exceed, and review, test, document, lint, and CI auto-fix prompts keep the full intent. Under the caller-side omission the PR-drafting turns receive no intent text at all and draft from the diff and commit messages only; the intent is withheld from them, never scanned out of their output. A run records the folded decision (the `axi run --no-publish-intent` flag OR this global default) at start; reruns inherit it, and a mid-run config change never re-publishes. This field is global-only: a pushed branch's `.alamino.yaml` cannot express it.
 
 #### intent.check
 
@@ -1549,7 +1549,7 @@ intent:
       - '(?i)run-[a-z0-9-]+'
 ```
 
-`terms` match case-insensitive literal substrings. `patterns` use Go RE2 regular expressions and are case-sensitive unless the expression enables `(?i)`. Explicit, inherited, proof, push, rerun, retry, and other supplied intent is checked before it can supersede an active run or start a pipeline agent. Transcript-inferred intent is checked after extraction and before no-mistakes stores or forwards the summary. `--skip intent` does not bypass the policy.
+`terms` match case-insensitive literal substrings. `patterns` use Go RE2 regular expressions and are case-sensitive unless the expression enables `(?i)`. Explicit, inherited, proof, push, rerun, retry, and other supplied intent is checked before it can supersede an active run or start a pipeline agent. Transcript-inferred intent is checked after extraction and before alamino stores or forwards the summary. `--skip intent` does not bypass the policy.
 
 `off` performs no checks. `warn` writes a private local warning and continues. `reject` stops the run. Warning, error, and log messages list matching rule indexes only; they never echo matched text. Warnings are not findings and are never published.
 
@@ -1558,7 +1558,7 @@ Each config layer accepts at most 32 terms and patterns combined, at most 256 by
 The match score is the share of matching files mentioned in a transcript session; deleted files are ignored when the diff also contains non-deleted changes.
 All-deletion diffs still match against the deleted changed files.
 Mentioning extra files does not reduce the score.
-For multi-file diffs, no-mistakes still requires at least two overlapping files and an effective minimum score of `0.5`.
+For multi-file diffs, alamino still requires at least two overlapping files and an effective minimum score of `0.5`.
 Partial matches older than 24 hours are rejected unless their raw score is at least `0.8`.
 If exactly one accepted candidate has a raw score of at least `0.85`, that decisive candidate wins before recency ranking.
 Otherwise, accepted candidates are ranked by confidence, which combines the raw score with a small recency boost, with ties going to the most recent matching session, and ambiguous accepted candidates may be disambiguated by the configured pipeline agent.
@@ -1570,22 +1570,22 @@ Parent directory for new run evidence. Global-only. A repository cannot set it.
 | | |
 | ---- | -------- |
 | Type | `string` |
-| Default | `<NM_HOME>/evidence` |
+| Default | `<ALAMINO_HOME>/evidence` |
 
-Set `evidence_dir` to an absolute path, `~`, or a path starting with `~/` (or `~\` on Windows). New runs write `<evidence_dir>/<run-id>`. When the key is absent or empty, `test.evidence.local_root` still selects the parent, with `<NM_HOME>/evidence` as its default. A nonempty `evidence_dir` takes precedence over `local_root`.
+Set `evidence_dir` to an absolute path, `~`, or a path starting with `~/` (or `~\` on Windows). New runs write `<evidence_dir>/<run-id>`. When the key is absent or empty, `test.evidence.local_root` still selects the parent, with `<ALAMINO_HOME>/evidence` as its default. A nonempty `evidence_dir` takes precedence over `local_root`.
 
-If the directory is missing, not writable, not absolute after `~` expansion, or overlaps a default, configured, or recorded worktree placement, no-mistakes logs a warning and uses `<NM_HOME>/evidence`. It does not use `test.evidence.local_root` as that fallback. It does not create a missing directory, and it does not move a directory that already exists.
+If the directory is missing, not writable, not absolute after `~` expansion, or overlaps a default, configured, or recorded worktree placement, alamino logs a warning and uses `<ALAMINO_HOME>/evidence`. It does not use `test.evidence.local_root` as that fallback. It does not create a missing directory, and it does not move a directory that already exists.
 
 If the default evidence directory also overlaps a worktree placement, run creation fails rather than writing evidence into a checkout.
 
 A run records its evidence directory at creation. A later change to `evidence_dir` does not retarget that run. A run recorded before this setting existed keeps resolving through `test.evidence.local_root`.
 
-For GitLab image uploads from that run directory, see [Pull request](/no-mistakes/reference/pipeline-steps/#pull-request).
+For GitLab image uploads from that run directory, see [Pull request](/alamino/reference/pipeline-steps/#pull-request).
 
 ### test.evidence
 
 Test-step evidence storage settings.
-By default, evidence artifacts are written to `<NM_HOME>/evidence/<run-id>`. [`evidence_dir`](#evidence_dir) moves that parent for new runs. On GitHub.com/GHEC, supported image and video artifacts are also uploaded when the PR is rendered; see `attach_media` below.
+By default, evidence artifacts are written to `<ALAMINO_HOME>/evidence/<run-id>`. [`evidence_dir`](#evidence_dir) moves that parent for new runs. On GitHub.com/GHEC, supported image and video artifacts are also uploaded when the PR is rendered; see `attach_media` below.
 
 |      |          |
 | ---- | -------- |
@@ -1596,10 +1596,10 @@ By default, evidence artifacts are written to `<NM_HOME>/evidence/<run-id>`. [`e
 | `test.evidence.store_in_repo` | `bool`   | `false`                  | Publish test evidence artifacts to the repository's orphan evidence branch |
 | `test.evidence.attach_media`  | `bool`   | GitHub: `true`; GitLab: `false` | Upload evidence when the PR is rendered: images/videos to GitHub user-attachments, images to GitLab project uploads |
 | `test.evidence.compact`       | `bool`   | `true`                   | Keep the PR Testing section compact; set `false` for inline previews and expanded details |
-| `test.evidence.dir`           | `string` | `.no-mistakes/evidence`  | Directory prefix inside the evidence branch                                |
-| `test.evidence.branch`        | `string` | `no-mistakes/evidence`   | Name of the orphan evidence branch                                         |
-| `test.evidence.commit_message` | `string` | `no-mistakes: evidence for {{.Branch}} (run {{.RunID}})` | Subject template for evidence-branch commits |
-| `test.evidence.local_root`    | `string` | `<NM_HOME>/evidence`     | Absolute parent for run evidence when `evidence_dir` is unset             |
+| `test.evidence.dir`           | `string` | `.alamino/evidence`  | Directory prefix inside the evidence branch                                |
+| `test.evidence.branch`        | `string` | `alamino/evidence`   | Name of the orphan evidence branch                                         |
+| `test.evidence.commit_message` | `string` | `alamino: evidence for {{.Branch}} (run {{.RunID}})` | Subject template for evidence-branch commits |
+| `test.evidence.local_root`    | `string` | `<ALAMINO_HOME>/evidence`     | Absolute parent for run evidence when `evidence_dir` is unset             |
 | `test.evidence.link_base_url` | `string` | unset                    | Opt-in `http(s)` base for links to locally served evidence; see [Evidence links](#evidence-links) (global-only) |
 | `test.evidence.retention`     | `string` | `336h` (14 days)         | How long a run's evidence survives; `unlimited`/`none`/`off`/`never` or a non-positive duration disables the bound |
 | `test.evidence.max_runs`      | `int`    | `200`                    | How many run directories survive regardless of age; `0` disables the bound |
@@ -1610,26 +1610,26 @@ Non-compact sections are taller and can approach GitHub's PR body size limit soo
 
 The test step always collects evidence outside the worktree, so artifacts never enter the branch under validation.
 On GitHub.com and GitHub Enterprise Cloud, image and video artifacts that pass GitHub's attach rules (png, jpg, jpeg, gif, webp, svg, mp4, mov, webm; images at most 10 MiB and videos at most 100 MiB) are uploaded to GitHub user-attachments when the PR body is rendered, unless `attach_media` is false. Setting `attach_media: false` disables uploads even when `store_in_repo: true`; evidence-branch publication and its commit-pinned links remain enabled.
-The same setting gates GitLab evidence uploads, which require explicit `attach_media: true` in global or repository config. For the GitLab Evidence section, including its behavior without uploads, see [Pull request](/no-mistakes/reference/pipeline-steps/#pull-request).
+The same setting gates GitLab evidence uploads, which require explicit `attach_media: true` in global or repository config. For the GitLab Evidence section, including its behavior without uploads, see [Pull request](/alamino/reference/pipeline-steps/#pull-request).
 GitHub uploads need the raw GitHub token, which the PR step reads once per PR render with `gh auth token`; when that read fails, the step logs one line and skips every remaining upload in that render instead of asking again per file. If your `gh` sits behind a credential vault or disclosure gate that prompts before it releases the token, set `attach_media: false` so the PR step never asks for it.
 For GitHub attachments, the testing section embeds the returned image markdown or bare video URL so remote reviewers can open the media. Upload is fail-closed: any error, unsupported type, oversize file, GitHub Enterprise Server, non-GitHub forge, or GitHub App/Actions token falls back to the configured evidence presentation rather than a dead attachment URL. Published evidence retains commit-pinned links, with previews when `compact: false`; unpublished local artifacts follow [Evidence links](#evidence-links). Text artifacts remain inline or collapsible according to `compact`.
 When `store_in_repo` is true for a GitHub repository, the PR step copies that directory onto `branch` under `<dir>/<branch-slug>` in the code branch's push-target repository (the fork when fork routing is configured), pushes it, and links the artifacts from the pull request body.
-Published text files get the same home-directory redaction as the PR title and body, so a path under the operator's home is committed with that part rewritten to `~`. Before that, the run's worktree root, and any path into another run worktree under `<NM_HOME>/worktrees/<repo-id>/<run-id>`, is rewritten to `{run-worktree}` (a bare `<NM_HOME>/worktrees` or `<NM_HOME>/worktrees/<repo-id>` to `{worktrees}`), because the repo id is a hash of the local checkout path and `NM_HOME` may sit outside the home directory. Binary and visual artifacts are published as written, and the local evidence files are never changed.
+Published text files get the same home-directory redaction as the PR title and body, so a path under the operator's home is committed with that part rewritten to `~`. Before that, the run's worktree root, and any path into another run worktree under `<ALAMINO_HOME>/worktrees/<repo-id>/<run-id>`, is rewritten to `{run-worktree}` (a bare `<ALAMINO_HOME>/worktrees` or `<ALAMINO_HOME>/worktrees/<repo-id>` to `{worktrees}`), because the repo id is a hash of the local checkout path and `ALAMINO_HOME` may sit outside the home directory. Binary and visual artifacts are published as written, and the local evidence files are never changed.
 When both `attach_media` and `store_in_repo` apply, the testing section carries the user-attachments embed in addition to the commit-pinned git link.
 The branch is an orphan: it shares no history with your code branches, so evidence never reaches the default branch. Links use the evidence commit rather than the branch, so they keep resolving after later runs.
 Branch slashes become nested directories, unsafe branch characters are replaced, and an empty branch slug falls back to the run ID.
 `branch` must be a valid Git branch name; an invalid value fails the config with the offending key and value.
 `commit_message` supports literal text and two placeholders: `{{.Branch}}` (the code branch name) and `{{.RunID}}` (the run ID). It follows the same template restrictions, size limits, and unsafe-character rules as [`commit.fix_message`](#commitfix_message); an invalid template fails configuration loading, and a subject that fails validation at publish time leaves the evidence unpublished.
-The publisher never force-pushes. It appends to the fetched evidence-branch tip with a fast-forward push, retries one lost race, and refuses to use the run branch, default branch, or an existing branch whose tip lacks the `.no-mistakes-evidence` marker.
+The publisher never force-pushes. It appends to the fetched evidence-branch tip with a fast-forward push, retries one lost race, and refuses to use the run branch, default branch, or an existing branch whose tip lacks the `.alamino-evidence` marker.
 Publication is also refused when the remote cannot be read or pushed, an artifact exceeds 64 MiB, a run exceeds 500 files or 256 MiB, or another writer wins the retry. The PR body then keeps its local rendering instead of adding links that would not resolve.
-Evidence-branch publication currently supports GitHub links only. On other providers, no evidence branch is pushed. GitLab image uploads are independent of these publication settings; see [Pull request](/no-mistakes/reference/pipeline-steps/#pull-request).
+Evidence-branch publication currently supports GitHub links only. On other providers, no evidence branch is pushed. GitLab image uploads are independent of these publication settings; see [Pull request](/alamino/reference/pipeline-steps/#pull-request).
 Enabling this pushes a branch to your remote, so pick a `branch` name your CI workflows do not build.
 
 #### Local storage and cleanup
 
 The default evidence location is under the app root rather than the system temp directory; [`evidence_dir`](#evidence_dir) and `local_root` can select a different parent. On Linux the daemon runs from a service unit that does not export `TMPDIR`, so the old temp-directory default resolved to the shared `/tmp`, which current Ubuntu mounts as a RAM-backed `tmpfs`. The app root is disk backed on macOS, Linux, and Windows alike.
 
-no-mistakes reaps its recorded run directories itself rather than relying on an operating-system temp cleaner. Unrecognized directories under an evidence root are left untouched.
+alamino reaps its recorded run directories itself rather than relying on an operating-system temp cleaner. Unrecognized directories under an evidence root are left untouched.
 
 - A finished run that produced no artifacts leaves nothing behind.
 - Recorded run directories older than `retention` are removed.
@@ -1638,7 +1638,7 @@ no-mistakes reaps its recorded run directories itself rather than relying on an 
 
 Reaping runs after each finished run and again at daemon startup. An upgraded daemon also drains the pre-relocation directory in the system temp directory under the same rules; nothing is migrated, because absolute paths recorded in older pull request bodies name the old location.
 
-`local_root` must be an absolute path outside `<NM_HOME>/worktrees`; a relative or managed-worktree path fails daemon startup and prevents new or recovered runs from starting. Because `retention` bounds how long a PR body's local artifact links keep resolving, raise it rather than lowering it if your reviews run long.
+`local_root` must be an absolute path outside `<ALAMINO_HOME>/worktrees`; a relative or managed-worktree path fails daemon startup and prevents new or recovered runs from starting. Because `retention` bounds how long a PR body's local artifact links keep resolving, raise it rather than lowering it if your reviews run long.
 
 #### Evidence links
 
@@ -1646,20 +1646,20 @@ Reaping runs after each finished run and again at daemon startup. An upgraded da
 
 - In the Testing section, each local evidence file reference (an image, binary, or over-budget artifact that was neither published nor uploaded) becomes `- Evidence: [label](<link_base_url>/<run-id>/<file>)`, on every provider and in both `compact` presentations.
 - In the scenario table, every complete reference to a file that exists under the run's evidence directory becomes a link: a name relative to that directory (nested paths and names with spaces included) or an absolute path inside it; unrelated words remain plain text, and a reference the cell already carries as a Markdown link, image, autolink, or bare URL is left exactly as written. A code span holding known evidence files renders each as a link without the backticks, preserving separators and other words; a code span without a known evidence file is left as written. Embedded transcripts retain their inline contents and gain a `Source` link in compact details or an `Evidence` link in expanded presentation.
-- For GitLab's separate `## Evidence` section, see [Pull request](/no-mistakes/reference/pipeline-steps/#pull-request).
+- For GitLab's separate `## Evidence` section, see [Pull request](/alamino/reference/pipeline-steps/#pull-request).
 - In Testing artifact entries, `link_base_url` applies to local-file mentions under the evidence root where no remote link exists; it never overrides an explicit artifact URL, a successful upload, or a published evidence-branch link. Scenario-table references use the configured base independently of those artifact entries.
 
 `link_base_url` links evidence files in the evidence list lines, the scenario table’s Evidence column, transcript sources, and the GitLab Evidence section; free-form prose such as the testing summary, tested details, and artifact descriptions is left as written.
 
-Surrounding whitespace and trailing slashes are trimmed; an empty value disables the setting. A value that is not an absolute `http(s)` URL, contains whitespace after trimming, carries credentials, or has a query or fragment fails configuration loading, in the global file and in a pushed repository copy alike. Hosting, access control, and how long the served copy survives are yours; the pipeline never checks that a link resolves, and `retention` still bounds the local copy. The setting is global-only like `local_root`: a repository cannot choose where a PR's evidence links point, so a valid `test.evidence.link_base_url` in `.no-mistakes.yaml` is ignored.
+Surrounding whitespace and trailing slashes are trimmed; an empty value disables the setting. A value that is not an absolute `http(s)` URL, contains whitespace after trimming, carries credentials, or has a query or fragment fails configuration loading, in the global file and in a pushed repository copy alike. Hosting, access control, and how long the served copy survives are yours; the pipeline never checks that a link resolves, and `retention` still bounds the local copy. The setting is global-only like `local_root`: a repository cannot choose where a PR's evidence links point, so a valid `test.evidence.link_base_url` in `.alamino.yaml` is ignored.
 
 The publication fields are global defaults. Repo config can override `store_in_repo`, `attach_media`, `compact`, `dir`, and `commit_message`; it can override `branch` only through the trusted default-branch copy. `local_root`, `retention`, `max_runs`, and `link_base_url` are global-only: a repository does not get to name a filesystem path this machine's daemon writes to, set the retention budget for a directory every repository on the machine shares, or choose where a PR's evidence links point.
 
-`test.evidence.retention` and `test.evidence.max_runs` also bound `<NM_HOME>/logs/<run-id>` (per-run step logs), reaped on the same cadence rather than through a second config surface for the same kind of per-run diagnostic artifact.
+`test.evidence.retention` and `test.evidence.max_runs` also bound `<ALAMINO_HOME>/logs/<run-id>` (per-run step logs), reaped on the same cadence rather than through a second config surface for the same kind of per-run diagnostic artifact.
 
 ### eval
 
-Local review-evaluation corpus settings for [`no-mistakes eval`](/no-mistakes/reference/eval/).
+Local review-evaluation corpus settings for [`alamino eval`](/alamino/reference/eval/).
 
 |      |          |
 | ---- | -------- |
@@ -1674,13 +1674,13 @@ Local review-evaluation corpus settings for [`no-mistakes eval`](/no-mistakes/re
 
 `capture_provenance` is what makes a review pass replayable at all. It is recorded when the round is written and cannot be added afterwards, because the pinned configuration is a point-in-time snapshot, so a run reviewed with it off can never be captured later.
 
-`auto_capture` collects without any command: when an eligible run finishes, its decided review rounds become cases and fixed `ci-check` and `ci-review-bot` findings become Review false negatives. It does nothing while `capture_provenance` is off. Collection runs after the pipeline has already reported its outcome and can never change it; a failure is logged and nothing else. The [Evaluation toolkit](/no-mistakes/reference/eval/#how-cases-are-collected) owns eligibility and labeling details.
+`auto_capture` collects without any command: when an eligible run finishes, its decided review rounds become cases and fixed `ci-check` and `ci-review-bot` findings become Review false negatives. It does nothing while `capture_provenance` is off. Collection runs after the pipeline has already reported its outcome and can never change it; a failure is logged and nothing else. The [Evaluation toolkit](/alamino/reference/eval/#how-cases-are-collected) owns eligibility and labeling details.
 
 `max_cases` sets the retention target enforced after automatic collection. When it is exceeded the oldest unprotected cases are dropped first. A case with a replay in progress or recorded candidate replays is protected, so the corpus can remain above the target rather than invalidate a comparison you have spent tokens on. Cases from the same repository share one local object pool, so a case costs its own records plus the objects its commits introduced rather than a copy of the repository.
 
 `diversified_size` caps the official gold-only eval set used by `eval run --cases diversified`. Selection is stratified and pinned; unlabeled cases never fill it. `0` keeps one gold case per stratum with no Hamilton bound. Corpus retention (`max_cases`) and this official-set cap are different knobs.
 
-These are operator settings for this machine's local disk, so they are global-only: an `eval` block in a repository's `.no-mistakes.yaml` is ignored. Corpus storage stays under `<NM_HOME>/eval` and no-mistakes never uploads it; replay still sends code to the selected agent's configured model provider as described in the [Evaluation toolkit](/no-mistakes/reference/eval/).
+These are operator settings for this machine's local disk, so they are global-only: an `eval` block in a repository's `.alamino.yaml` is ignored. Corpus storage stays under `<ALAMINO_HOME>/eval` and alamino never uploads it; replay still sends code to the selected agent's configured model provider as described in the [Evaluation toolkit](/alamino/reference/eval/).
 
 ### providers.github.draft_pull_requests
 
@@ -1733,7 +1733,7 @@ This is a global default. Per-repo config can override it via `providers.azurede
 ### providers.origin.draft_pull_requests
 
 Open pull requests created on Cursor Origin as drafts (`origin pr create --status draft`).
-When false (the default), no-mistakes passes `--status open` because the Origin CLI otherwise defaults to draft.
+When false (the default), alamino passes `--status open` because the Origin CLI otherwise defaults to draft.
 
 | | |
 |---|---|
@@ -1745,4 +1745,4 @@ This is a global default. Per-repo config can override it via `providers.origin.
 
 ## Environment variables
 
-See [Environment Variables](/no-mistakes/reference/environment/) for `NM_HOME`, `NM_DAEMON_CONNECT_TIMEOUT`, Forgejo host and token settings, Bitbucket Cloud credentials, and update-check suppression.
+See [Environment Variables](/alamino/reference/environment/) for `ALAMINO_HOME`, `ALAMINO_DAEMON_CONNECT_TIMEOUT`, Forgejo host and token settings, Bitbucket Cloud credentials, and update-check suppression.

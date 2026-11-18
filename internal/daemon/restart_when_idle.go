@@ -14,14 +14,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Restart when idle (issue #1691).
 //
-// `no-mistakes update` replaces the executable file and then has to restart
+// `alamino update` replaces the executable file and then has to restart
 // the daemon, which until now cancelled every run executing at that moment.
 // A scheduled restart instead lets the running daemon - still executing the
 // image it was started from - finish those runs, holds new pushes instead of

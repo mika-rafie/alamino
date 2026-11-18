@@ -1,5 +1,5 @@
 // Package gatecontext owns the authoritative classification of callers that
-// are executing inside an active no-mistakes validation step.
+// are executing inside an active alamino validation step.
 package gatecontext
 
 import (
@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/worktrees"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/worktrees"
 )
 
 const ErrorCode = "nested_gate_context"
@@ -22,11 +22,11 @@ const ErrorCode = "nested_gate_context"
 // RefusalMessage is the stable, privacy-safe error contract used at daemon
 // ingress and non-AXI command boundaries.
 func RefusalMessage(result Result) string {
-	target := "an active no-mistakes validation step"
+	target := "an active alamino validation step"
 	if result.RunID != "" && result.Phase != "" {
-		target = fmt.Sprintf("no-mistakes run %s, phase %s", result.RunID, result.Phase)
+		target = fmt.Sprintf("alamino run %s, phase %s", result.RunID, result.Phase)
 	} else if result.RunID != "" {
-		target = "no-mistakes run " + result.RunID
+		target = "alamino run " + result.RunID
 	}
 	return fmt.Sprintf("%s: refusing pipeline control from %s; return control to the outer executor", ErrorCode, target)
 }

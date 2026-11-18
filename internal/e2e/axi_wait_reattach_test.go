@@ -41,14 +41,14 @@ func TestAxiCustomWaitSurvivesReattachmentAndAcceptedResponse(t *testing.T) {
 		t.Helper()
 		started := time.Now()
 		out, err := h.Run(args...)
-		t.Logf("no-mistakes %s (elapsed %s):\n%s", strings.Join(args, " "), time.Since(started), out)
+		t.Logf("alamino %s (elapsed %s):\n%s", strings.Join(args, " "), time.Since(started), out)
 		if err == nil || !strings.Contains(out, "wait of 3s elapsed while driving the run") {
 			t.Fatalf("expected bounded hold expiry: %v\n%s", err, out)
 		}
-		if !strings.Contains(out, "Re-run `no-mistakes axi run --wait 3s`") {
+		if !strings.Contains(out, "Re-run `alamino axi run --wait 3s`") {
 			t.Fatalf("reattach lost the hold or replayed the response:\n%s", out)
 		}
-		if strings.Contains(out, "Re-run `no-mistakes axi respond") || strings.Contains(out, "outcome: failed") {
+		if strings.Contains(out, "Re-run `alamino axi respond") || strings.Contains(out, "outcome: failed") {
 			t.Fatalf("expiry replayed a decision or failed the pipeline:\n%s", out)
 		}
 	}
@@ -60,7 +60,7 @@ func TestAxiCustomWaitSurvivesReattachmentAndAcceptedResponse(t *testing.T) {
 	// slow review also rejects an implementation that treats hours as seconds.
 	started := time.Now()
 	gate, err := h.Run("axi", "run", "--wait", "6h")
-	t.Logf("no-mistakes axi run --wait 6h (elapsed %s):\n%s", time.Since(started), gate)
+	t.Logf("alamino axi run --wait 6h (elapsed %s):\n%s", time.Since(started), gate)
 	if err != nil || !strings.Contains(gate, "default-choice") {
 		t.Fatalf("long hold did not reach the decision: %v\n%s", err, gate)
 	}
@@ -75,7 +75,7 @@ func TestAxiCustomWaitSurvivesReattachmentAndAcceptedResponse(t *testing.T) {
 	assertElapsed("axi", "respond", "--action", "approve", "--wait", "3s")
 	assertElapsed("axi", "run", "--wait", "3s")
 	final, err := h.Run("axi", "run", "--wait", "6h")
-	t.Logf("no-mistakes axi run --wait 6h after accepted response:\n%s", final)
+	t.Logf("alamino axi run --wait 6h after accepted response:\n%s", final)
 	if err != nil || !strings.Contains(final, "outcome: passed") {
 		t.Fatalf("reattached run did not finish: %v\n%s", err, final)
 	}

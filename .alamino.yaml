@@ -1,4 +1,4 @@
-# no-mistakes' own dogfood config.
+# alamino's own dogfood config.
 # Local Test is intentionally empty: the Test step is targeted validation of the
 # requested intent (agent-driven smallest relevant checks + evidence), never a
 # repository-wide regression suite. Broad race-enabled Go coverage stays in
@@ -22,7 +22,7 @@ document:
   instructions: |
     Configuration keys are owned by docs/src/content/docs/reference/global-config.md
     (global fields) and docs/src/content/docs/reference/repo-config.md (repo fields).
-    Environment variables and the telemetry local/remote split are owned by
+    Environment variables and the local performance records are owned by
     docs/src/content/docs/reference/environment.md.
     The daemon lifecycle model (singleton lock, lifecycle guard, crash recovery)
     is owned by docs/src/content/docs/concepts/daemon.md.

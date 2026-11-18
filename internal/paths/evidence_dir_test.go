@@ -17,14 +17,14 @@ func TestResolveEvidenceRootUsesAUsableSettingAndFallsBack(t *testing.T) {
 	}
 	p := WithRoot(root)
 	home := filepath.Join(root, "home")
-	dropbox := filepath.Join(home, "Dropbox", "no-mistakes-evidence")
+	dropbox := filepath.Join(home, "Dropbox", "alamino-evidence")
 	if err := os.MkdirAll(dropbox, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 
-	got, warning := p.ResolveEvidenceRoot("~/Dropbox/no-mistakes-evidence", "")
+	got, warning := p.ResolveEvidenceRoot("~/Dropbox/alamino-evidence", "")
 	if warning != "" {
 		t.Fatalf("warning = %q, want none", warning)
 	}

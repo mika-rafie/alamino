@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestExecutor_ReviewSkipStopsBeforeDownstreamWork(t *testing.T) {
@@ -148,7 +148,10 @@ func TestExecutor_ReviewSkipLegitimateContinuations(t *testing.T) {
 
 func respondReviewSkipTest(t *testing.T, executor *Executor, done <-chan error, action types.ApprovalAction) {
 	t.Helper()
-	deadline := time.Now().Add(3 * time.Second)
+	// Same budget as waitForStepStatus: on a loaded Windows runner the executor
+	// took longer than three seconds to park at the review gate, and the
+	// "ignore" and "pr only" scenarios failed with "no step awaiting approval".
+	deadline := time.Now().Add(30 * time.Second)
 	for {
 		var err error
 		if action == types.ActionFix {

@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps"
 	"github.com/spf13/cobra"
 )
 
 // The supplied PR title and description each travel as one base64 push
 // option, like intent.
 const (
-	prTitlePushOptionPrefix = "no-mistakes.pr-title="
-	prBodyPushOptionPrefix  = "no-mistakes.pr-body="
+	prTitlePushOptionPrefix = "alamino.pr-title="
+	prBodyPushOptionPrefix  = "alamino.pr-body="
 )
 
 // maxAxiRunPRBodyBytes is the pkt-line budget for the description's push
@@ -132,7 +132,7 @@ func requireDaemonHonorsRunPRText(client closingIssueRefsUpdateClient, text db.R
 		err = errors.New("daemon supports supplied PR text on creation only")
 	}
 	if err != nil {
-		return fmt.Errorf("the running daemon is too old to honor --pr-title or --pr-body-file for existing PR updates (%v); restart it with `no-mistakes daemon restart` so the current binary serves it", err)
+		return fmt.Errorf("the running daemon is too old to honor --pr-title or --pr-body-file for existing PR updates (%v); restart it with `alamino daemon restart` so the current binary serves it", err)
 	}
 	return nil
 }

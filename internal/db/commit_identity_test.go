@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/git"
+	"github.com/mika-rafie/alamino/internal/git"
 )
 
 func TestRunCommitIdentityIsImmutableAndSurvivesReopen(t *testing.T) {

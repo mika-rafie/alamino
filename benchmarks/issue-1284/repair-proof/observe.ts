@@ -2,14 +2,14 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { appendFileSync } from "node:fs";
 
 export default function (pi: ExtensionAPI) {
-	const path = process.env.NM_PROOF_PREFIX + ".provider.jsonl";
+	const path = process.env.ALAMINO_PROOF_PREFIX + ".provider.jsonl";
 	function record(value: unknown) {
 		appendFileSync(path, JSON.stringify(value) + "\n", { mode: 0o600 });
 	}
 	pi.on("before_provider_request", (event, ctx) => {
 		const payload = event.payload as any;
 		const outputTool = payload.tools?.find((tool: any) =>
-			(tool.name ?? tool.function?.name) === "no_mistakes_output");
+			(tool.name ?? tool.function?.name) === "alamino_output");
 		record({ type: "request", model: ctx.model?.id, provider: ctx.model?.provider,
 			payloadModel: payload.model, toolChoice: payload.tool_choice,
 			outputTool: outputTool ? { name: outputTool.name ?? outputTool.function?.name,

@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const evidenceTestUpstream = "https://github.com/example/widgets.git"
@@ -48,7 +48,7 @@ func newEvidencePublishContext(t *testing.T, branch string) (sctx *pipeline.Step
 	sctx.Repo.UpstreamURL = evidenceTestUpstream
 	sctx.Repo.DefaultBranch = "main"
 	sctx.Run.Branch = branch
-	sctx.Config.Test.Evidence = config.Evidence{StoreInRepo: true, Dir: ".no-mistakes/evidence", Branch: "no-mistakes/evidence"}
+	sctx.Config.Test.Evidence = config.Evidence{StoreInRepo: true, Dir: ".alamino/evidence", Branch: "alamino/evidence"}
 	return sctx, remote
 }
 
@@ -93,11 +93,11 @@ func TestPublishRunEvidence_LandsOnOrphanBranchAndLinksFromThePRBody(t *testing.
 		t.Fatal("expected evidence to be published")
 	}
 
-	tip := gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence")
+	tip := gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence")
 	tree := gitCmd(t, remote, "ls-tree", "-r", "--name-only", tip)
 	for _, want := range []string{
-		".no-mistakes/evidence/feature/add-login/checkout.png",
-		".no-mistakes/evidence/feature/add-login/cli-run.txt",
+		".alamino/evidence/feature/add-login/checkout.png",
+		".alamino/evidence/feature/add-login/cli-run.txt",
 	} {
 		if !strings.Contains(tree, want) {
 			t.Errorf("evidence branch missing %q, has:\n%s", want, tree)
@@ -113,11 +113,11 @@ func TestPublishRunEvidence_LandsOnOrphanBranchAndLinksFromThePRBody(t *testing.
 	md := BuildTestingSummaryForPR(steps, rounds, sctx.Repo.UpstreamURL, sctx.Run.HeadSHA, sctx.WorkDir, testEvidenceDir(sctx), links)
 	t.Logf("rendered PR testing markdown:\n%s", md)
 
-	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.no-mistakes/evidence/feature/add-login/checkout.png"
+	wantLink := "https://github.com/example/widgets/blob/" + tip + "/.alamino/evidence/feature/add-login/checkout.png"
 	if !strings.Contains(md, "- Evidence: [Checkout screenshot]("+wantLink+")") {
 		t.Fatalf("expected the PR body to link the evidence branch, got:\n%s", md)
 	}
-	if !strings.Contains(md, "https://github.com/example/widgets/blob/"+tip+"/.no-mistakes/evidence/feature/add-login/cli-run.txt") {
+	if !strings.Contains(md, "https://github.com/example/widgets/blob/"+tip+"/.alamino/evidence/feature/add-login/cli-run.txt") {
 		t.Fatalf("expected the log artifact to link the evidence branch, got:\n%s", md)
 	}
 	if strings.Contains(md, "local file:") {
@@ -128,9 +128,9 @@ func TestPublishRunEvidence_LandsOnOrphanBranchAndLinksFromThePRBody(t *testing.
 	// either artifact's commit-pinned source link.
 	md = buildPRTestingSummary(steps, rounds, sctx.Repo.UpstreamURL, sctx.Run.HeadSHA, sctx.WorkDir, evidenceDir, links, scm.ProviderGitHub, nil, false, "")
 	for _, want := range []string{
-		"![Checkout screenshot](https://raw.githubusercontent.com/example/widgets/" + tip + "/.no-mistakes/evidence/feature/add-login/checkout.png)",
+		"![Checkout screenshot](https://raw.githubusercontent.com/example/widgets/" + tip + "/.alamino/evidence/feature/add-login/checkout.png)",
 		"- Evidence: [Checkout screenshot](" + wantLink + ")",
-		"- Evidence: [CLI run](https://github.com/example/widgets/blob/" + tip + "/.no-mistakes/evidence/feature/add-login/cli-run.txt)",
+		"- Evidence: [CLI run](https://github.com/example/widgets/blob/" + tip + "/.alamino/evidence/feature/add-login/cli-run.txt)",
 		"```text\nit works\n```",
 	} {
 		if !strings.Contains(md, want) {
@@ -162,7 +162,7 @@ func TestPublishRunEvidence_PercentEncodesEveryArtifactPathSegment(t *testing.T)
 	if links == nil {
 		t.Fatal("expected evidence to be published")
 	}
-	tip := gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence")
+	tip := gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence")
 	steps, rounds := testStepWithArtifacts(fmt.Sprintf(
 		`{"kind":"screenshot","label":"Encoded screenshot","path":%q}`,
 		filepath.Join(evidenceDir, filepath.FromSlash(artifact)),
@@ -185,10 +185,10 @@ func TestPublishRunEvidence_UsesTheConfiguredBranchName(t *testing.T) {
 	}
 
 	tree := gitCmd(t, remote, "ls-tree", "-r", "--name-only", "refs/heads/team/ci/evidence")
-	if !strings.Contains(tree, ".no-mistakes/evidence/feature/add-login/cli-run.txt") {
+	if !strings.Contains(tree, ".alamino/evidence/feature/add-login/cli-run.txt") {
 		t.Errorf("configured evidence branch missing the artifact, has:\n%s", tree)
 	}
-	if refs := gitCmd(t, remote, "for-each-ref", "--format=%(refname)", "refs/heads/no-mistakes"); refs != "" {
+	if refs := gitCmd(t, remote, "for-each-ref", "--format=%(refname)", "refs/heads/alamino"); refs != "" {
 		t.Errorf("the default evidence branch was created too: %q", refs)
 	}
 }
@@ -198,7 +198,7 @@ func TestPublishRunEvidence_CommitSubject(t *testing.T) {
 	for _, tc := range []struct {
 		name, template, want string
 	}{
-		{"default", "", "no-mistakes: evidence for feature/add-login (run %s)"},
+		{"default", "", "alamino: evidence for feature/add-login (run %s)"},
 		{"configured", "chore(evidence): {{.Branch}} {{.RunID}}", "chore(evidence): feature/add-login %s"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -210,7 +210,7 @@ func TestPublishRunEvidence_CommitSubject(t *testing.T) {
 			if links := publishRunEvidence(sctx); links == nil {
 				t.Fatal("expected evidence to be published")
 			}
-			got := gitCmd(t, remote, "log", "-1", "--format=%s", "refs/heads/no-mistakes/evidence")
+			got := gitCmd(t, remote, "log", "-1", "--format=%s", "refs/heads/alamino/evidence")
 			if want := fmt.Sprintf(tc.want, sctx.Run.ID); got != want {
 				t.Fatalf("evidence commit subject = %q, want %q", got, want)
 			}
@@ -335,7 +335,7 @@ func TestPublishRunEvidence_NeverPublishesTheReviewConversation(t *testing.T) {
 		t.Fatal("the real test evidence beside the conversation must still publish")
 	}
 
-	tree := gitCmd(t, remote, "ls-tree", "-r", "--name-only", gitCmd(t, remote, "rev-parse", "refs/heads/no-mistakes/evidence"))
+	tree := gitCmd(t, remote, "ls-tree", "-r", "--name-only", gitCmd(t, remote, "rev-parse", "refs/heads/alamino/evidence"))
 	if !strings.Contains(tree, "cli-run.txt") {
 		t.Fatalf("the real test evidence did not publish:\n%s", tree)
 	}
@@ -348,7 +348,7 @@ func TestPublishRunEvidence_NeverPublishesTheReviewConversation(t *testing.T) {
 
 func TestPublishRunEvidence_RedactsRunWorktreePaths(t *testing.T) {
 	nmHome := t.TempDir()
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	sctx, remote := newEvidencePublishContext(t, "feature/add-login")
 	other := filepath.Join(nmHome, "worktrees", "ab12cd34ef56", "run-0", "out.log")
 	writeRunEvidence(t, sctx, map[string]string{
@@ -358,7 +358,7 @@ func TestPublishRunEvidence_RedactsRunWorktreePaths(t *testing.T) {
 	if links := publishRunEvidence(sctx); links == nil {
 		t.Fatal("evidence did not publish")
 	}
-	got := gitCmd(t, remote, "cat-file", "-p", "refs/heads/no-mistakes/evidence:.no-mistakes/evidence/feature/add-login/cli-run.txt")
+	got := gitCmd(t, remote, "cat-file", "-p", "refs/heads/alamino/evidence:.alamino/evidence/feature/add-login/cli-run.txt")
 	if want := "ran " + filepath.Join("{run-worktree}", "bin", "tool") + "\nsaw " + filepath.Join("{run-worktree}", "out.log"); got != want {
 		t.Errorf("published text = %q, want %q", got, want)
 	}

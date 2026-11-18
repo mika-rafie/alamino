@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 // EmptyTreeSHA is the well-known SHA of an empty tree in git.
@@ -57,7 +57,7 @@ func RunWithInput(ctx context.Context, dir, input string, args ...string) (strin
 // RunBare executes Git against exactly bareDir. Unlike Run, it never falls
 // back to cwd-based repository discovery when bareDir is malformed. Gate
 // recovery uses this after structural validation so an invalid directory under
-// NM_HOME cannot discover or mutate an ancestor worktree.
+// ALAMINO_HOME cannot discover or mutate an ancestor worktree.
 func RunBare(ctx context.Context, bareDir string, args ...string) (string, error) {
 	if bareDir == "" {
 		return "", fmt.Errorf("bare git directory is empty")
@@ -582,7 +582,7 @@ func FetchRemoteBranchToPrivateRef(ctx context.Context, dir, remote, branch, loc
 // this operation, allowing the caller to publish the verified object with its
 // own create-only or compare-and-swap policy.
 func FetchRemoteRef(ctx context.Context, dir, remote, remoteRef, expectedCommit string) error {
-	temporaryRef := fmt.Sprintf("refs/no-mistakes/fetch/%d-%d", os.Getpid(), time.Now().UnixNano())
+	temporaryRef := fmt.Sprintf("refs/alamino/fetch/%d-%d", os.Getpid(), time.Now().UnixNano())
 	defer func() {
 		_, _ = Run(context.WithoutCancel(ctx), dir, "update-ref", "--no-deref", "-d", temporaryRef)
 	}()
@@ -620,7 +620,7 @@ func PushCommitWithOptions(ctx context.Context, dir, remote, commitSHA, ref, exp
 
 // PushCommitWithOptionsSkippingHooks is PushCommitWithOptions for an internal
 // control-plane push that must not invoke the repository's pre-push hook. Use
-// it only for a local no-mistakes gate trigger; delivery pushes keep the
+// it only for a local alamino gate trigger; delivery pushes keep the
 // repository hook.
 func PushCommitWithOptionsSkippingHooks(ctx context.Context, dir, remote, commitSHA, ref, expectedSHA string, forceWithLease bool, pushOptions []string) error {
 	return pushSourceWithOptions(ctx, dir, remote, commitSHA, ref, expectedSHA, forceWithLease, pushOptions, true)
@@ -633,7 +633,7 @@ func PushWithOptions(ctx context.Context, dir, remote, ref, expectedSHA string, 
 
 // PushWithOptionsSkippingHooks is PushWithOptions for an internal control-plane
 // push that must not invoke the repository's pre-push hook. Use it only for a
-// local no-mistakes gate trigger; delivery pushes keep the repository hook.
+// local alamino gate trigger; delivery pushes keep the repository hook.
 func PushWithOptionsSkippingHooks(ctx context.Context, dir, remote, ref, expectedSHA string, forceWithLease bool, pushOptions []string) error {
 	return pushSourceWithOptions(ctx, dir, remote, "HEAD", ref, expectedSHA, forceWithLease, pushOptions, true)
 }

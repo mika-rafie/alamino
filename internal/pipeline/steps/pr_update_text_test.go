@@ -11,11 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 const (
@@ -68,7 +68,7 @@ func TestPRUpdateTextKeepOnUpdate(t *testing.T) {
 				t.Fatalf("attestation head = %s, want %s", publishedAttestationHead(t, body), headSHA)
 			}
 			assertKeptEvidence(t, body, mode, keptRiskLine)
-			if strings.Count(body, "<!-- no-mistakes-pipeline-attestation:v1 ") != 1 {
+			if strings.Count(body, "<!-- alamino-pipeline-attestation:v1 ") != 1 {
 				t.Fatalf("attestation count:\n%s", body)
 			}
 			logs := string(mustRead(t, logFile))
@@ -288,7 +288,7 @@ func TestPRUpdateTextRegenerateRewrites(t *testing.T) {
 			if strings.Contains(body, "Refs #414") || !strings.Contains(body, "- replace the author narrative") {
 				t.Fatalf("regenerate body = %q", body)
 			}
-			if strings.Contains(body, "no-mistakes-pr-appendix") {
+			if strings.Contains(body, "alamino-pr-appendix") {
 				t.Fatalf("regenerate published an owned appendix:\n%s", body)
 			}
 			logs := string(mustRead(t, logFile))
@@ -304,7 +304,7 @@ func TestPRUpdateTextKeepRefusesUnownedAttestation(t *testing.T) {
 	dir, baseSHA, headSHA := setupGitRepo(t)
 	env, logFile := fakeGH(t, "https://github.com/test/repo/pull/42")
 	bodyFile := envEntry(env, "FAKE_CLI_PR_BODY_FILE")
-	legacy := "## What Changed\n\n- old narrative\n\n<!-- no-mistakes-pipeline-attestation:v1 {\"head_sha\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"steps\":[]} -->\n"
+	legacy := "## What Changed\n\n- old narrative\n\n<!-- alamino-pipeline-attestation:v1 {\"head_sha\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"steps\":[]} -->\n"
 	if err := os.WriteFile(bodyFile, []byte(legacy), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -327,16 +327,16 @@ func TestPRUpdateTextKeepRefusesUnownedAttestation(t *testing.T) {
 
 func assertKeptEvidence(t *testing.T, body, mode, riskLine string) {
 	t.Helper()
-	if strings.Count(body, "no-mistakes-pr-appendix") != 2 {
-		t.Fatalf("owned appendix markers = %d\n%s", strings.Count(body, "no-mistakes-pr-appendix"), body)
+	if strings.Count(body, "alamino-pr-appendix") != 2 {
+		t.Fatalf("owned appendix markers = %d\n%s", strings.Count(body, "alamino-pr-appendix"), body)
 	}
-	start := strings.Index(body, "<!-- no-mistakes-pr-appendix:v1 sha256=")
-	end := strings.Index(body, "<!-- /no-mistakes-pr-appendix:v1 -->")
+	start := strings.Index(body, "<!-- alamino-pr-appendix:v1 sha256=")
+	end := strings.Index(body, "<!-- /alamino-pr-appendix:v1 -->")
 	if start < 0 || end < start {
 		t.Fatalf("appendix bounds missing:\n%s", body)
 	}
 	appendix := body[start:end]
-	if !strings.Contains(appendix, riskLine) || !strings.Contains(appendix, noMistakesPRSignature) {
+	if !strings.Contains(appendix, riskLine) || !strings.Contains(appendix, alaminoPRSignature) {
 		t.Fatalf("appendix evidence = %q", appendix)
 	}
 	if mode == config.PRAppendixMinimal {
@@ -352,7 +352,7 @@ func assertKeptEvidence(t *testing.T, body, mode, riskLine string) {
 
 func publishedAttestationHead(t *testing.T, body string) string {
 	t.Helper()
-	const prefix = "<!-- no-mistakes-pipeline-attestation:v1 "
+	const prefix = "<!-- alamino-pipeline-attestation:v1 "
 	start := strings.Index(body, prefix)
 	if start < 0 {
 		t.Fatalf("body has no attestation:\n%s", body)
@@ -478,7 +478,7 @@ func TestPRSuppliedTextCreatesOwnedBody(t *testing.T) {
 				t.Fatalf("create: %+v, %v", out, err)
 			}
 			body := string(mustRead(t, envEntry(env, "FAKE_CLI_PR_BODY_FILE")))
-			if !strings.HasPrefix(body, suppliedPRBodyText+"\n\n<!-- no-mistakes-pr-appendix:v1 ") {
+			if !strings.HasPrefix(body, suppliedPRBodyText+"\n\n<!-- alamino-pr-appendix:v1 ") {
 				t.Fatalf("supplied narrative was not published verbatim above the appendix:\n%s", body)
 			}
 			parts, err := parsePROwnedBody(body)
@@ -638,7 +638,7 @@ func TestPRFreshDescriptionReplacesLegacyUnownedAttestation(t *testing.T) {
 	sctx, _, _ := suppliedPRContext(t, noDraftAgent(t), suppliedPRTitleText, suppliedPRBodyText)
 	env, _ := fakeGH(t, "https://github.com/test/repo/pull/42")
 	bodyFile := envEntry(env, "FAKE_CLI_PR_BODY_FILE")
-	legacy := "## What Changed\n\nOld generated text.\n\n<!-- no-mistakes-pipeline-attestation:v1 {} -->"
+	legacy := "## What Changed\n\nOld generated text.\n\n<!-- alamino-pipeline-attestation:v1 {} -->"
 	if err := os.WriteFile(bodyFile, []byte(legacy), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -724,7 +724,7 @@ func TestPRSuppliedTitleOnlyKeepsTheDraftedBody(t *testing.T) {
 				t.Fatalf("supplied title did not replace the drafted one:\n%s", logs)
 			}
 			body := string(mustRead(t, envEntry(env, "FAKE_CLI_PR_BODY_FILE")))
-			if !strings.Contains(body, "## What Changed") || strings.Contains(body, "no-mistakes-pr-appendix") {
+			if !strings.Contains(body, "## What Changed") || strings.Contains(body, "alamino-pr-appendix") {
 				t.Fatalf("a title-only run must keep an ordinary unowned body:\n%s", body)
 			}
 		})
@@ -764,7 +764,7 @@ func TestPRSuppliedBodyOnlyFallsBackToTheOrdinaryTitleWhenDraftingFails(t *testi
 	if logs := string(mustRead(t, logFile)); !strings.Contains(logs, "--title chore: update pull request") {
 		t.Fatalf("body-only run did not use the ordinary fallback title:\n%s", logs)
 	}
-	if body := string(mustRead(t, envEntry(env, "FAKE_CLI_PR_BODY_FILE"))); !strings.HasPrefix(body, suppliedPRBodyText+"\n\n<!-- no-mistakes-pr-appendix:v1 ") {
+	if body := string(mustRead(t, envEntry(env, "FAKE_CLI_PR_BODY_FILE"))); !strings.HasPrefix(body, suppliedPRBodyText+"\n\n<!-- alamino-pr-appendix:v1 ") {
 		t.Fatalf("supplied body was not published verbatim above the appendix:\n%s", body)
 	}
 }
@@ -819,7 +819,7 @@ func TestPRSuppliedBodyOnBitbucketCarriesTheVisibleAttestation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(content.Body, suppliedPRBodyText) || !strings.Contains(content.Body, "```text\n<!-- no-mistakes-pipeline-attestation:v1 ") {
+	if !strings.HasPrefix(content.Body, suppliedPRBodyText) || !strings.Contains(content.Body, "```text\n<!-- alamino-pipeline-attestation:v1 ") {
 		t.Fatalf("Bitbucket body = %q", content.Body)
 	}
 }

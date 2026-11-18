@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func budgetRule(n int) string {
@@ -28,11 +28,11 @@ func TestFixSummaryRules_BudgetFollowsRenderedPrefix(t *testing.T) {
 		step     types.StepName
 		want     int
 	}{
-		{"default review", "", types.StepReview, 51},
-		{"default test", "", types.StepTest, 53},
-		{"default lint", "", types.StepLint, 53},
-		{"default document", "", types.StepDocument, 49},
-		{"default custom gate", "", types.StepName("gate.test.mutation"), 72 - len("no-mistakes(gate.test.mutation): ")},
+		{"default review", "", types.StepReview, 55},
+		{"default test", "", types.StepTest, 57},
+		{"default lint", "", types.StepLint, 57},
+		{"default document", "", types.StepDocument, 53},
+		{"default custom gate", "", types.StepName("gate.test.mutation"), 72 - len("alamino(gate.test.mutation): ")},
 		{"custom template", "fix({{.Step}}): {{.Summary}}", types.StepReview, 59},
 		{"summary only", "{{.Summary}}", types.StepReview, 72},
 		{"text after summary", "{{.Summary}} [{{.Step}}]", types.StepReview, 72 - len(" [review]")},
@@ -76,12 +76,12 @@ func TestFixPrompts_TellEachStepItsSummaryBudget(t *testing.T) {
 		defaultBudget int
 		customBudget  int
 	}{
-		{"review", &ReviewStep{}, config.Commands{}, 51, 59},
-		{"test", &TestStep{}, config.Commands{Test: "exit 0"}, 53, 72 - len("fix(test): ")},
-		{"lint", &LintStep{}, config.Commands{Lint: "exit 0"}, 53, 72 - len("fix(lint): ")},
-		{"lint agent pass", &LintStep{}, config.Commands{}, 53, 72 - len("fix(lint): ")},
-		{"document", &DocumentStep{}, config.Commands{}, 49, 72 - len("fix(document): ")},
-		{"custom gate", &CustomGateStep{Gate: gate}, config.Commands{}, 72 - len("no-mistakes(gate.test.mutation-budget): "), 72 - len("fix(gate.test.mutation-budget): ")},
+		{"review", &ReviewStep{}, config.Commands{}, 55, 59},
+		{"test", &TestStep{}, config.Commands{Test: "exit 0"}, 57, 72 - len("fix(test): ")},
+		{"lint", &LintStep{}, config.Commands{Lint: "exit 0"}, 57, 72 - len("fix(lint): ")},
+		{"lint agent pass", &LintStep{}, config.Commands{}, 57, 72 - len("fix(lint): ")},
+		{"document", &DocumentStep{}, config.Commands{}, 53, 72 - len("fix(document): ")},
+		{"custom gate", &CustomGateStep{Gate: gate}, config.Commands{}, 72 - len("alamino(gate.test.mutation-budget): "), 72 - len("fix(gate.test.mutation-budget): ")},
 	}
 	for _, tt := range steps {
 		for _, template := range []string{"", "fix({{.Step}}): {{.Summary}}"} {

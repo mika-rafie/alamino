@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/ipc"
 )
 
 // The capability contract requires an affirmative, decodable reply. A health
@@ -54,7 +54,7 @@ func TestRequireTranscriptHomes(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-			} else if err == nil || !strings.Contains(err.Error(), "transcript-home selection") || !strings.Contains(err.Error(), "no-mistakes daemon restart") {
+			} else if err == nil || !strings.Contains(err.Error(), "transcript-home selection") || !strings.Contains(err.Error(), "alamino daemon restart") {
 				t.Fatalf("unconfirmed support must refuse with restart guidance: %v", err)
 			}
 		})

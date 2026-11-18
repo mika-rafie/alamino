@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/winproc"
+	"github.com/mika-rafie/alamino/internal/winproc"
 )
 
 var taskkillProcessTree = func(pid int) ([]byte, error) {

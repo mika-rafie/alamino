@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // swapCase flips the letter case of every ASCII letter in s.

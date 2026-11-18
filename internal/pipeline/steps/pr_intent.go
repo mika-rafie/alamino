@@ -3,7 +3,7 @@ package steps
 import (
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/pipeline"
 )
 
 // publicPRIntent returns the intent text published on the PR body, or "" when

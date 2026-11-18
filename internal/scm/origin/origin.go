@@ -4,7 +4,7 @@
 //
 // Traps, verified against origin 2026.08.24 and live Origin JSON:
 //
-//   - `origin pr create` defaults to `--status draft`. no-mistakes' other
+//   - `origin pr create` defaults to `--status draft`. alamino' other
 //     providers open ready PRs unless draft_pull_requests is set, so CreatePR
 //     always passes `--status` explicitly (open or draft).
 //   - `origin pr create` has no `--json` flag. CreatePR takes the PR URL the
@@ -34,7 +34,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // CmdFactory builds an exec.Cmd in the caller's workdir with the caller's env.

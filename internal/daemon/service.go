@@ -11,26 +11,26 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 // Base identifiers for the managed-service artifacts. The live identifiers
 // returned by launchdServiceLabel/systemdServiceName/windowsTaskName include
-// a short stable suffix derived from p.Root() so two no-mistakes installs
-// with different NM_HOMEs cannot collide in the global launchctl/systemctl/
+// a short stable suffix derived from p.Root() so two alamino installs
+// with different ALAMINO_HOMEs cannot collide in the global launchctl/systemctl/
 // schtasks namespace. See serviceInstanceSuffix for the full rationale.
 const (
-	launchdServiceLabelBase = "com.kunchenguid.no-mistakes.daemon"
-	systemdServiceNameBase  = "no-mistakes-daemon"
-	windowsTaskNameBase     = "no-mistakes-daemon"
+	launchdServiceLabelBase = "io.github.mika-rafie.alamino.daemon"
+	systemdServiceNameBase  = "alamino-daemon"
+	windowsTaskNameBase     = "alamino-daemon"
 )
 
 // Legacy (pre-scoping) identifiers, retained only so that a new binary can
 // clean up artifacts installed by a pre-fix binary on first `daemon start`.
 const (
-	legacyLaunchdServiceLabel = "com.kunchenguid.no-mistakes.daemon"
-	legacySystemdServiceName  = "no-mistakes-daemon.service"
-	legacyWindowsTaskName     = "no-mistakes-daemon"
+	legacyLaunchdServiceLabel = "io.github.mika-rafie.alamino.daemon"
+	legacySystemdServiceName  = "alamino-daemon.service"
+	legacyWindowsTaskName     = "alamino-daemon"
 )
 
 var runtimeGOOS = runtime.GOOS
@@ -171,10 +171,9 @@ func serviceProxyEnv() [][2]string {
 	return out
 }
 
-// serviceEnv resolves the forwarded proxy and telemetry environment for both
-// installation and drift detection. Proxies retain their existing group override
-// semantics. Telemetry is resolved independently so a proxy change cannot discard
-// a stored opt-out, and changing telemetry cannot discard the stored proxies.
+// serviceEnv resolves the forwarded proxy environment for both installation
+// and drift detection. Proxies set in the current environment override the
+// stored group as a whole; with none set, the stored proxies are inherited.
 func serviceEnv(inherited [][2]string) [][2]string {
 	out := serviceProxyEnv()
 	if len(out) == 0 {
@@ -184,21 +183,12 @@ func serviceEnv(inherited [][2]string) [][2]string {
 			}
 		}
 	}
-	const telemetryKey = "NO_MISTAKES_TELEMETRY"
-	if value := os.Getenv(telemetryKey); strings.TrimSpace(value) != "" {
-		return append(out, [2]string{telemetryKey, value})
-	}
-	for _, kv := range inherited {
-		if kv[0] == telemetryKey {
-			out = append(out, kv)
-		}
-	}
 	return out
 }
 
 // writeServiceFile renders a generated service definition (systemd unit or
 // launchd plist) via render and writes it with a permission mode that depends
-// on whether proxy or telemetry values were forwarded into it. Any forwarded
+// on whether proxy values were forwarded into it. Any forwarded
 // values select owner-only 0600, protecting proxy URLs that may embed credentials
 // (e.g. http://user:pass@host). With no forwarded values, the mode is 0644.
 //
@@ -209,10 +199,10 @@ func serviceEnv(inherited [][2]string) [][2]string {
 // bake proxy credentials into the content yet have it written under the
 // world-readable 0644 mode.
 //
-// Existing proxy and telemetry values are inherited via parseExistingProxyEnv
-// when absent from the current environment, using the same serviceEnv resolver
-// as drift detection. An env-less binary upgrade therefore retains the opt-out
-// as well as the proxies. The parser may be nil when there is no existing file.
+// Existing proxy values are inherited via parseExistingProxyEnv when absent
+// from the current environment, using the same serviceEnv resolver as drift
+// detection. An env-less binary upgrade therefore retains the proxies. The
+// parser may be nil when there is no existing file.
 //
 // When forwarded values are present the content is written to a sibling temp file
 // created at 0600 and atomically renamed over the target, so credential-bearing
@@ -277,7 +267,7 @@ func writeFileAtomic(path string, content []byte, mode os.FileMode) error {
 // defaultServiceManagerBypassed reports whether managed-service plumbing
 // (launchctl/systemctl/schtasks) should be skipped.
 //
-// It returns true when NM_TEST_START_DAEMON=1 is set (the production escape
+// It returns true when ALAMINO_TEST_START_DAEMON=1 is set (the production escape
 // hatch used by demo recordings and similar) or when the process is running
 // under `go test`. The test-binary guard is critical because the managed
 // service label, plist path, systemd unit path, and schtasks task name are
@@ -289,7 +279,7 @@ func writeFileAtomic(path string, content []byte, mode os.FileMode) error {
 // managed path (service_test.go) override serviceManagerBypassed via
 // stubServiceRuntime.
 func defaultServiceManagerBypassed() bool {
-	if os.Getenv("NM_TEST_START_DAEMON") == "1" {
+	if os.Getenv("ALAMINO_TEST_START_DAEMON") == "1" {
 		return true
 	}
 	return testing.Testing()
@@ -300,9 +290,9 @@ func defaultServiceManagerBypassed() bool {
 // name + path, Windows task name) are scoped per-install instead of sharing
 // a single globally unique identifier per user.
 //
-// Without scoping, the launchd label com.kunchenguid.no-mistakes.daemon (and
-// its systemd/Windows equivalents) is a shared slot. Any no-mistakes process
-// on the machine can `launchctl bootout gui/<uid>/com.kunchenguid.no-mistakes.daemon`
+// Without scoping, the launchd label io.github.mika-rafie.alamino.daemon (and
+// its systemd/Windows equivalents) is a shared slot. Any alamino process
+// on the machine can `launchctl bootout gui/<uid>/io.github.mika-rafie.alamino.daemon`
 // and tear down another install's daemon. The failure mode observed twice in
 // practice: a pipeline review step ran `go test ./internal/daemon` in a
 // worktree, that test binary reached TestStopNotRunningIsNoop which calls
@@ -311,11 +301,11 @@ func defaultServiceManagerBypassed() bool {
 //
 // By scoping every identifier by sha256(p.Root()), the test's Stop(p)
 // inspects a path and label that belong to its own tmpdir, not the live
-// daemon's NM_HOME. managedServiceInstalled(p) stats a non-existent scoped
+// daemon's ALAMINO_HOME. managedServiceInstalled(p) stats a non-existent scoped
 // plist, returns false, and Stop never reaches serviceCommandRunner.
 //
-// A secondary benefit: multiple concurrent NM_HOMEs (e.g. a dev vs prod
-// no-mistakes install) each get their own managed daemon and can coexist.
+// A secondary benefit: multiple concurrent ALAMINO_HOMEs (e.g. a dev vs prod
+// alamino install) each get their own managed daemon and can coexist.
 func serviceInstanceSuffix(p *paths.Paths) string {
 	root := ""
 	if p != nil {

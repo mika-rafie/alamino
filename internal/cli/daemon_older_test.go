@@ -10,14 +10,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func legacyLifecycleServer(t *testing.T, pid int, configure func(*ipc.Server)) *paths.Paths {
 	t.Helper()
 	p := paths.WithRoot(makeSocketSafeTempDir(t))
-	t.Setenv("NM_HOME", p.Root())
+	t.Setenv("ALAMINO_HOME", p.Root())
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}

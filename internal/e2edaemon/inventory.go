@@ -14,10 +14,10 @@ import (
 const (
 	// EnvInventory is the absolute path to the suite inventory directory.
 	// When unset, a process-local default under the system temp dir is used.
-	EnvInventory = "NM_E2E_DAEMON_INVENTORY"
+	EnvInventory = "ALAMINO_E2E_DAEMON_INVENTORY"
 
 	// EnvMaxConcurrent caps how many temporary E2E daemons may be live at once.
-	EnvMaxConcurrent = "NM_E2E_DAEMON_MAX"
+	EnvMaxConcurrent = "ALAMINO_E2E_DAEMON_MAX"
 
 	// DefaultMaxConcurrent bounds blast radius of one interrupted suite.
 	DefaultMaxConcurrent = 2
@@ -31,9 +31,9 @@ const (
 // Entry is one owned temporary E2E daemon root.
 type Entry struct {
 	ID           string    `json:"id"`
-	NMHome       string    `json:"nm_home"`
+	NMHome       string    `json:"alamino_home"`
 	PID          int       `json:"pid"`
-	NMBin        string    `json:"nm_bin,omitempty"`
+	NMBin        string    `json:"alamino_bin,omitempty"`
 	ProcessHash  string    `json:"process_hash,omitempty"`
 	OwnerPID     int       `json:"owner_pid"`
 	RegisteredAt time.Time `json:"registered_at"`
@@ -52,13 +52,13 @@ type Inventory struct {
 	findDaemons func(string) ([]int, error)
 }
 
-// DirFromEnv returns the inventory directory from NM_E2E_DAEMON_INVENTORY,
+// DirFromEnv returns the inventory directory from ALAMINO_E2E_DAEMON_INVENTORY,
 // or a stable per-user temp default when unset.
 func DirFromEnv() string {
 	if dir := os.Getenv(EnvInventory); dir != "" {
 		return dir
 	}
-	return filepath.Join(os.TempDir(), "no-mistakes-e2e-daemon-inventory")
+	return filepath.Join(os.TempDir(), "alamino-e2e-daemon-inventory")
 }
 
 // Open returns an Inventory rooted at DirFromEnv(), creating the directory
@@ -108,7 +108,7 @@ func (inv *Inventory) Register(id, nmHome, nmBin string, pid, ownerPID int) erro
 	}
 	nmHome = filepath.Clean(nmHome)
 	if nmHome == "" || nmHome == "." {
-		return fmt.Errorf("e2edaemon: invalid nm_home")
+		return fmt.Errorf("e2edaemon: invalid alamino_home")
 	}
 	if id == "" {
 		return fmt.Errorf("e2edaemon: empty entry id")

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 // piAgent spawns the pi CLI for each invocation. Pi reads its prompt from
@@ -59,7 +59,7 @@ func (a *piAgent) Close() error { return nil }
 
 func (a *piAgent) runOnce(ctx context.Context, opts RunOpts, strict bool) (*Result, error) {
 	if opts.Session != nil && opts.Session.ID != "" && !isPiSessionID(opts.Session.ID) {
-		// Pi accepts a path or partial UUID for --session. no-mistakes persists
+		// Pi accepts a path or partial UUID for --session. alamino persists
 		// only the full UUID that Pi minted, so corrupt local metadata cannot
 		// turn a recovery attempt into an arbitrary session-file selection.
 		return nil, fmt.Errorf("invalid pi session identity")
@@ -208,7 +208,7 @@ func piStdinError(err error) error {
 
 // buildArgs returns the Pi argv for one invocation. A nil session is an
 // intentionally cold step; an empty SessionRef starts a durable session; a
-// populated SessionRef resumes the UUID that no-mistakes previously recorded.
+// populated SessionRef resumes the UUID that alamino previously recorded.
 // Under the project-settings opt-out, the context-file suppression flag comes
 // first. User extras otherwise precede managed JSON/session flags.
 func (a *piAgent) buildArgs(session *SessionRef) []string {
@@ -245,7 +245,7 @@ func (a *piAgent) buildArgs(session *SessionRef) []string {
 
 // isPiSessionID accepts only the full canonical UUID Pi emits in its JSON
 // session header. It deliberately rejects paths and partial UUIDs accepted by
-// Pi's CLI because no-mistakes must never resume an ambiguous global session.
+// Pi's CLI because alamino must never resume an ambiguous global session.
 func isPiSessionID(id string) bool {
 	if len(id) != 36 {
 		return false
@@ -306,13 +306,13 @@ func buildPiPrompt(prompt string, schema json.RawMessage, strict bool) string {
 		if err != nil {
 			pretty = []byte(schema)
 		}
-		return prompt + "\n\n## no-mistakes final output contract\n\n" +
+		return prompt + "\n\n## alamino final output contract\n\n" +
 			"When the iteration is complete, your final assistant response must be only valid JSON matching this JSON Schema. " +
 			"Do not wrap it in Markdown fences. Do not include prose before or after the JSON object.\n\n" +
 			string(pretty)
 	}
-	return prompt + "\n\n## no-mistakes final output contract\n\n" +
-		"When the iteration is complete, submit the result by calling no_mistakes_output as your final and only remaining tool call. " +
+	return prompt + "\n\n## alamino final output contract\n\n" +
+		"When the iteration is complete, submit the result by calling alamino_output as your final and only remaining tool call. " +
 		"Its parameters enforce the requested JSON Schema. Do not write a final assistant JSON or prose response instead."
 }
 
@@ -508,7 +508,7 @@ func (p *piParser) handleAssistantEvent(raw any) {
 	idx := piIntField(evt, "contentIndex", "content_index")
 	switch evt["type"] {
 	case "text_delta":
-		// Emit just the incremental delta. no-mistakes' OnChunk consumers
+		// Emit just the incremental delta. alamino's OnChunk consumers
 		// (TUI log line buffer, file logger) expect appended text, not
 		// cumulative state.
 		delta := piFirstString(evt, "delta", "text", "content")

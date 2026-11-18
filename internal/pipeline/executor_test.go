@@ -9,12 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestExecutorAutomaticSkipReasonRedactsCredentials(t *testing.T) {
@@ -66,28 +65,6 @@ func TestExecutor_StepLifecycleEvents(t *testing.T) {
 		if e := events.find(ipc.EventStepCompleted, name); e == nil {
 			t.Errorf("missing step_completed event for %s", name)
 		}
-	}
-}
-
-func TestExecutor_SuccessfulStepsDoNotEmitTelemetry(t *testing.T) {
-	database, p, run, repo := setupTest(t)
-	workDir := t.TempDir()
-
-	recorder := &telemetryRecorder{}
-	restore := telemetry.SetDefaultForTesting(recorder)
-	defer restore()
-
-	exec := NewExecutor(database, p, nil, nil, []Step{
-		newPassStep(types.StepReview),
-		newPassStep(types.StepTest),
-	}, nil)
-
-	if err := exec.Execute(context.Background(), run, repo, workDir); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	if event := recorder.find("step", "", nil); event != nil {
-		t.Fatalf("successful steps should not emit step telemetry, got %v", event.fields)
 	}
 }
 
@@ -470,32 +447,6 @@ func roundNumbers(rounds []*db.StepRound) []int {
 	return numbers
 }
 
-func TestExecutor_SkippedStepsDoNotEmitTelemetry(t *testing.T) {
-	database, p, run, repo := setupTest(t)
-	workDir := t.TempDir()
-
-	recorder := &telemetryRecorder{}
-	restore := telemetry.SetDefaultForTesting(recorder)
-	defer restore()
-
-	skipStep := &mockStep{
-		name:    types.StepRebase,
-		outcome: &StepOutcome{ExitCode: 0, SkipRemaining: true},
-	}
-	exec := NewExecutor(database, p, nil, nil, []Step{
-		skipStep,
-		newPassStep(types.StepReview),
-	}, nil)
-
-	if err := exec.Execute(context.Background(), run, repo, workDir); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	if event := recorder.find("step", "status", string(types.StepStatusSkipped)); event != nil {
-		t.Fatalf("skipped steps should not emit step telemetry, got %v", event.fields)
-	}
-}
-
 func TestExecutor_RunEventStatusCorrectOnSuccess(t *testing.T) {
 	database, p, run, repo := setupTest(t)
 	workDir := t.TempDir()
@@ -596,7 +547,7 @@ func TestExecutor_StepError_FailsRun(t *testing.T) {
 
 func TestExecutor_OutOfMemoryFailureReasonKeepsRestorationDetail(t *testing.T) {
 	database, p, run, repo := setupTest(t)
-	const snapshot = "/tmp/nm-recovery-snapshot"
+	const snapshot = "/tmp/alamino-recovery-snapshot"
 	stepErr := errors.Join(
 		fmt.Errorf("run prepare command: %w", shellenv.ErrOutOfMemory),
 		fmt.Errorf("restore pre-preparation changes; recovery snapshot retained at %s: %w", snapshot, errors.New("git stash apply failed")),
@@ -617,31 +568,6 @@ func TestExecutor_OutOfMemoryFailureReasonKeepsRestorationDetail(t *testing.T) {
 		if !strings.Contains(reason, want) {
 			t.Fatalf("step failure reason %q is missing %q", reason, want)
 		}
-	}
-}
-
-func TestExecutor_FailedStepEmitsTelemetry(t *testing.T) {
-	database, p, run, repo := setupTest(t)
-	workDir := t.TempDir()
-
-	recorder := &telemetryRecorder{}
-	restore := telemetry.SetDefaultForTesting(recorder)
-	defer restore()
-
-	exec := NewExecutor(database, p, nil, nil, []Step{
-		newFailStep(types.StepReview, fmt.Errorf("review crashed")),
-	}, nil)
-
-	if err := exec.Execute(context.Background(), run, repo, workDir); err == nil {
-		t.Fatal("expected error, got nil")
-	}
-
-	event := recorder.find("step", "status", string(types.StepStatusFailed))
-	if event == nil {
-		t.Fatal("expected failed step telemetry event")
-	}
-	if got := event.fields["step"]; got != string(types.StepReview) {
-		t.Fatalf("step telemetry step = %v, want %q", got, types.StepReview)
 	}
 }
 

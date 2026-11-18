@@ -3,7 +3,7 @@ package pipeline
 import (
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // An agent driver's --instructions scope one fix round. They are recorded and

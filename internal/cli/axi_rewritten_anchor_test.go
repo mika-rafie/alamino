@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Recovery writes the superseded push anchor in the invoking worktree when
@@ -57,11 +57,11 @@ func TestTriggerRunAfterRemoteRewrittenRecovery(t *testing.T) {
 	if err != nil || !strings.Contains(out, "recovered: true") || !strings.Contains(out, "proof: worktree") {
 		t.Fatalf("recover rewritten remote: %v\n%s", err, out)
 	}
-	anchor := "refs/no-mistakes/recover-rewritten/" + f.runID + "/1"
+	anchor := "refs/alamino/recover-rewritten/" + f.runID + "/1"
 	if got := cliGit(t, f.local, "rev-parse", anchor); got != f.pushed {
 		t.Fatalf("worktree anchor = %s, want %s", got, f.pushed)
 	}
-	if got := cliGit(t, gateDir, "for-each-ref", "--format=%(refname)", "refs/no-mistakes/"); got != "" {
+	if got := cliGit(t, gateDir, "for-each-ref", "--format=%(refname)", "refs/alamino/"); got != "" {
 		t.Fatalf("fixture must have only a worktree anchor, found gate refs: %s", got)
 	}
 
@@ -101,7 +101,7 @@ func TestTriggerRunAfterRemoteRewrittenRecovery(t *testing.T) {
 	}
 	for dir, ref := range map[string]string{
 		f.local: anchor,
-		gateDir: "refs/tags/no-mistakes-abandoned/feature/sync/" + f.pushed,
+		gateDir: "refs/tags/alamino-abandoned/feature/sync/" + f.pushed,
 	} {
 		if got := cliGit(t, dir, "rev-parse", ref); got != f.pushed {
 			t.Fatalf("preserved ref %s in %s = %s, want %s", ref, dir, got, f.pushed)

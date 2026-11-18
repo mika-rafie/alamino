@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func installSystemdUserService(p *paths.Paths, exe string) error {
@@ -94,7 +94,7 @@ func renderSystemdUnit(exe string, p *paths.Paths, home string) string {
 }
 
 // renderSystemdUnitWithProxyEnv renders the systemd unit using the forwarded
-// proxy and telemetry environment supplied by the caller (see serviceEnv).
+// proxy environment supplied by the caller (see serviceEnv).
 func renderSystemdUnitWithProxyEnv(exe string, p *paths.Paths, home string, proxyEnv [][2]string) string {
 	command := strings.Join([]string{
 		systemdEscapeArg(exe),
@@ -107,13 +107,13 @@ func renderSystemdUnitWithProxyEnv(exe string, p *paths.Paths, home string, prox
 		systemdEnvironmentLine("HOME", home),
 		systemdEnvironmentLine("PATH", managedServicePath(home)),
 	}
-	// Use the caller's resolved environment, including the independent telemetry
-	// setting. See serviceEnv for inheritance and override rules.
+	// Use the caller's resolved environment. See serviceEnv for inheritance and
+	// override rules.
 	for _, kv := range proxyEnv {
 		envLines = append(envLines, systemdEnvironmentLine(kv[0], kv[1]))
 	}
 	return fmt.Sprintf(`[Unit]
-Description=no-mistakes background daemon
+Description=alamino background daemon
 
 [Service]
 Type=simple

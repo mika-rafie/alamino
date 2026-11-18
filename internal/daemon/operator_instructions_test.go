@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func pathInstructionsYAML(indent, prefix string, n int) string {
@@ -37,7 +37,7 @@ func TestStartRun_FailsClosedWhenOperatorAndTrustedPathInstructionsOverrunTheCap
 
 	repo, _ := setupTestGitRepo(t, p, d, "operator-budget-repo")
 	trusted := "review:\n  path_instructions:\n" + pathInstructionsYAML("    ", "t", 20)
-	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".no-mistakes.yaml"), []byte(trusted), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".alamino.yaml"), []byte(trusted), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	gitCmd(t, repo.WorkingPath, "commit", "-am", "trusted review rules")
@@ -88,7 +88,7 @@ func TestLoadRecoveredConfig_FailsClosedWhenOperatorAndTrustedPathInstructionsOv
 
 	repo, _ := setupTestGitRepo(t, p, d, "operator-budget-recovery")
 	trusted := "review:\n  path_instructions:\n" + pathInstructionsYAML("    ", "t", 20)
-	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".no-mistakes.yaml"), []byte(trusted), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo.WorkingPath, ".alamino.yaml"), []byte(trusted), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	gitCmd(t, repo.WorkingPath, "commit", "-am", "trusted review rules")

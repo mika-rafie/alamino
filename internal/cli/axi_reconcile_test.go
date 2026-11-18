@@ -9,17 +9,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 func TestTriggerRunRejectedPushRestoresReconciledGateRef(t *testing.T) {
 	dir := t.TempDir()
 	p := paths.WithRoot(makeSocketSafeTempDir(t))
-	t.Setenv("NM_HOME", p.Root())
+	t.Setenv("ALAMINO_HOME", p.Root())
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestTriggerRunRejectedPushRestoresReconciledGateRef(t *testing.T) {
 	if got := cliGit(t, gateDir, "rev-parse", "refs/heads/main"); got != privateHead {
 		t.Fatalf("failed submission left mirror at %s, want restored %s", got, privateHead)
 	}
-	if got := cliGit(t, gateDir, "rev-parse", "refs/tags/no-mistakes-abandoned/main/"+privateHead); got != privateHead {
+	if got := cliGit(t, gateDir, "rev-parse", "refs/tags/alamino-abandoned/main/"+privateHead); got != privateHead {
 		t.Fatalf("archive = %s, want %s", got, privateHead)
 	}
 	if got := cliGit(t, dir, "rev-parse", "HEAD"); got != liveHead {

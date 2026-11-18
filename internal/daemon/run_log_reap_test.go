@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // runLogFixture builds a DB plus a logs root and returns helpers for seeding
@@ -144,7 +144,7 @@ func TestReapRunLogsKeepsEverythingWhenBothBoundsAreDisabled(t *testing.T) {
 }
 
 // TestReapRunLogsLeavesDaemonLogFilesAlone confirms the reaper only ever acts
-// on the per-run subdirectories inside <NM_HOME>/logs, never the daemon's own
+// on the per-run subdirectories inside <ALAMINO_HOME>/logs, never the daemon's own
 // log files that share the same root (daemon.log, cli.log, ...).
 func TestReapRunLogsLeavesDaemonLogFilesAlone(t *testing.T) {
 	f := newRunLogFixture(t)

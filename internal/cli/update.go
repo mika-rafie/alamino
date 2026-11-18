@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/kunchenguid/no-mistakes/internal/update"
+	"github.com/mika-rafie/alamino/internal/update"
 	"github.com/spf13/cobra"
 )
 
@@ -12,13 +12,11 @@ func newUpdateCmd() *cobra.Command {
 	var whenIdle bool
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update no-mistakes and reset the daemon",
+		Short: "Update alamino and reset the daemon",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logLifecycleInvocation("update", force)
-			return trackCommand("update", func() error {
-				return update.Run(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), update.RunOptions{Beta: beta, Yes: yes, Force: force, WhenIdle: whenIdle, Stdin: cmd.InOrStdin()})
-			})
+			return update.Run(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), update.RunOptions{Beta: beta, Yes: yes, Force: force, WhenIdle: whenIdle, Stdin: cmd.InOrStdin()})
 		},
 	}
 	cmd.Flags().BoolVar(&beta, "beta", false, "install the latest release including prereleases")

@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/branchsync"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/branchsync"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // ciRepairFixture is one CI monitor run wired to a real git worktree, a real
@@ -300,7 +300,7 @@ func TestCIStep_AgentCommittedRepairFollowsThePolicy(t *testing.T) {
 // binding, and the recorded head either all land or none of them are recorded.
 // A gate-mirror failure happens after the remote already carries the head, so
 // the tempting shortcut is to record the publication anyway. Recording it would
-// leave the gate behind the remote, where `no-mistakes rerun` resolves the
+// leave the gate behind the remote, where `alamino rerun` resolves the
 // stale gate head and silently omits the repair.
 //
 // Nothing is recorded until every part succeeds, so the failure is simply

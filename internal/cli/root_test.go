@@ -8,19 +8,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/wizard"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/wizard"
 )
 
 func TestRootYesRunsWizardNonInteractively(t *testing.T) {
 	setupTestRepo(t)
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 
 	d, err := db.Open(p.DB())
@@ -75,7 +75,7 @@ func TestRootYesRunsWizardNonInteractively(t *testing.T) {
 func TestRootSkipPassesStepsToWizard(t *testing.T) {
 	setupTestRepo(t)
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 
 	d, err := db.Open(p.DB())
@@ -126,7 +126,7 @@ func TestRootSkipPassesStepsToWizard(t *testing.T) {
 func TestRootYesUsesVisibleWizardWhenInteractive(t *testing.T) {
 	setupTestRepo(t)
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 
 	d, err := db.Open(p.DB())
@@ -197,7 +197,7 @@ func TestRootYesUsesVisibleWizardWhenInteractive(t *testing.T) {
 func TestRootYesFailsWhenWizardPushProducesNoRun(t *testing.T) {
 	setupTestRepo(t)
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 
 	d, err := db.Open(p.DB())
@@ -230,7 +230,7 @@ func TestRootYesFailsWhenWizardPushProducesNoRun(t *testing.T) {
 func TestRootYesPassesCommandContextToWizard(t *testing.T) {
 	setupTestRepo(t)
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 
 	d, err := db.Open(p.DB())
@@ -269,7 +269,7 @@ func TestRootYesPassesCommandContextToWizard(t *testing.T) {
 func TestRootYesStopsWaitingForRunWhenContextCanceled(t *testing.T) {
 	setupTestRepo(t)
 	nmHome := makeSocketSafeTempDir(t)
-	t.Setenv("NM_HOME", nmHome)
+	t.Setenv("ALAMINO_HOME", nmHome)
 	p := paths.WithRoot(nmHome)
 
 	d, err := db.Open(p.DB())

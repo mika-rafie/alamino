@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func configurableFixCommitScenario(t *testing.T, fixSummary string) string {
@@ -84,7 +84,7 @@ func TestConfigurableFixCommitMessageJourney(t *testing.T) {
 
 	const branch = "feature/configurable-fix-commit"
 	h.CommitChange(branch, "feature.txt", "unsafe\n", "add unsafe feature")
-	h.CommitChange(branch, ".no-mistakes.yaml", `ignore_patterns:
+	h.CommitChange(branch, ".alamino.yaml", `ignore_patterns:
   - '*.generated.go'
   - 'vendor/**'
 allow_repo_commands: true
@@ -130,7 +130,7 @@ func TestFixCommitTrailersJourney(t *testing.T) {
 		t.Fatalf("read global config: %v", err)
 	}
 	globalSource := strings.Replace(string(globalData), "  review: 0\n", "  review: 1\n", 1)
-	globalSource += "commit:\n  trailers:\n    - 'Assisted-by: no-mistakes:{{.Agent}}:{{.Model}}'\n"
+	globalSource += "commit:\n  trailers:\n    - 'Assisted-by: alamino:{{.Agent}}:{{.Model}}'\n"
 	if err := os.WriteFile(globalConfig, []byte(globalSource), 0o644); err != nil {
 		t.Fatalf("write global config: %v", err)
 	}
@@ -161,7 +161,7 @@ func TestFixCommitTrailersJourney(t *testing.T) {
 		subject := strings.TrimSpace(fields[i])
 		trailers := strings.TrimSpace(fields[i+1])
 		switch subject {
-		case "no-mistakes(review): guard unsafe value":
+		case "alamino(review): guard unsafe value":
 			fixTrailers = append(fixTrailers, trailers)
 		case "add unsafe feature":
 			userTrailers = append(userTrailers, trailers)
@@ -169,7 +169,7 @@ func TestFixCommitTrailersJourney(t *testing.T) {
 	}
 	// The model is whatever the recorded claude fixture served; it must arrive
 	// as reported, not as the unknown placeholder.
-	const prefix = "Assisted-by: no-mistakes:claude:"
+	const prefix = "Assisted-by: alamino:claude:"
 	if len(fixTrailers) != 1 || !strings.HasPrefix(fixTrailers[0], prefix) ||
 		strings.Contains(fixTrailers[0], "\n") || strings.TrimPrefix(fixTrailers[0], prefix) == "unknown" {
 		t.Fatalf("review fix commit trailers = %q, want one %q trailer carrying the served model", fixTrailers, prefix+"<model>")
@@ -203,7 +203,7 @@ func TestGlobalBranchReplacementFixCommitJourney(t *testing.T) {
 	}
 
 	const branch = "PROJ/123"
-	h.CommitChange(branch, ".no-mistakes.yaml", `ignore_patterns:
+	h.CommitChange(branch, ".alamino.yaml", `ignore_patterns:
   - '*.generated.go'
   - 'vendor/**'
 allow_repo_commands: true
@@ -230,7 +230,7 @@ commit:
 		t.Fatalf("latest upstream commit subject = %q, want %q (all subjects: %q)", subjects[0], want, subjects)
 	}
 
-	t.Logf("branch pushed through no-mistakes: %s", branch)
+	t.Logf("branch pushed through alamino: %s", branch)
 	t.Logf("machine-local replacement: %q", "PROJ-${1}")
 	t.Logf("completed pipeline upstream commit subjects:\n%s", strings.TrimSpace(string(log)))
 }

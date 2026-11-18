@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/paths"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ func newExportCmd() *cobra.Command {
 				return fmt.Errorf("resolve export paths: %w", err)
 			}
 			// Do not use openResources: export must not create directories,
-			// migrate a database, start a daemon or emit remote telemetry.
+			// migrate a database or start a daemon.
 			database, err := db.OpenReadOnly(p.DB())
 			if err != nil {
 				return fmt.Errorf("open export database: %w", err)

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm"
 )
 
 // azPR is the subset of `az repos pr show/list/create` JSON output we consume.

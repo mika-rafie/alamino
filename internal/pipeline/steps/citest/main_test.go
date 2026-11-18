@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline/steps/internal/stepstest"
+	"github.com/mika-rafie/alamino/internal/pipeline/steps/internal/stepstest"
 )
 
 func TestMain(m *testing.M) {
@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	// Fixtures must not inherit the developer's global git config: a
 	// commit.gpgsign=true there makes every fixture commit ask gpg to sign.
-	globalConfigDir, err := os.MkdirTemp("", "no-mistakes-citest-tests-")
+	globalConfigDir, err := os.MkdirTemp("", "alamino-citest-tests-")
 	if err != nil {
 		panic(err)
 	}

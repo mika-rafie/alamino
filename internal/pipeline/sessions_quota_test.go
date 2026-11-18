@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
+	"github.com/mika-rafie/alamino/internal/agent"
 )
 
 func TestQuotaSwitchPreservesDurableSessionRequests(t *testing.T) {

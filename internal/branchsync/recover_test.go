@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	gitpkg "github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	pipelinepkg "github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	gitpkg "github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/paths"
+	pipelinepkg "github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 type cancellationRaceStep struct {
@@ -48,7 +48,7 @@ func (s *cancellationRaceStep) Execute(sctx *pipelinepkg.StepContext) (*pipeline
 	if _, err := gitpkg.Run(sctx.Ctx, sctx.WorkDir, "add", "fix.txt"); err != nil {
 		return nil, err
 	}
-	if _, err := gitpkg.Run(sctx.Ctx, sctx.WorkDir, "commit", "-m", "no-mistakes(review): fix"); err != nil {
+	if _, err := gitpkg.Run(sctx.Ctx, sctx.WorkDir, "commit", "-m", "alamino(review): fix"); err != nil {
 		return nil, err
 	}
 	head, err := gitpkg.HeadSHA(sctx.Ctx, sctx.WorkDir)
@@ -154,9 +154,9 @@ func buildRecoverRepositories(t *testing.T, root string) recoverHeads {
 	mustRun(t, pipeline, "checkout", "feature/recover")
 	mustWrite(t, filepath.Join(pipeline, "fix.txt"), "pipeline fix\n")
 	mustRun(t, pipeline, "add", "fix.txt")
-	mustRun(t, pipeline, "commit", "-m", "no-mistakes(review): fix")
+	mustRun(t, pipeline, "commit", "-m", "alamino(review): fix")
 	mustWrite(t, filepath.Join(pipeline, "fix.txt"), "pipeline fix 2\n")
-	mustRun(t, pipeline, "commit", "-am", "no-mistakes(lint): fix")
+	mustRun(t, pipeline, "commit", "-am", "alamino(lint): fix")
 	preserved := mustRun(t, pipeline, "rev-parse", "HEAD")
 	mustRun(t, pipeline, "push", "origin", "HEAD:refs/heads/feature/recover")
 	removeScratchClone(t, pipeline)
@@ -235,7 +235,7 @@ func newDivergentArchiveRecoverFixture(t *testing.T) (*recoverFixture, string) {
 	return fixture, archiveRef
 }
 
-func (f *recoverFixture) anchorRef() string { return "refs/no-mistakes/recover/" + f.run.ID }
+func (f *recoverFixture) anchorRef() string { return "refs/alamino/recover/" + f.run.ID }
 
 func (f *recoverFixture) custodyReturned() bool {
 	f.t.Helper()
@@ -248,7 +248,7 @@ func (f *recoverFixture) custodyReturned() bool {
 
 func assertKeepLocalRecoveryOffer(t *testing.T, state State) {
 	t.Helper()
-	if state.NextAction == nil || state.NextAction.Code != "recover_custody" || state.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if state.NextAction == nil || state.NextAction.Code != "recover_custody" || state.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("want keep-local recover_custody, got %#v", state.NextAction)
 	}
 }
@@ -269,7 +269,7 @@ func assertManualReconciliationOffer(t *testing.T, state State) {
 	if state.Safety != "blocked_recover_manual_reconciliation" {
 		t.Fatalf("want manual-reconciliation safety, got %#v", state)
 	}
-	if state.NextAction == nil || state.NextAction.Code != "inspect_and_reconcile_manually" || state.NextAction.Command != "no-mistakes axi status" {
+	if state.NextAction == nil || state.NextAction.Code != "inspect_and_reconcile_manually" || state.NextAction.Command != "alamino axi status" {
 		t.Fatalf("want manual reconciliation guidance, got %#v", state.NextAction)
 	}
 }
@@ -314,7 +314,7 @@ func TestActivePrePushRunStaysBlockedWithoutRecovery(t *testing.T) {
 	if state.State != StatePipelineOwned || state.Safety != "blocked_pipeline_owned" {
 		t.Fatalf("active run state = %#v", state)
 	}
-	if state.NextAction == nil || state.NextAction.Code != "continue_active_run" || state.NextAction.Command != "no-mistakes axi status" {
+	if state.NextAction == nil || state.NextAction.Code != "continue_active_run" || state.NextAction.Command != "alamino axi status" {
 		t.Fatalf("active run next action = %#v", state.NextAction)
 	}
 	if state.Pipeline.Status != "running" {
@@ -590,7 +590,7 @@ func TestBoundArchiveOffersOnlyKeepLocalRecoveryForDivergentLaterHead(t *testing
 	if state.Recovery == nil || state.Recovery.Proof != "verified" || !state.Recovery.KeepLocal || state.Recovery.RequiredHead != f.submitted || state.Recovery.PreservedHead != f.preserved || state.Recovery.ArchiveRef != archiveRef {
 		t.Fatalf("archive recovery evidence = %#v", state.Recovery)
 	}
-	if state.NextAction == nil || state.NextAction.Code != "recover_custody" || state.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if state.NextAction == nil || state.NextAction.Code != "recover_custody" || state.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("archive next action = %#v", state.NextAction)
 	}
 	if got := mustRun(t, f.local, "for-each-ref", "--format=%(refname) %(objectname) %(symref)"); got != beforeLocalRefs {
@@ -601,7 +601,7 @@ func TestBoundArchiveOffersOnlyKeepLocalRecoveryForDivergentLaterHead(t *testing
 	}
 
 	refused := f.service.Recover(f.ctx, false)
-	if refused.Recovered || refused.Changed || refused.Safety != "blocked_recover_archive_requires_keep_local" || refused.NextAction == nil || refused.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if refused.Recovered || refused.Changed || refused.Safety != "blocked_recover_archive_requires_keep_local" || refused.NextAction == nil || refused.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("default archive recovery = %#v", refused)
 	}
 	if got := mustRun(t, f.local, "for-each-ref", "--format=%(refname) %(objectname) %(symref)"); got != beforeLocalRefs {
@@ -959,7 +959,7 @@ func TestRecoverKeepLocalAnchorsIndependentlyMovedGateHead(t *testing.T) {
 	if got := mustRun(t, f.gate, "rev-parse", "refs/heads/feature/recover"); got != f.submitted {
 		t.Fatalf("keep-local gate branch = %s, want %s", got, f.submitted)
 	}
-	if got := mustRun(t, f.gate, "rev-parse", "refs/no-mistakes/recover-gate/"+f.run.ID); got != movedGate {
+	if got := mustRun(t, f.gate, "rev-parse", "refs/alamino/recover-gate/"+f.run.ID); got != movedGate {
 		t.Fatalf("independent gate anchor = %s, want %s", got, movedGate)
 	}
 }
@@ -1183,7 +1183,7 @@ func TestInspectOffersKeepLocalWhenRecordedHeadIsMissing(t *testing.T) {
 	if state.NextAction == nil || state.NextAction.Code != "recover_custody" {
 		t.Fatalf("missing-head next action = %#v", state.NextAction)
 	}
-	if state.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if state.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("missing-head recovery command = %q", state.NextAction.Command)
 	}
 }
@@ -1268,7 +1268,7 @@ func TestRecoverKeepLocalReleasesAllStrandedTerminalRuns(t *testing.T) {
 	}
 
 	state := f.service.InspectCached(f.ctx)
-	if state.Pipeline.RunID != newest.ID || state.NextAction == nil || state.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if state.Pipeline.RunID != newest.ID || state.NextAction == nil || state.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("stacked missing-head state = %#v", state)
 	}
 	kept := f.service.Recover(f.ctx, true)
@@ -1301,7 +1301,7 @@ func TestRecoverKeepLocalReleasesMixedEvidenceStack(t *testing.T) {
 	}
 
 	state := f.service.InspectCached(f.ctx)
-	if state.Pipeline.RunID != newest.ID || state.NextAction == nil || state.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if state.Pipeline.RunID != newest.ID || state.NextAction == nil || state.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("mixed stack state = %#v", state)
 	}
 	kept := f.service.Recover(f.ctx, true)
@@ -1336,7 +1336,7 @@ func TestRecoverKeepLocalReleasesStackWhenOlderHeadIsMissing(t *testing.T) {
 	}
 
 	state := f.service.InspectCached(f.ctx)
-	if state.Pipeline.RunID != newest.ID || state.NextAction == nil || state.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if state.Pipeline.RunID != newest.ID || state.NextAction == nil || state.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("older missing-head stack state = %#v", state)
 	}
 	kept := f.service.Recover(f.ctx, true)
@@ -1414,7 +1414,7 @@ func TestRecoverKeepLocalIgnoresSupersededUnpublishedRuns(t *testing.T) {
 	}
 
 	state := f.service.InspectCached(f.ctx)
-	if state.Pipeline.RunID != missing.ID || state.NextAction == nil || state.NextAction.Command != "no-mistakes axi sync --recover --keep-local" {
+	if state.Pipeline.RunID != missing.ID || state.NextAction == nil || state.NextAction.Command != "alamino axi sync --recover --keep-local" {
 		t.Fatalf("missing-head state after superseded run = %#v", state)
 	}
 	kept := f.service.Recover(f.ctx, true)
@@ -1826,7 +1826,7 @@ func TestActiveUnmovedRunBlocksAsPipelineOwnedWithoutRecovery(t *testing.T) {
 	if state.State != StatePipelineOwned || state.Safety != "blocked_pipeline_owned" {
 		t.Fatalf("active unmoved state = %s/%s error=%q", state.State, state.Safety, state.Error)
 	}
-	if state.NextAction == nil || state.NextAction.Code != "continue_active_run" || state.NextAction.Command != "no-mistakes axi status" {
+	if state.NextAction == nil || state.NextAction.Code != "continue_active_run" || state.NextAction.Command != "alamino axi status" {
 		t.Fatalf("active unmoved next action = %#v", state.NextAction)
 	}
 	recovered := f.service.Recover(f.ctx, false)
@@ -2253,7 +2253,7 @@ func newRebasedRecoverRun(t *testing.T, root string, heads recoverHeads, status 
 }
 
 func (f *recoverFixture) localAnchorRef() string {
-	return "refs/no-mistakes/recover-local/" + f.run.ID
+	return "refs/alamino/recover-local/" + f.run.ID
 }
 
 type terminalRewriteHeads struct {
@@ -2273,9 +2273,9 @@ func buildTerminalEqualTreeRewriteRepositories(t *testing.T, root string) termin
 	recorded := mustRun(t, pipeline, "rev-parse", "HEAD")
 	tree := mustRun(t, pipeline, "rev-parse", recorded+"^{tree}")
 	live := mustRun(t, pipeline, "commit-tree", tree, "-p", "origin/main", "-m", "terminal equal-tree rewrite")
-	mustRun(t, pipeline, "push", "origin", recorded+":refs/no-mistakes/test-recorded")
+	mustRun(t, pipeline, "push", "origin", recorded+":refs/alamino/test-recorded")
 	mustRun(t, pipeline, "push", "--force", "origin", live+":refs/heads/feature/recover")
-	mustRun(t, gate, "update-ref", "-d", "refs/no-mistakes/test-recorded")
+	mustRun(t, gate, "update-ref", "-d", "refs/alamino/test-recorded")
 	removeScratchClone(t, pipeline)
 	return terminalRewriteHeads{rebased: rebased, recorded: recorded, live: live}
 }
@@ -2383,8 +2383,8 @@ func pushTerminalRewrite(t *testing.T, f *recoverFixture, mutate func(string)) s
 
 func assertUnverifiedRecoveryRefusalNoMutation(t *testing.T, f *recoverFixture) State {
 	t.Helper()
-	localRefs := mustRun(t, f.local, "for-each-ref", "--format=%(refname) %(objectname)", "refs/no-mistakes")
-	gateRefs := mustRun(t, f.gate, "for-each-ref", "--format=%(refname) %(objectname)", "refs/no-mistakes")
+	localRefs := mustRun(t, f.local, "for-each-ref", "--format=%(refname) %(objectname)", "refs/alamino")
+	gateRefs := mustRun(t, f.gate, "for-each-ref", "--format=%(refname) %(objectname)", "refs/alamino")
 	runBefore, err := f.db.GetRun(f.run.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -2393,10 +2393,10 @@ func assertUnverifiedRecoveryRefusalNoMutation(t *testing.T, f *recoverFixture) 
 	if state.Recovered || state.Changed {
 		t.Fatalf("unsafe recovery succeeded: %#v", state)
 	}
-	if got := mustRun(t, f.local, "for-each-ref", "--format=%(refname) %(objectname)", "refs/no-mistakes"); got != localRefs {
+	if got := mustRun(t, f.local, "for-each-ref", "--format=%(refname) %(objectname)", "refs/alamino"); got != localRefs {
 		t.Fatalf("refusal changed local recovery refs: %q != %q", got, localRefs)
 	}
-	if got := mustRun(t, f.gate, "for-each-ref", "--format=%(refname) %(objectname)", "refs/no-mistakes"); got != gateRefs {
+	if got := mustRun(t, f.gate, "for-each-ref", "--format=%(refname) %(objectname)", "refs/alamino"); got != gateRefs {
 		t.Fatalf("refusal changed gate recovery refs: %q != %q", got, gateRefs)
 	}
 	runAfter, err := f.db.GetRun(f.run.ID)
@@ -2466,9 +2466,9 @@ func TestRecoverTerminalUnverifiedRewriteNegativeControls(t *testing.T) {
 		recorded := mustRun(t, pipeline, "rev-parse", "HEAD")
 		tree := mustRun(t, pipeline, "rev-parse", "HEAD^{tree}")
 		live := mustRun(t, pipeline, "commit-tree", tree, "-p", "origin/main", "-m", "uncontained live rewrite")
-		mustRun(t, pipeline, "push", "origin", recorded+":refs/no-mistakes/test-recorded")
+		mustRun(t, pipeline, "push", "origin", recorded+":refs/alamino/test-recorded")
 		mustRun(t, pipeline, "push", "--force", "origin", live+":refs/heads/feature/recover")
-		mustRun(t, f.gate, "update-ref", "-d", "refs/no-mistakes/test-recorded")
+		mustRun(t, f.gate, "update-ref", "-d", "refs/alamino/test-recorded")
 		if err := f.db.UpdateRunHeadSHA(f.run.ID, recorded); err != nil {
 			t.Fatal(err)
 		}
@@ -2482,8 +2482,8 @@ func TestRecoverTerminalUnverifiedRewriteNegativeControls(t *testing.T) {
 	t.Run("symbolic live branch", func(t *testing.T) {
 		t.Parallel()
 		f, _ := newTerminalEqualTreeRewriteFixture(t)
-		mustRun(t, f.gate, "update-ref", "refs/no-mistakes/symbolic-live", f.preserved)
-		mustRun(t, f.gate, "symbolic-ref", "refs/heads/feature/recover", "refs/no-mistakes/symbolic-live")
+		mustRun(t, f.gate, "update-ref", "refs/alamino/symbolic-live", f.preserved)
+		mustRun(t, f.gate, "symbolic-ref", "refs/heads/feature/recover", "refs/alamino/symbolic-live")
 		if state := assertUnverifiedRecoveryRefusalNoMutation(t, f); state.Safety != "blocked_recover_unverified_head" {
 			t.Fatalf("symbolic-live refusal = %s", state.Safety)
 		}
@@ -2538,7 +2538,7 @@ func TestRecoverRebasedPreservedHeadAdoptsWithoutEscalating(t *testing.T) {
 		t.Fatal("fixture did not leave the operator worktree at the submitted head")
 	}
 	// The bug's masking condition: neither head is an ancestor of the other.
-	mustRun(t, f.local, "fetch", "--no-tags", f.gate, "+refs/heads/feature/recover:refs/no-mistakes/test/preserved")
+	mustRun(t, f.local, "fetch", "--no-tags", f.gate, "+refs/heads/feature/recover:refs/alamino/test/preserved")
 	if isAncestor(f.ctx, f.local, f.submitted, f.preserved) || isAncestor(f.ctx, f.local, f.preserved, f.submitted) {
 		t.Fatal("fixture is not a rebase divergence: one head is an ancestor of the other")
 	}
@@ -2618,7 +2618,7 @@ func TestRecoverRebasedPreservedHeadEscalatesWhenFixRoundsRewroteOperatorLines(t
 
 	f := newRebasedRecoverFixtureWithPipelineWork(t, types.RunCancelled, func(t *testing.T, pipelineDir string) {
 		mustWrite(t, filepath.Join(pipelineDir, "feature.txt"), "feature one\nfeature two guarded\n")
-		mustRun(t, pipelineDir, "commit", "-am", "no-mistakes(review): guard the second line")
+		mustRun(t, pipelineDir, "commit", "-am", "alamino(review): guard the second line")
 	})
 
 	state := f.service.Recover(f.ctx, false)
@@ -2648,7 +2648,7 @@ func TestCancelledRebasedRewriteOffersKeepLocalAndTheCommandSucceeds(t *testing.
 
 	f := newRebasedRecoverFixtureWithPipelineWork(t, types.RunCancelled, func(t *testing.T, pipelineDir string) {
 		mustWrite(t, filepath.Join(pipelineDir, "feature.txt"), "feature one\nfeature two guarded\n")
-		mustRun(t, pipelineDir, "commit", "-am", "no-mistakes(review): guard the second line")
+		mustRun(t, pipelineDir, "commit", "-am", "alamino(review): guard the second line")
 	})
 	mustRun(t, f.gate, "update-ref", f.anchorRef(), f.preserved)
 
@@ -2678,7 +2678,7 @@ func TestUnverifiedTerminalHeadGetsNoRecoveryOffer(t *testing.T) {
 
 	f := newRebasedRecoverFixtureWithPipelineWork(t, types.RunCancelled, func(t *testing.T, pipelineDir string) {
 		mustWrite(t, filepath.Join(pipelineDir, "feature.txt"), "feature one\nfeature two guarded\n")
-		mustRun(t, pipelineDir, "commit", "-am", "no-mistakes(review): guard the second line")
+		mustRun(t, pipelineDir, "commit", "-am", "alamino(review): guard the second line")
 	})
 	mustRun(t, f.gate, "update-ref", f.anchorRef(), f.preserved)
 	if err := f.db.UpdateRunStatus(f.run.ID, types.RunCancelled); err != nil {
@@ -2904,7 +2904,7 @@ func TestRecoverSquashedEquivalentPreservedHeadAdopts(t *testing.T) {
 	mustRun(t, filepath.Dir(f.local), "-c", "core.autocrlf=false", "clone", f.gate, pipeline)
 	mustRun(t, pipeline, "checkout", "feature/recover")
 	mustRun(t, pipeline, "reset", "--soft", "origin/main")
-	mustRun(t, pipeline, "commit", "-m", "no-mistakes(rebase): squashed feature")
+	mustRun(t, pipeline, "commit", "-m", "alamino(rebase): squashed feature")
 	squashed := mustRun(t, pipeline, "rev-parse", "HEAD")
 	mustRun(t, pipeline, "push", "--force", "origin", "HEAD:refs/heads/feature/recover")
 	if err := f.db.UpdateRunHeadSHA(f.run.ID, squashed); err != nil {
@@ -2944,7 +2944,7 @@ func TestRecoverSquashedPreservedHeadStillEscalatesForDroppedLocalWork(t *testin
 	// The second of the operator's two lines never makes it into the squash.
 	mustWrite(t, filepath.Join(pipeline, "feature.txt"), "feature one\n")
 	mustRun(t, pipeline, "add", "feature.txt")
-	mustRun(t, pipeline, "commit", "-m", "no-mistakes(review): squashed without the second line")
+	mustRun(t, pipeline, "commit", "-m", "alamino(review): squashed without the second line")
 	dropped := mustRun(t, pipeline, "rev-parse", "HEAD")
 	mustRun(t, pipeline, "push", "--force", "origin", "HEAD:refs/heads/feature/recover")
 	if err := f.db.UpdateRunHeadSHA(f.run.ID, dropped); err != nil {

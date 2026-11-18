@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/kunchenguid/no-mistakes/internal/safepath"
+	"github.com/mika-rafie/alamino/internal/safepath"
 )
 
 func main() {

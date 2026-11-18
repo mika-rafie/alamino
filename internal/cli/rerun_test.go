@@ -12,17 +12,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/testgit"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/verificationplan"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/testgit"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/verificationplan"
 )
 
 func TestRerunCallerHeadDoesNotCombineDifferentGitStates(t *testing.T) {
@@ -45,9 +45,9 @@ func TestRerunCallerHeadDoesNotCombineDifferentGitStates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("NM_RERUN_REAL_GIT", realGit)
-	t.Setenv("NM_RERUN_NEXT_HEAD", next)
-	t.Setenv("NM_RERUN_ORIGINAL_HEAD", original)
+	t.Setenv("ALAMINO_RERUN_REAL_GIT", realGit)
+	t.Setenv("ALAMINO_RERUN_NEXT_HEAD", next)
+	t.Setenv("ALAMINO_RERUN_ORIGINAL_HEAD", original)
 	// Let real Git collect status, then stage an edit and move HEAD before
 	// returning. The new HEAD is never clean during this capture.
 	binDir := t.TempDir()
@@ -61,7 +61,7 @@ func check(err error) {
   if err != nil { fmt.Fprintln(os.Stderr, err); os.Exit(1) }
 }
 func run(args ...string) {
-  cmd := exec.Command(os.Getenv("NM_RERUN_REAL_GIT"), args...)
+  cmd := exec.Command(os.Getenv("ALAMINO_RERUN_REAL_GIT"), args...)
   cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
   check(cmd.Run())
 }
@@ -70,7 +70,7 @@ func main() {
   if os.Args[1] == "status" {
     check(os.WriteFile("tracked.txt", []byte("edited\n"), 0644))
     run("add", "tracked.txt")
-    run("update-ref", "HEAD", os.Getenv("NM_RERUN_NEXT_HEAD"), os.Getenv("NM_RERUN_ORIGINAL_HEAD"))
+    run("update-ref", "HEAD", os.Getenv("ALAMINO_RERUN_NEXT_HEAD"), os.Getenv("ALAMINO_RERUN_ORIGINAL_HEAD"))
   }
 }
 `
@@ -155,7 +155,7 @@ func TestRerunSendsOnlyCleanCallerHead(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			dir := t.TempDir()
 			p := paths.WithRoot(makeSocketSafeTempDir(t))
-			t.Setenv("NM_HOME", p.Root())
+			t.Setenv("ALAMINO_HOME", p.Root())
 			if err := p.EnsureDirs(); err != nil {
 				t.Fatal(err)
 			}
@@ -370,7 +370,7 @@ func TestRerunRefusesDifferentCleanHeadCLI(t *testing.T) {
 		t.Run(selection, func(t *testing.T) {
 			dir := t.TempDir()
 			p := paths.WithRoot(makeSocketSafeTempDir(t))
-			t.Setenv("NM_HOME", p.Root())
+			t.Setenv("ALAMINO_HOME", p.Root())
 			if err := p.EnsureDirs(); err != nil {
 				t.Fatal(err)
 			}
@@ -425,7 +425,7 @@ func TestRerunRefusesDifferentCleanHeadCLI(t *testing.T) {
 			if err == nil {
 				t.Fatalf("CLI accepted differing clean head: %s", output.String())
 			}
-			for _, want := range []string{"refusing rerun", selected, callerHead, "no-mistakes axi status", "no-mistakes axi run"} {
+			for _, want := range []string{"refusing rerun", selected, callerHead, "alamino axi status", "alamino axi run"} {
 				if !strings.Contains(err.Error(), want) || !strings.Contains(output.String(), want) {
 					t.Fatalf("CLI refusal missing %q: err=%v output=%s", want, err, output.String())
 				}

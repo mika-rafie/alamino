@@ -9,16 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
-// Issue #1233 at the surface an operator actually hits: `no-mistakes axi run`
+// Issue #1233 at the surface an operator actually hits: `alamino axi run`
 // refuses to reconcile a private mirror holding private-only commits, and the
 // sanctioned recovery path that declares that chain preserved writes an anchor
 // reconciliation never consulted - so every recover -> rerun -> push iteration
@@ -28,7 +28,7 @@ import (
 func TestTriggerRunReconcilesPrivateMirrorPreservedByRecoveryAnchor(t *testing.T) {
 	dir := t.TempDir()
 	p := paths.WithRoot(makeSocketSafeTempDir(t))
-	t.Setenv("NM_HOME", p.Root())
+	t.Setenv("ALAMINO_HOME", p.Root())
 	if err := p.EnsureDirs(); err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestTriggerRunReconcilesPrivateMirrorPreservedByRecoveryAnchor(t *testing.T
 	if got := cliGit(t, gateDir, "rev-parse", "refs/heads/main"); got != liveHead {
 		t.Fatalf("mirror = %s after submission, want live head %s", got, liveHead)
 	}
-	archive := "refs/tags/no-mistakes-abandoned/main/" + privateHead
+	archive := "refs/tags/alamino-abandoned/main/" + privateHead
 	if got := cliGit(t, gateDir, "rev-parse", archive); got != privateHead {
 		t.Fatalf("archive %s = %s, want the exact private head %s", archive, got, privateHead)
 	}
@@ -155,7 +155,7 @@ func TestTriggerRunReconcilesPrivateMirrorPreservedByRecoveryAnchor(t *testing.T
 	// The refusal an operator sees must name every satisfier this fresh-
 	// submission call shape can actually take - and no unreachable one.
 	for _, want := range []string{
-		"refs/no-mistakes/recover/<run>",
+		"refs/alamino/recover/<run>",
 		"ancestry",
 		"tree-survival",
 	} {

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	toon "github.com/toon-format/toon-go"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // longAskUserDescription is well past any inline cap and keeps its reasoning in

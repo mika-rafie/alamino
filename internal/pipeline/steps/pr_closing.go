@@ -6,11 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/closingissues"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/github"
-	"github.com/kunchenguid/no-mistakes/internal/scm/gitlab"
+	"github.com/mika-rafie/alamino/internal/closingissues"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/github"
+	"github.com/mika-rafie/alamino/internal/scm/gitlab"
 )
 
 // The pipeline adds closing references to a PR body from exactly one place:

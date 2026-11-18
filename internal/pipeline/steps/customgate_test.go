@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func stepNames(steps []pipeline.Step) []string {
@@ -162,7 +162,7 @@ func TestCustomGateStep_CommandGateFixRoundRepairsThenReChecks(t *testing.T) {
 	if status := gitStatusPorcelain(t, dir); status != "" {
 		t.Fatalf("worktree = %q, want the fix committed", status)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(gate.test.mutation-budget): satisfy mutation budget" {
+	if got := lastCommitMessage(t, dir); got != "alamino(gate.test.mutation-budget): satisfy mutation budget" {
 		t.Fatalf("last commit message = %q", got)
 	}
 }

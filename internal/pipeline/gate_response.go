@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // RespondDispositions is what a gate response actually recorded, reported back
@@ -62,7 +62,7 @@ const fixResponseRevertHelp = "Reverting an applied fix is out of scope for a ga
 // be validated because the state it is validated against - the gate's findings
 // or this step's earlier rounds - could not be read. The refusal is fail
 // closed: the gate stays parked and nothing is recorded.
-const fixResponseUnreadableHelp = "The response was refused rather than validated against unreadable state, and the gate is still parked: inspect it with `no-mistakes axi status`, then retry, or approve or skip the step instead."
+const fixResponseUnreadableHelp = "The response was refused rather than validated against unreadable state, and the gate is still parked: inspect it with `alamino axi status`, then retry, or approve or skip the step instead."
 
 // decodeRoundDecision checks the stored decision fields a fix response is
 // attributed by. Only a value that is PRESENT and undecodable fails: a round

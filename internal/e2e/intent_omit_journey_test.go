@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // omitIntentSlowBranch is a branch whose step prompts the scenario answers
@@ -92,8 +92,8 @@ func TestOmitIntentJourney(t *testing.T) {
 	h := NewHarness(t, SetupOpts{Agent: "claude", Scenario: writeOmitIntentScenario(t)})
 	ctx := context.Background()
 
-	parentURL := "https://github.com/parent-owner/no-mistakes.git"
-	forkURL := "https://github.com/fork-owner/no-mistakes.git"
+	parentURL := "https://github.com/parent-owner/alamino.git"
+	forkURL := "https://github.com/fork-owner/alamino.git"
 	forkDir := filepath.Join(filepath.Dir(h.UpstreamDir), "fork.git")
 	if err := os.MkdirAll(forkDir, 0o755); err != nil {
 		t.Fatalf("mkdir fork: %v", err)
@@ -113,7 +113,7 @@ func TestOmitIntentJourney(t *testing.T) {
 	ghLog := filepath.Join(filepath.Dir(h.AgentLog), "gh-omit-intent.log")
 	t.Setenv("FAKEAGENT_GH_MODE", "fork-pr")
 	t.Setenv("FAKEAGENT_GH_LOG", ghLog)
-	t.Setenv("FAKEAGENT_GH_PARENT", "parent-owner/no-mistakes")
+	t.Setenv("FAKEAGENT_GH_PARENT", "parent-owner/alamino")
 	if out, err := h.Run("init", "--fork-url", forkURL); err != nil {
 		t.Fatalf("init with fork URL: %v\n%s", err, out)
 	}

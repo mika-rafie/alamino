@@ -3,7 +3,7 @@ package steps
 import (
 	"fmt"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // pipelineDeliveryPhaseClause documents the pre-push ownership boundary for

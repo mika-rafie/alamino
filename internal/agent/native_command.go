@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 // ownedChildrenSettleWindow bounds how long the owned-children probe re-checks
@@ -49,7 +49,7 @@ type nativeAgentPipe struct {
 	done     func()
 	doneOnce sync.Once
 	// activity, when set, is called for every non-empty read. It is the only
-	// evidence no-mistakes has that a native agent is still alive during the
+	// evidence alamino has that a native agent is still alive during the
 	// long tool-using stretches that produce no assistant prose.
 	activity func()
 }

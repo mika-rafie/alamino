@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestCorrectionCommitIdentityAcrossProducers(t *testing.T) {

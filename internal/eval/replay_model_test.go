@@ -8,18 +8,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // Pi reports model and provider as separate fields, so a candidate spelled
 // xai/grok-4.6 is served as model "grok-4.6" plus provider "xai".
 const piReviewOutput = `{"findings":[],"risk_level":"low","risk_rationale":"clean","risk_scope":"source-or-external"}`
 
-const piReviewToolResult = `{"type":"tool_execution_end","toolCallId":"final-1","toolName":"no_mistakes_output","isError":false,"result":{"terminate":true,"details":{"output":` + piReviewOutput + `}}}` + "\n"
+const piReviewToolResult = `{"type":"tool_execution_end","toolCallId":"final-1","toolName":"alamino_output","isError":false,"result":{"terminate":true,"details":{"output":` + piReviewOutput + `}}}` + "\n"
 
-const piServedGrok46Reply = `{"type":"message_end","message":{"role":"assistant","provider":"xai","model":"grok-4.6","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"no_mistakes_output","arguments":` + piReviewOutput + `}]}}` + "\n" + piReviewToolResult
+const piServedGrok46Reply = `{"type":"message_end","message":{"role":"assistant","provider":"xai","model":"grok-4.6","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"alamino_output","arguments":` + piReviewOutput + `}]}}` + "\n" + piReviewToolResult
 
-const piServedMuseReply = `{"type":"message_end","message":{"role":"assistant","provider":"different-sidecar","model":"meta/muse-spark-1.3-contributor","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"no_mistakes_output","arguments":` + piReviewOutput + `}]}}` + "\n" + piReviewToolResult
+const piServedMuseReply = `{"type":"message_end","message":{"role":"assistant","provider":"different-sidecar","model":"meta/muse-spark-1.3-contributor","stopReason":"toolUse","content":[{"type":"toolCall","id":"final-1","name":"alamino_output","arguments":` + piReviewOutput + `}]}}` + "\n" + piReviewToolResult
 
 func TestReplayPiModelIdentityComparison(t *testing.T) {
 	ctx := context.Background()

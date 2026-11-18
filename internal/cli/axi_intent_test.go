@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // A read error with partial text must not launch a run with the partial intent.
@@ -46,7 +46,7 @@ func TestAxiRunIntentRejectsInputBeforeOpeningResources(t *testing.T) {
 	blank := writeIntentFile(t, " \t\r\n\u2003")
 	missing := filepath.Join(t.TempDir(), "missing")
 	invalid := "goal\xff"
-	large := strings.Repeat("x", 49123)
+	large := strings.Repeat("x", 49126)
 	for _, tc := range []struct {
 		name  string
 		args  []string
@@ -56,9 +56,9 @@ func TestAxiRunIntentRejectsInputBeforeOpeningResources(t *testing.T) {
 		{"string invalid UTF-8", []string{"--intent", invalid}, nil, "must be valid UTF-8"},
 		{"file invalid UTF-8", []string{"--intent-file", writeIntentFile(t, invalid)}, nil, "must be valid UTF-8"},
 		{"stdin invalid UTF-8", []string{"--intent=-"}, strings.NewReader(invalid), "must be valid UTF-8"},
-		{"string oversized", []string{"--intent", large}, nil, "exceeds the 49122-byte"},
-		{"file oversized", []string{"--intent-file", writeIntentFile(t, large)}, nil, "exceeds the 49122-byte"},
-		{"stdin oversized", []string{"--intent=-"}, strings.NewReader(large), "exceeds the 49122-byte"},
+		{"string oversized", []string{"--intent", large}, nil, "exceeds the 49125-byte"},
+		{"file oversized", []string{"--intent-file", writeIntentFile(t, large)}, nil, "exceeds the 49125-byte"},
+		{"stdin oversized", []string{"--intent=-"}, strings.NewReader(large), "exceeds the 49125-byte"},
 		{"file device", []string{"--intent-file", os.DevNull}, nil, "regular file"},
 		{"string empty", []string{"--intent="}, nil, "--intent must not be empty"},
 		{"string whitespace", []string{"--intent", " \n\u2003"}, nil, "--intent must not be empty"},
@@ -78,7 +78,7 @@ func TestAxiRunIntentRejectsInputBeforeOpeningResources(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			home := filepath.Join(t.TempDir(), "not-created")
-			t.Setenv("NM_HOME", home)
+			t.Setenv("ALAMINO_HOME", home)
 			cmd := newAxiRunCmd()
 			cmd.SetArgs(tc.args)
 			unread := &intentErrorReader{}
@@ -250,11 +250,11 @@ func TestAxiRunIntentStrictClaimUsesResolvedBytes(t *testing.T) {
 // This crosses the real executable, Cobra, local Git push and IPC boundaries.
 // A synthetic no-op gate push reaches AXI's existing rerun fallback. The fake
 // server records the request and returns a completed run; no agent or forge runs.
-func TestNoMistakesBinary_IntentTransport(t *testing.T) {
+func TestAlaminoBinary_IntentTransport(t *testing.T) {
 	wantHomes := runenv.TranscriptHomes{ClaudeConfigDir: filepath.Join(t.TempDir(), "claude account"), CodexHome: filepath.Join(t.TempDir(), "codex account")}
 	t.Setenv("CLAUDE_CONFIG_DIR", wantHomes.ClaudeConfigDir)
 	t.Setenv("CODEX_HOME", wantHomes.CodexHome)
-	bin := buildNoMistakesBinary(t)
+	bin := buildAlaminoBinary(t)
 	requests := make(chan ipc.RerunParams, 8)
 	olderDaemonFixture(t, nil, func(srv *ipc.Server) {
 		serveTranscriptHomesProbe(srv)
@@ -360,10 +360,10 @@ func TestNoMistakesBinary_IntentTransport(t *testing.T) {
 type intentProducingReader struct{ bytes int }
 
 func (r *intentProducingReader) Read(p []byte) (int, error) {
-	if r.bytes >= 49123 {
+	if r.bytes >= 49126 {
 		return 0, errors.New("read beyond limit probe")
 	}
-	n := min(len(p), 49123-r.bytes)
+	n := min(len(p), 49126-r.bytes)
 	for i := range p[:n] {
 		p[i] = 'x'
 	}
@@ -379,7 +379,7 @@ func TestAxiRunIntentBoundsProducingStdin(t *testing.T) {
 	r := &intentProducingReader{}
 	cmd.SetIn(r)
 	got, err := resolveAxiRunIntent(cmd, "-", "")
-	if err == nil || !strings.Contains(err.Error(), "exceeds the 49122-byte") || got != "" || r.bytes != 49123 {
+	if err == nil || !strings.Contains(err.Error(), "exceeds the 49125-byte") || got != "" || r.bytes != 49126 {
 		t.Fatalf("got %d bytes, error %v, consumed %d", len(got), err, r.bytes)
 	}
 }
@@ -387,7 +387,7 @@ func TestAxiRunIntentBoundsProducingStdin(t *testing.T) {
 func TestAxiRunIntentAcceptsBoundaryThroughEOF(t *testing.T) {
 	// Include JSON-escaped text and multibyte UTF-8, including the real
 	// replacement character (valid UTF-8, unlike a malformed byte sequence).
-	text := strings.Repeat("\x00", 49122-len("雪�\n")) + "雪�\n"
+	text := strings.Repeat("\x00", 49125-len("雪�\n")) + "雪�\n"
 	for _, transport := range []string{"string", "file", "stdin"} {
 		t.Run(transport, func(t *testing.T) {
 			cmd := newAxiRunCmd()

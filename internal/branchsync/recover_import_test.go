@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // These tests reproduce the PR 2899 custody refusal: the operator's repair head
@@ -92,7 +92,7 @@ func checkRecoverHeadCarryingPreservedWork(t *testing.T, localHasBoth, gateHasBo
 	localObjects, gateObjects := objectCount(t, f.local), objectCount(t, f.gate)
 	state := f.service.InspectCached(f.ctx)
 	if state.Safety != "blocked_pipeline_owned_recoverable" || state.NextAction == nil ||
-		state.NextAction.Code != "recover_custody" || state.NextAction.Command != "no-mistakes axi sync --recover" {
+		state.NextAction.Code != "recover_custody" || state.NextAction.Command != "alamino axi sync --recover" {
 		t.Fatalf("inspection must offer plain recovery once the relationship is provable: %#v", state)
 	}
 	if refSnapshot(t, f.local) != localRefs || refSnapshot(t, f.gate) != gateRefs {
@@ -170,7 +170,7 @@ func TestRecoverPreservedHeadContainingLocalOnlyWorkIsAdoptedWithoutLocalHeadInG
 	}
 	mustWrite(t, filepath.Join(pipeline, "more.txt"), "pipeline kept going\n")
 	mustRun(t, pipeline, "add", "more.txt")
-	mustRun(t, pipeline, "commit", "-m", "no-mistakes(test): more")
+	mustRun(t, pipeline, "commit", "-m", "alamino(test): more")
 	preserved := mustRun(t, pipeline, "rev-parse", "HEAD")
 	mustRun(t, pipeline, "push", "origin", "HEAD:refs/heads/feature/recover")
 	if err := f.db.UpdateRunHeadSHA(f.run.ID, preserved); err != nil {
@@ -190,7 +190,7 @@ func TestRecoverPreservedHeadContainingLocalOnlyWorkIsAdoptedWithoutLocalHeadInG
 	}
 
 	state := f.service.InspectCached(f.ctx)
-	if state.Safety != "blocked_pipeline_owned_recoverable" || state.NextAction == nil || state.NextAction.Command != "no-mistakes axi sync --recover" {
+	if state.Safety != "blocked_pipeline_owned_recoverable" || state.NextAction == nil || state.NextAction.Command != "alamino axi sync --recover" {
 		t.Fatalf("inspection = %#v", state)
 	}
 	recovered := f.service.Recover(f.ctx, false)
@@ -200,7 +200,7 @@ func TestRecoverPreservedHeadContainingLocalOnlyWorkIsAdoptedWithoutLocalHeadInG
 	if got := mustRun(t, f.local, "rev-parse", "HEAD"); got != preserved {
 		t.Fatalf("HEAD = %s, want preserved %s", got, preserved)
 	}
-	if got := mustRun(t, f.local, "rev-parse", "refs/no-mistakes/recover-local/"+f.run.ID); got != local {
+	if got := mustRun(t, f.local, "rev-parse", "refs/alamino/recover-local/"+f.run.ID); got != local {
 		t.Fatalf("pre-recovery local head anchor = %s, want %s", got, local)
 	}
 	if got := mustRun(t, f.local, "rev-parse", f.anchorRef()); got != preserved {

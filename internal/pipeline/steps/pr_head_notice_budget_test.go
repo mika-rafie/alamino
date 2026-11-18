@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/scm/plugin/fakeplugin"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/scm/plugin/fakeplugin"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestProviderPlugin_PRStepRetainsHeadProofNoticeAtTinyBodyCaps(t *testing.T) {

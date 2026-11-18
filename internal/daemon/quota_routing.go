@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // quotaRoutingRecordForRun reads the ONE quota-axi snapshot for a run and

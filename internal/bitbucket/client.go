@@ -15,9 +15,9 @@ import (
 
 const (
 	defaultAPIBaseURL = "https://api.bitbucket.org"
-	envEmail          = "NO_MISTAKES_BITBUCKET_EMAIL"
-	envToken          = "NO_MISTAKES_BITBUCKET_API_TOKEN"
-	envAPIBaseURL     = "NO_MISTAKES_BITBUCKET_API_BASE_URL"
+	envEmail          = "ALAMINO_BITBUCKET_EMAIL"
+	envToken          = "ALAMINO_BITBUCKET_API_TOKEN"
+	envAPIBaseURL     = "ALAMINO_BITBUCKET_API_BASE_URL"
 	maxStepLogBytes   = 32 * 1024
 )
 

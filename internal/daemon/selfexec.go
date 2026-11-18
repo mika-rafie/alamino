@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 var daemonHealthCheck = daemonIsRunningViaIPC
@@ -33,7 +33,7 @@ func daemonStartTimeout() time.Duration {
 	if runtimeGOOS != "windows" {
 		fallback += shellenv.DefaultShellRetryWindow + shellenv.DefaultShellProbeTimeout
 	}
-	return durationFromEnv("NM_TEST_DAEMON_START_TIMEOUT", fallback)
+	return durationFromEnv("ALAMINO_TEST_DAEMON_START_TIMEOUT", fallback)
 }
 
 // daemonStopTimeout bounds how long waitForDaemonStop polls for a graceful
@@ -48,11 +48,11 @@ func daemonStopTimeout() time.Duration {
 	if runtimeGOOS == "windows" {
 		fallback = 15 * time.Second
 	}
-	return durationFromEnv("NM_TEST_DAEMON_STOP_TIMEOUT", fallback)
+	return durationFromEnv("ALAMINO_TEST_DAEMON_STOP_TIMEOUT", fallback)
 }
 
 func daemonStartPollInterval() time.Duration {
-	return durationFromEnv("NM_TEST_DAEMON_START_POLL_INTERVAL", 100*time.Millisecond)
+	return durationFromEnv("ALAMINO_TEST_DAEMON_START_POLL_INTERVAL", 100*time.Millisecond)
 }
 
 func durationFromEnv(name string, fallback time.Duration) time.Duration {
@@ -101,7 +101,7 @@ func StartGuarded(p *paths.Paths, beforeRestart func() error) error {
 		return fmt.Errorf("daemon already running")
 	}
 	// Canonical socket is dead. A daemon for the same logical root may still be
-	// alive under a different path spelling (symlinked or relative NM_HOME),
+	// alive under a different path spelling (symlinked or relative ALAMINO_HOME),
 	// which the socket-keyed health check above cannot see. Detect via the OS
 	// process list: refuse if a healthy stray is serving this root, or reap a
 	// stale stray (including a crash-looping managed unit) before starting.
@@ -175,7 +175,7 @@ func reinstallManagedServiceIfChanged(p *paths.Paths, beforeRestart func() error
 	}
 
 	existing, readErr := os.ReadFile(installPath)
-	// Inherit proxy and telemetry values already baked into the definition so an
+	// Inherit proxy values already baked into the definition so an
 	// env-less `daemon start` does not render a no-proxy target, falsely detect
 	// drift, and reinstall - which would strip the proxy and re-break the daemon
 	// with "403 Request not allowed". This mirrors the executable inheritance
@@ -341,7 +341,7 @@ func startDetachedDaemon(p *paths.Paths) error {
 	}
 
 	cmd := exec.Command(exe, "daemon", "run", "--root", p.Root())
-	cmd.Env = upsertEnv(os.Environ(), "NM_HOME", p.Root())
+	cmd.Env = upsertEnv(os.Environ(), "ALAMINO_HOME", p.Root())
 	return launchDetachedDaemon(p, cmd)
 }
 
@@ -823,7 +823,7 @@ func daemonSocketAcceptingConnections(path string) (bool, error) {
 // closes its IPC listener at the START of shutdown, and closing a Unix
 // listener unlinks the socket, so the health check reports "not running"
 // while the process is still draining runs, closing the database, flushing
-// logs, and reaping its bootstrap log-sink child. The NM_HOME singleton lock
+// logs, and reaping its bootstrap log-sink child. The ALAMINO_HOME singleton lock
 // is an OS file lock the kernel releases only when the owning process
 // actually dies, so a stop that returned at "socket gone" handed the caller a
 // root whose lock was still held - and the very next `daemon start` (that is,
@@ -889,7 +889,7 @@ func waitForDaemonStop(p *paths.Paths, instance daemonInstance) error {
 
 // clearDeadDaemonArtifacts removes the socket and PID file of a daemon that
 // is provably gone: the PID file names a process that no longer exists or
-// whose start time no longer matches, and no process holds the NM_HOME
+// whose start time no longer matches, and no process holds the ALAMINO_HOME
 // singleton lock. A live or unverifiable PID leaves everything in place. The
 // lock is held only to re-check the PID file and remove the artifacts, so a
 // daemon that is starting up is neither blocked by the inspection nor loses
@@ -973,7 +973,7 @@ func EnsureDaemon(p *paths.Paths) error {
 	}
 	alive, err := daemonHealthCheck(p)
 	if err != nil {
-		return fmt.Errorf("%w (run 'no-mistakes daemon start' to recover)", err)
+		return fmt.Errorf("%w (run 'alamino daemon start' to recover)", err)
 	}
 	if alive {
 		return nil

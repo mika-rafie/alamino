@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	claudeSkillRel = filepath.Join(".claude", "skills", "no-mistakes", "SKILL.md")
-	agentsSkillRel = filepath.Join(".agents", "skills", "no-mistakes", "SKILL.md")
+	claudeSkillRel = filepath.Join(".claude", "skills", "alamino", "SKILL.md")
+	agentsSkillRel = filepath.Join(".agents", "skills", "alamino", "SKILL.md")
 
 	// staleSkillTime is far in the past so that any write init makes to a seeded
 	// skill file, even one that rewrites identical bytes, moves its mtime.
@@ -91,11 +91,11 @@ func TestInitSkipUserSkill(t *testing.T) {
 			// Knock the gate remote out so the re-run has something to repair:
 			// skipping the skill must not skip the gate refresh.
 			ctx := context.Background()
-			urlOut, err := h.runGit(ctx, h.WorkDir, "remote", "get-url", "no-mistakes")
+			urlOut, err := h.runGit(ctx, h.WorkDir, "remote", "get-url", "alamino")
 			if err != nil {
 				t.Fatalf("get gate url: %v\n%s", err, urlOut)
 			}
-			if out, err := h.runGit(ctx, h.WorkDir, "remote", "remove", "no-mistakes"); err != nil {
+			if out, err := h.runGit(ctx, h.WorkDir, "remote", "remove", "alamino"); err != nil {
 				t.Fatalf("remove gate remote: %v\n%s", err, out)
 			}
 
@@ -103,9 +103,9 @@ func TestInitSkipUserSkill(t *testing.T) {
 			if !strings.Contains(second, "already initialized") {
 				t.Errorf("re-init should report an existing gate, got:\n%s", second)
 			}
-			repaired, err := h.runGit(ctx, h.WorkDir, "remote", "get-url", "no-mistakes")
+			repaired, err := h.runGit(ctx, h.WorkDir, "remote", "get-url", "alamino")
 			if err != nil {
-				t.Fatalf("no-mistakes remote not repaired by re-init: %v\n%s", err, repaired)
+				t.Fatalf("alamino remote not repaired by re-init: %v\n%s", err, repaired)
 			}
 			if got, want := strings.TrimSpace(string(repaired)), strings.TrimSpace(string(urlOut)); got != want {
 				t.Errorf("repaired gate url = %q, want %q", got, want)
@@ -190,7 +190,7 @@ func TestInitSkipUserSkillKeepsConcurrentWrite(t *testing.T) {
 			// Init is paused mid-run: this write lands strictly between its
 			// start and its end.
 			claudeSkill := filepath.Join(h.HomeDir, claudeSkillRel)
-			edited := []byte("---\nname: no-mistakes\n---\nlocal edit made while init was running\n")
+			edited := []byte("---\nname: alamino\n---\nlocal edit made while init was running\n")
 			if err := os.WriteFile(claudeSkill, edited, 0o640); err != nil {
 				t.Fatalf("write during init: %v", err)
 			}
@@ -346,7 +346,7 @@ func seedUserSkill(t *testing.T, home, rel string, perm os.FileMode, label strin
 	t.Helper()
 	path := filepath.Join(home, rel)
 	mkdirAll(t, filepath.Dir(path))
-	body := "---\nname: no-mistakes\n---\nuser copy: " + label + "\n"
+	body := "---\nname: alamino\n---\nuser copy: " + label + "\n"
 	if err := os.WriteFile(path, []byte(body), perm); err != nil {
 		t.Fatal(err)
 	}

@@ -11,17 +11,17 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/buildinfo"
-	"github.com/kunchenguid/no-mistakes/internal/daemon"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
+	"github.com/mika-rafie/alamino/internal/buildinfo"
+	"github.com/mika-rafie/alamino/internal/daemon"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
 )
 
 const (
-	appName            = "no-mistakes"
-	repoName           = "kunchenguid/no-mistakes"
+	appName            = "alamino"
+	repoName           = "mika-rafie/alamino"
 	backgroundFlag     = "--update-check"
-	noUpdateCheckEnv   = "NO_MISTAKES_NO_UPDATE_CHECK"
+	noUpdateCheckEnv   = "ALAMINO_NO_UPDATE_CHECK"
 	checksumsAssetName = "checksums.txt"
 	cacheTTL           = 24 * time.Hour
 	maxAPIResponseSize = 5 << 20

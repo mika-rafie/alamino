@@ -38,7 +38,7 @@ func TestValidateRunPRBody(t *testing.T) {
 		"C1 control":      "a\u0085b",
 		"bidi override":   "a‮b",
 		"bidi isolate":    "a⁧b",
-		"appendix marker": "<!-- no-mistakes-pr-appendix:v1 sha256=x -->",
+		"appendix marker": "<!-- alamino-pr-appendix:v1 sha256=x -->",
 		"attestation":     pipelineAttestationCommentPrefix + "{} -->",
 	} {
 		if err := ValidateRunPRBody(body); err == nil {

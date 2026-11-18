@@ -13,20 +13,19 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/custody"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/gateguidance"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/quotarouting"
-	"github.com/kunchenguid/no-mistakes/internal/reviewqa"
-	"github.com/kunchenguid/no-mistakes/internal/safeurl"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/custody"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/gateguidance"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/quotarouting"
+	"github.com/mika-rafie/alamino/internal/reviewqa"
+	"github.com/mika-rafie/alamino/internal/safeurl"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 // EventFunc is called when a pipeline event occurs, for streaming to subscribers.
@@ -39,7 +38,7 @@ const (
 
 // FixInstructions is the per-finding guidance a fix response attaches, keyed
 // by finding ID. FromDriver marks guidance from an agent driving the run
-// through `no-mistakes axi`; it is stored apart from the user's own
+// through `alamino axi`; it is stored apart from the user's own
 // instructions so that no later prompt presents a driver's scoping as a
 // decision the user made.
 type FixInstructions struct {
@@ -934,18 +933,6 @@ func (e *Executor) Resume(ctx context.Context, run *db.Run, repo *db.Repo, workD
 		return completeReconciledGate()
 	}
 
-	approvalFields := telemetry.Fields{
-		"step":       telemetry.StepName(gate.step.Name()),
-		"action":     string(response.action),
-		"fix_review": gate.stepResult.Status == types.StepStatusFixReview,
-	}
-	if agentName := e.telemetryAgentName(); agentName != "" {
-		approvalFields["agent"] = agentName
-	}
-	if selectedCount := selectedFindingCount(gate.findings, response.findingIDs); selectedCount > 0 {
-		approvalFields["selected_findings_count"] = selectedCount
-	}
-	telemetry.Track("approval", approvalFields)
 	switch response.action {
 	case types.ActionApprove:
 		e.recordDeclinedRound(gate.lastRoundID, gate.findings, gate.step.Name(), gate.round)
@@ -1036,7 +1023,6 @@ func (e *Executor) Resume(ctx context.Context, run *db.Run, repo *db.Repo, workD
 			}
 			e.emitStepEvent(ipc.EventStepStarted, run, repo, gate.step.Name(), string(types.StepStatusRunning))
 		} else {
-			telemetry.Track("fix", e.fixTelemetryFields("user", gate.step.Name(), selectedFindingCount(gate.findings, response.findingIDs), 0))
 			selected, merged, outstandingFindings, selectedForPersistence := normalizeFixSelection(gate.findings, response, gate.step.Name() == types.StepReview)
 			selectedOutstandingIDs := gate.selectedOutstandingIDs
 			if gate.step.Name() == types.StepReview {
@@ -1824,7 +1810,6 @@ rounds:
 			}
 			if fixableFindings != "" {
 				autoFixAttempts++
-				telemetry.Track("fix", e.fixTelemetryFields("auto", stepName, findingsCount(fixableFindings), autoFixAttempts))
 				slog.Info("auto-fixing step", "step", stepName, "attempt", autoFixAttempts, "max", autoFixLimit)
 				executionMS += time.Since(phaseStart).Milliseconds()
 				fixCount := findingsCount(fixableFindings)
@@ -1934,19 +1919,6 @@ rounds:
 				goto done
 			}
 
-			approvalFields := telemetry.Fields{
-				"step":       telemetry.StepName(stepName),
-				"action":     string(response.action),
-				"fix_review": sctx.Fixing,
-			}
-			if agentName := e.telemetryAgentName(); agentName != "" {
-				approvalFields["agent"] = agentName
-			}
-			if selectedCount := selectedFindingCount(effectiveFindings, response.findingIDs); selectedCount > 0 {
-				approvalFields["selected_findings_count"] = selectedCount
-			}
-			telemetry.Track("approval", approvalFields)
-
 			switch response.action {
 			case types.ActionApprove:
 				// Approved - execution already frozen in executionMS, reset phaseStart
@@ -1977,7 +1949,6 @@ rounds:
 				return false, "", fmt.Errorf("step %s: %s", stepName, abortError)
 
 			case types.ActionFix:
-				telemetry.Track("fix", e.fixTelemetryFields("user", stepName, selectedFindingCount(effectiveFindings, response.findingIDs), 0))
 				// Fix - mark step as fixing, resume execution timer, re-execute.
 				phaseStart = time.Now()
 				selectedCount := selectedFindingCount(effectiveFindings, response.findingIDs)
@@ -2911,25 +2882,6 @@ func (e *Executor) emitStepEventWithFindingsAndError(eventType ipc.EventType, ru
 		event.Findings = &findings
 	}
 	e.onEvent(event)
-	if !shouldTrackStepTelemetry(eventType, status) {
-		return
-	}
-
-	fields := telemetry.Fields{
-		"event":  string(eventType),
-		"step":   telemetry.StepName(stepName),
-		"status": status,
-	}
-	if agentName := e.telemetryAgentName(); agentName != "" {
-		fields["agent"] = agentName
-	}
-	if durationMS != nil {
-		fields["duration_ms"] = *durationMS
-	}
-	if findings != "" {
-		fields["findings_count"] = findingsCount(findings)
-	}
-	telemetry.Track("step", fields)
 }
 
 func (e *Executor) findingStatsForStep(runID string, stepName types.StepName) db.StepStats {
@@ -2950,18 +2902,6 @@ func (e *Executor) findingStatsForStep(runID string, stepName types.StepName) db
 	return db.StepStats{StepName: stepName}
 }
 
-func shouldTrackStepTelemetry(eventType ipc.EventType, status string) bool {
-	if eventType != ipc.EventStepCompleted {
-		return false
-	}
-	switch types.StepStatus(status) {
-	case types.StepStatusAwaitingApproval, types.StepStatusFixReview, types.StepStatusFailed:
-		return true
-	default:
-		return false
-	}
-}
-
 func (e *Executor) emitLogChunk(run *db.Run, repo *db.Repo, stepName types.StepName, content string) {
 	e.onEvent(ipc.Event{
 		Type:     ipc.EventLogChunk,
@@ -2970,28 +2910,6 @@ func (e *Executor) emitLogChunk(run *db.Run, repo *db.Repo, stepName types.StepN
 		StepName: &stepName,
 		Content:  &content,
 	})
-}
-
-func (e *Executor) telemetryAgentName() string {
-	if e.config == nil || e.config.Agent == "" {
-		return ""
-	}
-	return string(e.config.Agent)
-}
-
-func (e *Executor) fixTelemetryFields(source string, stepName types.StepName, selectedCount int, attempt int) telemetry.Fields {
-	fields := telemetry.Fields{
-		"source":                  source,
-		"step":                    telemetry.StepName(stepName),
-		"selected_findings_count": selectedCount,
-	}
-	if agentName := e.telemetryAgentName(); agentName != "" {
-		fields["agent"] = agentName
-	}
-	if attempt > 0 {
-		fields["attempt"] = attempt
-	}
-	return fields
 }
 
 func findingsCount(raw string) int {

@@ -1,5 +1,5 @@
 {
-  description = "no-mistakes: a local gate that reviews, tests, and fixes every push before it ships";
+  description = "alamino: a local gate that reviews, tests, and fixes every push before it ships";
 
   inputs = {
     # No x86_64-darwin: nixpkgs-unstable dropped it in 26.11 and throws on
@@ -25,15 +25,15 @@
       packages = forAllSystems (
         system:
         let
-          no-mistakes = nixpkgs.legacyPackages.${system}.callPackage ./package.nix {
+          alamino = nixpkgs.legacyPackages.${system}.callPackage ./package.nix {
             inherit version;
             commit = self.shortRev or self.dirtyShortRev or "unknown";
             date = "${substring 0 4 stamp}-${substring 4 2 stamp}-${substring 6 2 stamp}T${substring 8 2 stamp}:${substring 10 2 stamp}:${substring 12 2 stamp}Z";
           };
         in
         {
-          inherit no-mistakes;
-          default = no-mistakes;
+          inherit alamino;
+          default = alamino;
         }
       );
     };

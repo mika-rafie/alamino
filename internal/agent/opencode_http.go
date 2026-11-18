@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agentcfg"
-	"github.com/kunchenguid/no-mistakes/internal/shellenv"
+	"github.com/mika-rafie/alamino/internal/agentcfg"
+	"github.com/mika-rafie/alamino/internal/shellenv"
 )
 
 func (a *opencodeAgent) ensureServer(ctx context.Context, cwd string, env []string) (string, error) {

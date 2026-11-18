@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/forgecontext"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
-	"github.com/kunchenguid/no-mistakes/internal/scm"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/forgecontext"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/scm"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestCopyDirContents_PreservesGitRepo(t *testing.T) {
@@ -684,7 +684,7 @@ func TestCommitPipelineCorrection_ReportsCleanupFailureWithoutMaskingCommit(t *t
 	err := commitPipelineCorrectionWithCleanup(
 		context.Background(),
 		dir,
-		"no-mistakes(test): apply correction",
+		"alamino(test): apply correction",
 		func(line string) { warning = line },
 		func(path string) error {
 			cleanedPath = path
@@ -713,7 +713,7 @@ func TestCommitPipelineCorrection_EmptyIndexIsSuccessfulNoOp(t *testing.T) {
 	t.Parallel()
 	dir, _, headSHA := setupGitRepo(t)
 
-	err := commitPipelineCorrection(context.Background(), dir, "no-mistakes: empty handoff", nil)
+	err := commitPipelineCorrection(context.Background(), dir, "alamino: empty handoff", nil)
 	if err != nil {
 		t.Fatalf("empty-index correction must be a successful no-op: %v", err)
 	}
@@ -734,7 +734,7 @@ func TestCommitPipelineCorrection_RealCommitFailureStillFails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := commitPipelineCorrection(context.Background(), dir, "no-mistakes: must fail", nil)
+	err := commitPipelineCorrection(context.Background(), dir, "alamino: must fail", nil)
 	if err == nil {
 		t.Fatal("commit with a locked index unexpectedly succeeded")
 	}
@@ -803,7 +803,7 @@ func TestCommitAgentFixes_EmptyIndexRecordsAgentAdvancedHead(t *testing.T) {
 	gitCmd(t, submodule, "add", "-A")
 	gitCmd(t, submodule, "commit", "-m", "sub base")
 	gitCmd(t, dir, "-c", "protocol.file.allow=always", "submodule", "add", submodule, "sub")
-	gitCmd(t, dir, "commit", "-m", "no-mistakes(review): apply review fixes")
+	gitCmd(t, dir, "commit", "-m", "alamino(review): apply review fixes")
 	if err := os.WriteFile(filepath.Join(dir, "sub", "untracked.txt"), []byte("agent scratch\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -1299,7 +1299,7 @@ func TestCommitAgentFixes_TruncatesOversizedRenderedMessage(t *testing.T) {
 			if cuts := strings.Count(subject, "…"); cuts != tt.cuts {
 				t.Fatalf("committed subject marks %d cuts, want %d: %q", cuts, tt.cuts, subject)
 			}
-			if tt.template == "" && !strings.HasPrefix(subject, "no-mistakes(review): ") {
+			if tt.template == "" && !strings.HasPrefix(subject, "alamino(review): ") {
 				t.Fatalf("default subject prefix changed: %q", subject)
 			}
 			t.Logf("persisted review fix: subject_bytes=%d cut_markers=%d HEAD advanced; HEAD:agent-change.txt=change", len(subject), tt.cuts)
@@ -1395,7 +1395,7 @@ func TestCommitAgentFixes_UsesFallbackSummary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := lastCommitMessage(t, dir); got != "no-mistakes(lint): fallback lint fix" {
+	if got := lastCommitMessage(t, dir); got != "alamino(lint): fallback lint fix" {
 		t.Errorf("commit message = %q, want fallback-based message", got)
 	}
 }
@@ -1817,7 +1817,7 @@ func TestCommitAgentFixes_CleanWorktreeRecordsAgentAdvancedHead(t *testing.T) {
 	dir, baseSHA, startingHead := setupGitRepo(t)
 	gitCmd(t, dir, "checkout", "--detach", startingHead)
 	sctx := newTestContextWithDBRecords(t, &mockAgent{name: "test"}, dir, baseSHA, startingHead, config.Commands{})
-	gitCmd(t, dir, "commit", "--allow-empty", "-m", "no-mistakes(review): apply fixes")
+	gitCmd(t, dir, "commit", "--allow-empty", "-m", "alamino(review): apply fixes")
 	headSHA := gitCmd(t, dir, "rev-parse", "HEAD")
 	if err := commitAgentFixes(sctx, types.StepReview, "", ""); err != nil {
 		t.Fatal(err)

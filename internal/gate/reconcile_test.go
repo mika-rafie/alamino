@@ -92,7 +92,7 @@ func TestReconcileStaleBranchLeavesContainedAncestorForNonForcePush(t *testing.T
 	if got := reconcileGit(t, gateDir, "rev-parse", "refs/heads/feature/reconcile"); got != privateHead {
 		t.Fatalf("ancestor branch moved during inspection to %s, want %s", got, privateHead)
 	}
-	if tags := reconcileGit(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+	if tags := reconcileGit(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 		t.Fatalf("ancestor inspection unexpectedly archived a live branch: %q", tags)
 	}
 
@@ -144,7 +144,7 @@ func TestReconcileStaleBranchRefusesAndNamesUniquePrivateCommits(t *testing.T) {
 	if got := reconcileGit(t, gateDir, "rev-parse", "refs/heads/feature/reconcile"); got != privateHead {
 		t.Fatalf("refusal moved private branch to %s, want %s", got, privateHead)
 	}
-	if tags := reconcileGit(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+	if tags := reconcileGit(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 		t.Fatalf("refusal created an archive tag despite retaining the branch: %q", tags)
 	}
 }
@@ -241,7 +241,7 @@ func TestPlanStaleBranchReconciliationMutatesNothingAndApplyRefusesMovedHead(t *
 	if got := reconcileGit(t, gateDir, "rev-parse", "refs/heads/feature/reconcile"); got != privateHead {
 		t.Fatalf("planning moved the private branch to %s", got)
 	}
-	if tags := reconcileGit(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); tags != "" {
+	if tags := reconcileGit(t, gateDir, "tag", "--list", "alamino-abandoned/*"); tags != "" {
 		t.Fatalf("planning archived a live branch: %q", tags)
 	}
 
@@ -267,7 +267,7 @@ func TestArchivedHeadRecordedRejectsUnarchivedClaims(t *testing.T) {
 	if ArchivedHeadRecorded(ctx, gateDir, "feature/claim", head) {
 		t.Fatal("a head with no archive tag was reported as archived")
 	}
-	reconcileGit(t, gateDir, "update-ref", "refs/tags/no-mistakes-abandoned/feature/claim/"+head, head)
+	reconcileGit(t, gateDir, "update-ref", "refs/tags/alamino-abandoned/feature/claim/"+head, head)
 	if !ArchivedHeadRecorded(ctx, gateDir, "feature/claim", head) {
 		t.Fatal("an archived head was not recognized")
 	}
@@ -452,7 +452,7 @@ func TestReconcileStaleBranchDecision41AExactSubmittedHeadOnly(t *testing.T) {
 			if got := reconcileGit(t, gateDir, "rev-parse", "refs/heads/feature"); got != privateHead {
 				t.Fatalf("planning moved mirror to %s, want %s", got, privateHead)
 			}
-			if got := reconcileGit(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); got != "" {
+			if got := reconcileGit(t, gateDir, "tag", "--list", "alamino-abandoned/*"); got != "" {
 				t.Fatalf("planning archived head: %s", got)
 			}
 			if variant == "exact" {
@@ -489,14 +489,14 @@ func TestReconcileStaleBranchDecision41AExactLastPushedHead(t *testing.T) {
 				return reconcileGit(t, work, "rev-parse", "HEAD")
 			}
 			submittedHead := commit("feature.txt", "submitted resolution\n", "submitted work")
-			publishedHead := commit("pipeline.txt", "pipeline fix\n", "no-mistakes(lint): pipeline fix")
+			publishedHead := commit("pipeline.txt", "pipeline fix\n", "alamino(lint): pipeline fix")
 
 			// The reviewed rebase resolves a conflict, so no patch of the
 			// published range survives unchanged into the live head.
 			reconcileGit(t, work, "checkout", "--detach", base)
 			commit("feature.txt", "upstream neighbour\n", "advance base")
 			commit("feature.txt", "upstream neighbour\nsubmitted resolution\n", "rebased with resolved conflict")
-			liveHead := commit("pipeline.txt", "pipeline fix\n", "no-mistakes(lint): pipeline fix")
+			liveHead := commit("pipeline.txt", "pipeline fix\n", "alamino(lint): pipeline fix")
 
 			privateHead := publishedHead
 			ownedHeads := []string{submittedHead, publishedHead}
@@ -543,7 +543,7 @@ func TestReconcileStaleBranchDecision41AExactLastPushedHead(t *testing.T) {
 			if got := reconcileGit(t, gateDir, "rev-parse", "refs/heads/feature"); got != privateHead {
 				t.Fatalf("planning moved mirror to %s, want %s", got, privateHead)
 			}
-			if got := reconcileGit(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); got != "" {
+			if got := reconcileGit(t, gateDir, "tag", "--list", "alamino-abandoned/*"); got != "" {
 				t.Fatalf("planning archived head: %s", got)
 			}
 			if variant != "exact" {
@@ -608,7 +608,7 @@ func TestReconcileStaleBranchRefusesPatchesDiscardedByOursMerge(t *testing.T) {
 			if got := reconcileGit(t, gateDir, "rev-parse", "refs/heads/feature"); got != privateHead {
 				t.Fatalf("refusal moved private ref: %s", got)
 			}
-			if got := reconcileGit(t, gateDir, "tag", "--list", "no-mistakes-abandoned/*"); got != "" {
+			if got := reconcileGit(t, gateDir, "tag", "--list", "alamino-abandoned/*"); got != "" {
 				t.Fatalf("discarded content was archived for deletion: %s", got)
 			}
 		})
@@ -898,7 +898,7 @@ func setupAnchoredPrivateBranch(t *testing.T) (work, gateDir, privateHead, first
 	return work, gateDir, privateHead, firstPrivateHead, liveHead
 }
 
-// The recover -> rerun -> push loop writes refs/no-mistakes/recover/<run> to
+// The recover -> rerun -> push loop writes refs/alamino/recover/<run> to
 // declare the unpublished chain preserved. Reconciliation must credit that
 // anchor instead of refusing against the very evidence the loop just wrote.
 func TestPlanStaleBranchReconciliationCreditsRecoveryAnchoredCommits(t *testing.T) {
@@ -906,7 +906,7 @@ func TestPlanStaleBranchReconciliationCreditsRecoveryAnchoredCommits(t *testing.
 	ctx := context.Background()
 	work, gateDir, privateHead, firstPrivateHead, liveHead := setupAnchoredPrivateBranch(t)
 
-	anchor := "refs/no-mistakes/recover/01M3GQ106JNJRM9DFQSPF48NSE"
+	anchor := "refs/alamino/recover/01M3GQ106JNJRM9DFQSPF48NSE"
 	reconcileGit(t, gateDir, "update-ref", anchor, privateHead)
 
 	plan, err := PlanStaleBranchReconciliation(ctx, gateDir, work, "feature/reconcile", liveHead, "", nil)
@@ -943,7 +943,7 @@ func TestPlanStaleBranchReconciliationStillRefusesUnanchoredCommitsAndNamesTheSa
 
 	// Anchor reaches only the first commit's parent chain shape by pointing at
 	// the first commit, so the second private commit stays unanchored.
-	reconcileGit(t, gateDir, "update-ref", "refs/no-mistakes/recover/01M3H865WHYBM2QWPD8ZY1QG81", firstPrivateHead)
+	reconcileGit(t, gateDir, "update-ref", "refs/alamino/recover/01M3H865WHYBM2QWPD8ZY1QG81", firstPrivateHead)
 
 	_, err := PlanStaleBranchReconciliation(ctx, gateDir, work, "feature/reconcile", liveHead, "", nil)
 	if err == nil {
@@ -953,7 +953,7 @@ func TestPlanStaleBranchReconciliationStillRefusesUnanchoredCommitsAndNamesTheSa
 	for _, want := range []string{
 		privateHead, // the unanchored at-risk commit is still named
 		"second private-only change",
-		"refs/no-mistakes/recover/<run>", // the new satisfier is named
+		"refs/alamino/recover/<run>", // the new satisfier is named
 		"tree-survival",
 		"ancestry",
 	} {
@@ -1006,7 +1006,7 @@ func TestPlanStaleBranchReconciliationIgnoresSymbolicRecoveryAnchors(t *testing.
 	ctx := context.Background()
 	work, gateDir, privateHead, _, liveHead := setupAnchoredPrivateBranch(t)
 
-	symbolic := "refs/no-mistakes/recover/01MSYMBOLICANCHOR000000000000"
+	symbolic := "refs/alamino/recover/01MSYMBOLICANCHOR000000000000"
 	reconcileGit(t, gateDir, "symbolic-ref", symbolic, "refs/heads/feature/reconcile")
 
 	anchors, err := listRecoveryAnchors(ctx, gateDir)
@@ -1062,7 +1062,7 @@ func TestPreservedByRecoveryAnchorsScansOversizedCandidateSetsInBatches(t *testi
 	ctx := context.Background()
 	work, gateDir, privateHead, _, liveHead := setupAnchoredPrivateBranch(t)
 	reconcileGit(t, gateDir, "fetch", work, liveHead+":refs/heads/live")
-	anchor := "refs/no-mistakes/recover/01MBATCHEDANCHOR00000000000000"
+	anchor := "refs/alamino/recover/01MBATCHEDANCHOR00000000000000"
 	reconcileGit(t, gateDir, "update-ref", anchor, privateHead)
 
 	candidates := make([]string, maxRecoveryCandidates+1)
@@ -1088,7 +1088,7 @@ func TestPreservedByRecoveryAnchorsIsBoundedToTheCandidateCommits(t *testing.T) 
 	// Stage an unrelated history in the gate and anchor it: the candidates are
 	// not descendants of it, so it must credit nothing.
 	reconcileGit(t, gateDir, "fetch", work, liveHead+":refs/heads/unrelated")
-	anchor := "refs/no-mistakes/recover/01MUNRELATEDANCHOR0000000000000"
+	anchor := "refs/alamino/recover/01MUNRELATEDANCHOR0000000000000"
 	reconcileGit(t, gateDir, "update-ref", anchor, reconcileGit(t, gateDir, "rev-parse", "refs/heads/unrelated"))
 
 	preserved, err := preservedByRecoveryAnchors(ctx, gateDir, liveHead, []string{privateHead})

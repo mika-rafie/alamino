@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func TestFixtureRootFromRepoRoot(t *testing.T) {
@@ -108,7 +108,7 @@ func TestDaemonStopDirFallsBackWhenWorkDirMoved(t *testing.T) {
 }
 
 func TestWaitForRunPrefersNewestRunOnBranch(t *testing.T) {
-	nmHome, err := os.MkdirTemp("/tmp", "nm-e2e-")
+	nmHome, err := os.MkdirTemp("/tmp", "alamino-e2e-")
 	if err != nil {
 		t.Fatalf("MkdirTemp: %v", err)
 	}

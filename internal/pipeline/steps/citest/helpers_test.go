@@ -3,8 +3,8 @@ package citest
 import (
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/pipeline"
-	"github.com/kunchenguid/no-mistakes/internal/types"
+	"github.com/mika-rafie/alamino/internal/pipeline"
+	"github.com/mika-rafie/alamino/internal/types"
 )
 
 func assertCIRestartsValidation(t *testing.T, outcome *pipeline.StepOutcome, err error) {

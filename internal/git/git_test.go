@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/runenv"
 )
 
 func TestMain(m *testing.M) {
-	dir, err := os.MkdirTemp("", "no-mistakes-git-tests-")
+	dir, err := os.MkdirTemp("", "alamino-git-tests-")
 	if err != nil {
 		panic(err)
 	}
@@ -536,7 +536,7 @@ func TestFetchRemoteBranchToPrivateRefPreservesSharedRefs(t *testing.T) {
 			if named {
 				remote = "origin"
 			}
-			privateRef := "refs/no-mistakes/test-fetch"
+			privateRef := "refs/alamino/test-fetch"
 			if err := FetchRemoteBranchToPrivateRef(context.Background(), target, remote, branch, privateRef); err != nil {
 				t.Fatal(err)
 			}

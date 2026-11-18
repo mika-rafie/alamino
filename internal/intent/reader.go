@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/runenv"
+	"github.com/mika-rafie/alamino/internal/runenv"
 )
 
 // Role identifies who produced a transcript message.
@@ -24,7 +24,7 @@ type Message struct {
 	Text      string
 	FilePaths []string
 	Timestamp time.Time
-	// Synthetic marks a message that was inserted by no-mistakes itself
+	// Synthetic marks a message that was inserted by alamino itself
 	// (e.g. a "middle messages omitted" notice from clampMessages). The
 	// transcript serializer renders these without a role prefix so the
 	// downstream LLM does not mistake them for user or assistant turns.

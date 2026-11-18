@@ -219,7 +219,7 @@ func TestMergeTakesForgeProfilesFromGlobalOnly(t *testing.T) {
 
 func TestLoadGlobalRejectsOwnerScopedProfileHostClaimedByPlugin(t *testing.T) {
 	_, err := LoadGlobalFromBytes([]byte("forge_profiles:\n  git.example.com/acme:\n    gh_user: acme-bot\n" +
-		"provider_plugins:\n  ssm:\n    command: nm-ssm\n    hosts: [git.example.com]\n"))
+		"provider_plugins:\n  ssm:\n    command: alamino-ssm\n    hosts: [git.example.com]\n"))
 	if err == nil || !strings.Contains(err.Error(), "also claimed by provider_plugins.ssm") {
 		t.Fatalf("LoadGlobalFromBytes error = %v, want plugin overlap", err)
 	}

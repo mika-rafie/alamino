@@ -9,16 +9,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kunchenguid/no-mistakes/internal/agent"
-	"github.com/kunchenguid/no-mistakes/internal/config"
-	"github.com/kunchenguid/no-mistakes/internal/db"
-	"github.com/kunchenguid/no-mistakes/internal/gate"
-	"github.com/kunchenguid/no-mistakes/internal/git"
-	"github.com/kunchenguid/no-mistakes/internal/ipc"
-	"github.com/kunchenguid/no-mistakes/internal/paths"
-	"github.com/kunchenguid/no-mistakes/internal/telemetry"
-	"github.com/kunchenguid/no-mistakes/internal/types"
-	"github.com/kunchenguid/no-mistakes/internal/wizard"
+	"github.com/mika-rafie/alamino/internal/agent"
+	"github.com/mika-rafie/alamino/internal/config"
+	"github.com/mika-rafie/alamino/internal/db"
+	"github.com/mika-rafie/alamino/internal/gate"
+	"github.com/mika-rafie/alamino/internal/git"
+	"github.com/mika-rafie/alamino/internal/ipc"
+	"github.com/mika-rafie/alamino/internal/paths"
+	"github.com/mika-rafie/alamino/internal/types"
+	"github.com/mika-rafie/alamino/internal/wizard"
 )
 
 var resolveWizardAgent = func(ctx context.Context, cfg *config.Config) error {
@@ -248,9 +247,6 @@ func runWizardWithMode(ctx context.Context, p *paths.Paths, state *repoState, sk
 		SuggestCommit: func(ctx context.Context) (string, error) {
 			return suggester.suggestCommit(ctx)
 		},
-		Track: func(action string, fields map[string]any) {
-			telemetry.Track("wizard", mergeTelemetryFields(fields, telemetry.Fields{"action": action}))
-		},
 	}
 
 	if wait != nil {
@@ -258,14 +254,6 @@ func runWizardWithMode(ctx context.Context, p *paths.Paths, state *repoState, sk
 			return wait(ctx, branch)
 		}
 	}
-
-	telemetry.Pageview("/wizard", telemetry.Fields{
-		"entrypoint":          wizardEntrypoint(auto),
-		"needs_branch":        state.needsBranch(),
-		"is_dirty":            state.dirty,
-		"detached":            state.detached,
-		"current_branch_role": wizardBranchRole(state.currentBranch, state.defaultBranch, state.detached),
-	})
 
 	run := wizardRun
 	if auto && !visible {
@@ -275,15 +263,6 @@ func runWizardWithMode(ctx context.Context, p *paths.Paths, state *repoState, sk
 	res, err := run(wizCfg)
 	if err == nil && res.Err != nil {
 		err = res.Err
-	}
-	if err == nil {
-		telemetry.Track("wizard", telemetry.Fields{
-			"action":         "result",
-			"status":         wizardResultStatus(res),
-			"branch_created": res.BranchCreated,
-			"commit_made":    res.CommitMade,
-			"pushed":         res.Pushed,
-		})
 	}
 	return res, err
 }
@@ -323,7 +302,7 @@ func awaitDaemonRunRegistration(ctx context.Context, client *ipc.Client, repoID,
 		return err
 	}
 	if run == nil {
-		logPath := filepath.Join("~/.no-mistakes", "repos", repoID+".git", "notify-push.log")
+		logPath := filepath.Join("~/.alamino", "repos", repoID+".git", "notify-push.log")
 		if p, pathErr := paths.New(); pathErr == nil {
 			logPath = filepath.Join(p.RepoDir(repoID), "notify-push.log")
 		}
@@ -361,42 +340,4 @@ func waitForActiveRun(ctx context.Context, client *ipc.Client, repoID, branch st
 		case <-poll.C:
 		}
 	}
-}
-
-func wizardBranchRole(currentBranch, defaultBranch string, detached bool) string {
-	if detached {
-		return "detached"
-	}
-	if currentBranch != "" && currentBranch == defaultBranch {
-		return "default"
-	}
-	return "feature"
-}
-
-func wizardResultStatus(res wizard.Result) string {
-	if res.Success {
-		return "completed"
-	}
-	if res.Aborted {
-		return "aborted"
-	}
-	return "closed"
-}
-
-func wizardEntrypoint(auto bool) string {
-	if auto {
-		return "wizard_auto"
-	}
-	return "wizard"
-}
-
-func mergeTelemetryFields(fields map[string]any, extra telemetry.Fields) telemetry.Fields {
-	merged := make(telemetry.Fields, len(fields)+len(extra))
-	for k, v := range fields {
-		merged[k] = v
-	}
-	for k, v := range extra {
-		merged[k] = v
-	}
-	return merged
 }
