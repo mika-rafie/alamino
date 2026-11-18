@@ -1,20 +1,17 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/mika-rafie/alamino/internal/cli"
 	"github.com/mika-rafie/alamino/internal/daemon"
 	"github.com/mika-rafie/alamino/internal/paths"
 	"github.com/mika-rafie/alamino/internal/shellenv"
-	"github.com/mika-rafie/alamino/internal/telemetry"
 	"github.com/mika-rafie/alamino/internal/update"
 )
 
@@ -95,12 +92,6 @@ func run() int {
 	// leak into user-facing output. The daemon process sets up its own
 	// file-based logger before reaching this point.
 	slog.SetDefault(slog.New(slog.NewTextHandler(cliLogWriter(), nil)))
-	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 750*time.Millisecond)
-		defer cancel()
-		_ = telemetry.Close(ctx)
-	}()
-
 	return cli.Execute()
 }
 

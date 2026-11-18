@@ -37,7 +37,6 @@ import (
 	"github.com/mika-rafie/alamino/internal/reviewqa"
 	"github.com/mika-rafie/alamino/internal/runenv"
 	"github.com/mika-rafie/alamino/internal/safeurl"
-	"github.com/mika-rafie/alamino/internal/telemetry"
 	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/mika-rafie/alamino/internal/verificationplan"
 	"github.com/mika-rafie/alamino/internal/worktrees"
@@ -571,7 +570,6 @@ func (m *RunManager) resumeRecoveredRun(plan recoveredRunPlan) {
 	spawn := func() {
 		m.wg.Add(1)
 		go func() {
-			startedAt := time.Now()
 			defer m.wg.Done()
 			defer close(done)
 			parkedAtShutdown := false
@@ -622,21 +620,6 @@ func (m *RunManager) resumeRecoveredRun(plan recoveredRunPlan) {
 				}
 				slog.Error("recovered pipeline failed", "run_id", plan.run.ID, "error", err)
 			}
-			fields := telemetry.Fields{
-				"action":      "finished",
-				"trigger":     "recovery",
-				"agent":       string(plan.cfg.Agent),
-				"branch_role": telemetryBranchRole(plan.run.Branch, plan.repo.DefaultBranch),
-				"status":      string(plan.run.Status),
-				"duration_ms": time.Since(startedAt).Milliseconds(),
-				"step_count":  len(plan.steps),
-				"pr_created":  plan.run.PRURL != nil && *plan.run.PRURL != "",
-			}
-			if failedStep := telemetryFailedStepName(m.db, plan.run.ID); failedStep != "" {
-				fields["failed_step"] = failedStep
-			}
-			addRunPerformanceSummary(m.db, plan.run.ID, fields)
-			telemetry.Track("run", fields)
 			m.autoIngestCIFalseNegatives(runCtx, plan.cfg, plan.run.ID)
 		}()
 	}
@@ -1785,28 +1768,15 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	sequence := m.reserveAdmission()
 	defer m.releaseAdmission(sequence)
-	branchRole := telemetryBranchRole(branch, repo.DefaultBranch)
-	trackStartFailure := func(stage string) {
-		telemetry.Track("run", telemetry.Fields{
-			"action":      "start_failed",
-			"trigger":     trigger,
-			"branch_role": branchRole,
-			"stage":       stage,
-		})
-	}
-
 	if m.shuttingDown.Load() {
-		trackStartFailure("daemon_shutdown")
 		return "", fmt.Errorf("daemon is shutting down")
 	}
 	if m.restartPending() {
-		trackStartFailure("restart_pending")
 		return "", errRestartPending
 	}
 	// Refuse invalid supplied PR text before any active run is superseded.
 	prText, prTextErr := normalizeRunPRText(prText)
 	if prTextErr != nil {
-		trackStartFailure("invalid_pr_text")
 		return "", prTextErr
 	}
 	// Best-effort only: a clone's remotes may change after init. Refresh the
@@ -1876,7 +1846,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		}
 	}
 	if globalCfgErr != nil && strings.Contains(globalCfgErr.Error(), "intent.check") {
-		trackStartFailure("intent_check_config")
 		return "", fmt.Errorf("load intent check policy: %w", globalCfgErr)
 	}
 	var intentCheckJSON string
@@ -1890,7 +1859,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		if trustedFetchErr == nil {
 			check, err = m.effectiveIntentCheckBeforeRun(ctx, repo, globalCfg, trustedSHA)
 			if err != nil {
-				trackStartFailure("intent_check_config")
 				return "", err
 			}
 		} else {
@@ -1909,7 +1877,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 			if matches := check.Match(policyIntent); len(matches) > 0 {
 				switch check.Mode {
 				case config.IntentCheckReject:
-					trackStartFailure("intent_check_rejected")
 					return "", fmt.Errorf("intent rejected by configured rules: %s", strings.Join(matches, ", "))
 				case config.IntentCheckWarn:
 					slog.Warn("run intent matched configured rules", "rules", strings.Join(matches, ", "))
@@ -1918,7 +1885,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		}
 		policy, err := json.Marshal(check)
 		if err != nil {
-			trackStartFailure("intent_check_snapshot")
 			return "", fmt.Errorf("serialize intent check policy: %w", err)
 		}
 		intentCheckJSON = string(policy)
@@ -1927,17 +1893,14 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	var pin *agentcfg.PiProfile
 	if request := agentcfg.OptionalPiProfile(profiles); request != nil {
 		if globalCfgErr != nil {
-			trackStartFailure("load_global_config")
 			return "", fmt.Errorf("load global config: %w", globalCfgErr)
 		}
 		var err error
 		pin, err = globalCfg.ResolvePiProfile(request)
 		if err != nil {
-			trackStartFailure("invalid_pi_profile")
 			return "", err
 		}
 		if err := m.validatePiProfileAgentsBeforeCancel(ctx, repo, headSHA, globalCfg, reviewer); err != nil {
-			trackStartFailure("invalid_pi_profile")
 			return "", err
 		}
 	}
@@ -1986,7 +1949,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 
 	storedPRBaseBranch, err := normalizeRunPRBaseBranch(prBaseBranch)
 	if err != nil {
-		trackStartFailure("invalid_pr_base_branch")
 		return "", err
 	}
 	// The caller-side omit decision is the OR of the explicit per-run request
@@ -1997,7 +1959,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 
 	run, err := m.db.InsertRunWithDestinationAndCallerRestrictions(repo.ID, branch, headSHA, baseSHA, runIntent, launchNonce, validationGeneration, intentDigest, storedPRBaseBranch, storedOmitIntent, plan, prText, homes, destination, restrictions, pin, reviewer)
 	if err != nil {
-		trackStartFailure("create_run")
 		return "", fmt.Errorf("create run: %w", err)
 	}
 	if err := m.db.BindRunCommitIdentity(run.ID, identity); err != nil {
@@ -2007,7 +1968,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	if intentCheckJSON != "" {
 		if err := m.db.SetRunIntentCheck(run.ID, intentCheckJSON); err != nil {
 			m.db.UpdateRunError(run.ID, fmt.Sprintf("pin intent check: %s", err))
-			trackStartFailure("pin_intent_check")
 			return "", fmt.Errorf("pin intent check: %w", err)
 		}
 		run.IntentCheckJSON = &intentCheckJSON
@@ -2015,7 +1975,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	if inherited := strings.TrimSpace(inheritedPRURL); inherited != "" {
 		if err := m.db.UpdateRunPRURL(run.ID, inherited); err != nil {
 			m.db.UpdateRunError(run.ID, fmt.Sprintf("inherit PR URL: %s", err))
-			trackStartFailure("inherit_pr_url")
 			return "", fmt.Errorf("inherit PR URL: %w", err)
 		}
 		run.PRURL = &inherited
@@ -2024,7 +1983,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		if err := m.db.UpdateRunClosingIssueRefs(run.ID, closingIssues); err != nil {
 			msg := fmt.Sprintf("persist closing issue references: %s", err)
 			m.db.UpdateRunError(run.ID, msg)
-			trackStartFailure("persist_closing_issue_refs")
 			return "", fmt.Errorf("persist closing issue references: %w", err)
 		}
 	}
@@ -2032,7 +1990,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	// global config. Explicit profiles already resolved before supersession.
 	if globalCfgErr != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("load config: %s", globalCfgErr))
-		trackStartFailure("load_global_config")
 		return "", fmt.Errorf("load global config: %w", globalCfgErr)
 	}
 
@@ -2047,18 +2004,15 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	checkouts, err := registeredCheckouts(m.db)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("list registered checkouts: %s", err))
-		trackStartFailure("list_registered_checkouts")
 		return "", fmt.Errorf("list registered checkouts: %w", err)
 	}
 	if err := layout.ValidateCheckout(repo.WorkingPath, checkouts...); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("worktree placement: %s", err))
-		trackStartFailure("invalid_worktree_placement")
 		return "", fmt.Errorf("worktree placement: %w", err)
 	}
 	wtDir := layout.Dir(repo.ID, repo.WorkingPath, run.ID)
 	if err := m.db.SetRunWorktreeDir(run.ID, wtDir); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record worktree placement: %s", err))
-		trackStartFailure("record_worktree_placement")
 		return "", fmt.Errorf("record worktree placement: %w", err)
 	}
 	if shared := retry.sharedEvidenceDir(); shared != "" {
@@ -2067,19 +2021,16 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		m.evidencePinMu.Unlock()
 		if err != nil {
 			m.db.UpdateRunError(run.ID, fmt.Sprintf("record evidence dir: %s", err))
-			trackStartFailure("record_evidence_dir")
 			return "", fmt.Errorf("record evidence dir: %w", err)
 		}
 		run.EvidenceDir = &shared
 	}
 	if err := m.pinRunEvidenceDir(run, globalCfg); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record evidence dir: %s", err))
-		trackStartFailure("record_evidence_dir")
 		return "", fmt.Errorf("record evidence dir: %w", err)
 	}
 	if err := git.WorktreeAdd(ctx, gateDir, wtDir, headSHA); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("create worktree: %s", err))
-		trackStartFailure("create_worktree")
 		return "", fmt.Errorf("create worktree: %w", err)
 	}
 
@@ -2097,13 +2048,11 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 
 	if err := git.CopyLocalUserIdentity(ctx, wtDir, identity); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("configure worktree git identity: %s", err))
-		trackStartFailure("configure_worktree_identity")
 		return "", fmt.Errorf("configure worktree git identity: %w", err)
 	}
 	if storedPRBaseBranch != "" && destination == nil {
 		if err := steps.VerifyRemoteBranchExists(ctx, wtDir, storedPRBaseBranch); err != nil {
 			m.db.UpdateRunError(run.ID, err.Error())
-			trackStartFailure("pr_base_branch_missing")
 			return "", err
 		}
 	}
@@ -2130,7 +2079,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	repoCfg, err := config.LoadRepo(wtDir)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("load config: %s", err))
-		trackStartFailure("load_repo_config")
 		return "", fmt.Errorf("load repo config: %w", err)
 	}
 	// SECURITY: load the code-executing selection fields (commands.* and
@@ -2154,7 +2102,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := assertGateTrustedConfigReadable(ctx, wtDir, repo.DefaultBranch, trustedSHA); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("trusted_config_unreadable")
 		return "", err
 	}
 	trustedRepoCfg := loadTrustedRepoConfig(ctx, wtDir, trustedSHA, run.ID)
@@ -2184,7 +2131,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := applyPinnedIntentCheck(cfg, run); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("pinned_intent_check")
 		return "", err
 	}
 	policyIntent := ""
@@ -2195,7 +2141,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		switch cfg.Intent.Check.Mode {
 		case config.IntentCheckReject:
 			m.db.UpdateRunError(run.ID, "intent rejected by configured rules")
-			trackStartFailure("intent_check_rejected")
 			return "", fmt.Errorf("intent rejected by configured rules: %s", strings.Join(matches, ", "))
 		case config.IntentCheckWarn:
 			slog.Warn("run intent matched configured rules", "rules", strings.Join(matches, ", "))
@@ -2203,18 +2148,15 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := cfg.Review.ValidatePathInstructionsBudget(); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("review_path_instructions_budget")
 		return "", err
 	}
 	if retry != nil {
 		if err := retry.proveAtLaunch(ctx, m, globalCfg, cfg, effectiveRepoCfg, run.ID); err != nil {
 			m.discardRefusedRetryRun(run.ID, cfg, retry)
-			trackStartFailure("retry_proof")
 			return "", err
 		}
 		if err := retry.record(m.db, run); err != nil {
 			m.discardRefusedRetryRun(run.ID, cfg, retry)
-			trackStartFailure("record_retry")
 			return "", err
 		}
 	}
@@ -2239,14 +2181,12 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err := m.paths.ValidateEvidenceRoot(cfg.Test.Evidence.LocalRoot); err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("evidence_root")
 		return "", err
 	}
 	cfg.TrustedConfigSHA = trustedSHA
 	if globalCfg.Eval.CaptureProvenance {
 		if err := cfg.EnableEvalProvenance(globalCfg, effectiveRepoCfg); err != nil {
 			m.db.UpdateRunError(run.ID, err.Error())
-			trackStartFailure("eval_provenance")
 			return "", err
 		}
 	}
@@ -2256,7 +2196,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	}
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("resolve forge profile: %s", err))
-		trackStartFailure("resolve_forge_profile")
 		return "", fmt.Errorf("resolve forge profile: %w", err)
 	}
 
@@ -2267,13 +2206,11 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	ag, quotaRecord, err := newPipelineAgent(ctx, cfg, pipelineEvidenceRoot(m.paths, cfg, run), exec.LookPath, forgeEnvironment(forgeCtx), nil)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("create_agent")
 		return "", err
 	}
 	if err := persistQuotaRoutingRecord(m.db, run.ID, quotaRecord); err != nil {
 		_ = ag.Close()
 		m.db.UpdateRunError(run.ID, err.Error())
-		trackStartFailure("record_quota_routing")
 		return "", err
 	}
 
@@ -2286,25 +2223,14 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 	pinnedGates, err := config.MarshalGates(cfg.Gates)
 	if err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record gates: %s", err))
-		trackStartFailure("record_gates")
 		return "", fmt.Errorf("record gates: %w", err)
 	}
 	if err := m.db.SetRunGates(run.ID, pinnedGates); err != nil {
 		m.db.UpdateRunError(run.ID, fmt.Sprintf("record gates: %s", err))
-		trackStartFailure("record_gates")
 		return "", fmt.Errorf("record gates: %w", err)
 	}
 
 	execSteps := steps.WithCustomGates(m.steps(), cfg.Gates)
-	telemetry.Track("run", telemetry.Fields{
-		"action":      "started",
-		"trigger":     trigger,
-		"agent":       string(cfg.Agent),
-		"branch_role": branchRole,
-		"step_count":  len(execSteps),
-		"demo_mode":   steps.IsDemoMode(),
-	})
-
 	// Create executor with event broadcast.
 	runCtx, cancel := context.WithCancelCause(context.Background())
 	executor := pipeline.NewExecutor(m.db, m.paths, cfg, ag, execSteps, m.broadcast)
@@ -2335,7 +2261,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 		// Launch pipeline in background.
 		m.wg.Add(1)
 		go func() {
-			startedAt := time.Now()
 			defer m.wg.Done()
 			defer close(done)
 			parkedAtShutdown := false
@@ -2345,21 +2270,6 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 					slog.Error("panic in pipeline goroutine", "run_id", run.ID, "panic", r)
 					run.Status = types.RunFailed
 					run.Error = &errMsg
-					fields := telemetry.Fields{
-						"action":      "finished",
-						"trigger":     trigger,
-						"agent":       string(cfg.Agent),
-						"branch_role": branchRole,
-						"status":      string(run.Status),
-						"duration_ms": time.Since(startedAt).Milliseconds(),
-						"step_count":  len(execSteps),
-						"pr_created":  run.PRURL != nil && *run.PRURL != "",
-					}
-					if failedStep := telemetryFailedStepName(m.db, run.ID); failedStep != "" {
-						fields["failed_step"] = failedStep
-					}
-					addRunPerformanceSummary(m.db, run.ID, fields)
-					telemetry.Track("run", fields)
 					verifiedHead, verified := preserveRunHead(m.db, wtDir, run)
 					var dbErr error
 					if verified {
@@ -2397,35 +2307,8 @@ func (m *RunManager) startRunWithIntentSourceLocked(ctx context.Context, repo *d
 				slog.Info("run left parked for resume after daemon restart", "run_id", run.ID)
 				return
 			} else if err != nil {
-				fields := telemetry.Fields{
-					"action":      "finished",
-					"trigger":     trigger,
-					"agent":       string(cfg.Agent),
-					"branch_role": branchRole,
-					"status":      string(run.Status),
-					"duration_ms": time.Since(startedAt).Milliseconds(),
-					"step_count":  len(execSteps),
-					"pr_created":  run.PRURL != nil && *run.PRURL != "",
-				}
-				if failedStep := telemetryFailedStepName(m.db, run.ID); failedStep != "" {
-					fields["failed_step"] = failedStep
-				}
-				addRunPerformanceSummary(m.db, run.ID, fields)
-				telemetry.Track("run", fields)
 				slog.Error("pipeline failed", "run_id", run.ID, "error", err)
 			} else {
-				fields := telemetry.Fields{
-					"action":      "finished",
-					"trigger":     trigger,
-					"agent":       string(cfg.Agent),
-					"branch_role": branchRole,
-					"status":      string(run.Status),
-					"duration_ms": time.Since(startedAt).Milliseconds(),
-					"step_count":  len(execSteps),
-					"pr_created":  run.PRURL != nil && *run.PRURL != "",
-				}
-				addRunPerformanceSummary(m.db, run.ID, fields)
-				telemetry.Track("run", fields)
 				slog.Info("pipeline completed", "run_id", run.ID)
 			}
 			// Collection runs here, on the finished run, because a case is only
@@ -2578,43 +2461,6 @@ func (m *RunManager) relabelEvalRun(ctx context.Context, cfg *config.Config, run
 	if _, err := eval.RelabelRun(ctx, store, m.paths, m.db, runID); err != nil {
 		slog.Warn("failed to relabel eval case after merge", "run_id", runID, "error", err)
 	}
-}
-
-// addRunPerformanceSummary attaches the bounded per-run performance rollup
-// to the terminal "run finished" event: low-cardinality counts only. The
-// detailed per-invocation evidence (session keys, models, timings, tokens)
-// stays in the local agent_invocations table and is never sent remotely.
-func addRunPerformanceSummary(database *db.DB, runID string, fields telemetry.Fields) {
-	summary, err := database.AgentInvocationSummaryForRun(runID)
-	if err != nil {
-		return
-	}
-	fields["agent_invocations"] = summary.Count
-	fields["resumed_invocations"] = summary.Resumed
-	fields["fallback_invocations"] = summary.Fallback
-}
-
-func telemetryBranchRole(branch, defaultBranch string) string {
-	if branch == "" {
-		return "unknown"
-	}
-	if defaultBranch != "" && branch == defaultBranch {
-		return "default"
-	}
-	return "feature"
-}
-
-func telemetryFailedStepName(database *db.DB, runID string) string {
-	steps, err := database.GetStepsByRun(runID)
-	if err != nil {
-		return ""
-	}
-	for _, step := range steps {
-		if step.Status == types.StepStatusFailed {
-			return telemetry.StepName(step.StepName)
-		}
-	}
-	return ""
 }
 
 // HandleRespond routes a gate response to the executor for the given run.

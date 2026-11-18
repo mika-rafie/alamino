@@ -6,8 +6,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 var doctorACPAliasRows = []struct {
@@ -21,9 +19,6 @@ var doctorACPAliasRows = []struct {
 func TestDoctorACPAliasRequiresBothBinaries(t *testing.T) {
 	for _, tt := range doctorACPAliasRows {
 		t.Run(tt.row, func(t *testing.T) {
-			restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-			defer restore()
-
 			t.Setenv("ALAMINO_HOME", t.TempDir())
 
 			binDir := t.TempDir()
@@ -46,9 +41,6 @@ func TestDoctorACPAliasRequiresBothBinaries(t *testing.T) {
 func TestDoctorACPAliasDetectedWithBothBinaries(t *testing.T) {
 	for _, tt := range doctorACPAliasRows {
 		t.Run(tt.row, func(t *testing.T) {
-			restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-			defer restore()
-
 			t.Setenv("ALAMINO_HOME", t.TempDir())
 
 			binDir := t.TempDir()

@@ -32,28 +32,26 @@ func newStatsCmd() *cobra.Command {
 		Short: "Show historical alamino usage stats",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackCommand("stats", func() error {
-				_, database, err := openResources()
-				if err != nil {
-					return err
-				}
-				defer database.Close()
+			_, database, err := openResources()
+			if err != nil {
+				return err
+			}
+			defer database.Close()
 
-				if agents || runID != "" {
-					return renderAgentPerfReport(cmd.OutOrStdout(), database, runID)
-				}
+			if agents || runID != "" {
+				return renderAgentPerfReport(cmd.OutOrStdout(), database, runID)
+			}
 
-				stats, err := database.GetStats()
-				if err != nil {
-					return fmt.Errorf("get stats: %w", err)
-				}
+			stats, err := database.GetStats()
+			if err != nil {
+				return fmt.Errorf("get stats: %w", err)
+			}
 
-				fmt.Fprintln(cmd.OutOrStdout(), renderStatsDashboard(stats))
-				for _, routing := range stats.QuotaRouting {
-					fmt.Fprintf(cmd.OutOrStdout(), "run %s\n%s", routing.RunID, axiDoc(quotaRoutingField(routing.Record)))
-				}
-				return nil
-			})
+			fmt.Fprintln(cmd.OutOrStdout(), renderStatsDashboard(stats))
+			for _, routing := range stats.QuotaRouting {
+				fmt.Fprintf(cmd.OutOrStdout(), "run %s\n%s", routing.RunID, axiDoc(quotaRoutingField(routing.Record)))
+			}
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&agents, "agents", false, "show local agent performance telemetry (per-purpose invocation aggregates)")

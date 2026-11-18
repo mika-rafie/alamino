@@ -35,7 +35,7 @@ type CandidateReport struct {
 }
 
 // Report loads every local evaluation result grouped by candidate. It never
-// contacts a forge, agent provider, telemetry endpoint, or remote case store.
+// contacts a forge, agent provider, or remote case store.
 func Report(store *Store) ([]CandidateReport, error) {
 	evaluations, err := store.evaluations()
 	if err != nil {

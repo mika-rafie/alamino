@@ -311,7 +311,6 @@ func TestWriteServiceFileTightensModeWhenProxyPresent(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("POSIX file modes (0644/0600) are not enforced on Windows; the proxy-bearing service file is only generated on macOS/Linux")
 	}
-	t.Setenv("ALAMINO_TELEMETRY", "")
 	for _, key := range proxyEnvKeys {
 		t.Setenv(key, "")
 	}
@@ -355,7 +354,6 @@ func TestWriteServiceFileReplacesAtomicallyWhenProxyPresent(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("POSIX file modes (0644/0600) are not enforced on Windows; the proxy-bearing service file is only generated on macOS/Linux")
 	}
-	t.Setenv("ALAMINO_TELEMETRY", "")
 	for _, key := range proxyEnvKeys {
 		t.Setenv(key, "")
 	}

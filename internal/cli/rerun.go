@@ -49,85 +49,83 @@ func newRerunCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return trackCommand("rerun", func() error {
-				p, d, err := openResources()
-				if err != nil {
-					return err
-				}
-				defer d.Close()
+			p, d, err := openResources()
+			if err != nil {
+				return err
+			}
+			defer d.Close()
 
-				repo, err := findRepo(d)
-				if err != nil {
-					return err
-				}
+			repo, err := findRepo(d)
+			if err != nil {
+				return err
+			}
 
-				branch, err := git.CurrentBranch(context.Background(), ".")
-				if err != nil {
-					return fmt.Errorf("get current branch: %w", err)
-				}
-				if branch == "HEAD" {
-					return fmt.Errorf("not on a branch")
-				}
-				if err := daemon.EnsureDaemon(p); err != nil {
-					return fmt.Errorf("start daemon: %w", err)
-				}
+			branch, err := git.CurrentBranch(context.Background(), ".")
+			if err != nil {
+				return fmt.Errorf("get current branch: %w", err)
+			}
+			if branch == "HEAD" {
+				return fmt.Errorf("not on a branch")
+			}
+			if err := daemon.EnsureDaemon(p); err != nil {
+				return fmt.Errorf("start daemon: %w", err)
+			}
 
-				client, err := ipc.Dial(p.Socket())
-				if err != nil {
-					return fmt.Errorf("connect to daemon: %w", err)
+			client, err := ipc.Dial(p.Socket())
+			if err != nil {
+				return fmt.Errorf("connect to daemon: %w", err)
+			}
+			defer client.Close()
+			if err := requireDaemonCallerRestrictions(client, restrictions); err != nil {
+				return err
+			}
+			reviewer, err = resolveReviewer(client, repo.ID, reviewer)
+			if err != nil {
+				return err
+			}
+			// A rerun inherits omission from the selected prior run, and
+			// only the daemon knows that selection, so the caller can never
+			// rule omission out: probe unconditionally, whatever the flag
+			// or the global default says.
+			if err := probeDaemonOmitIntent(client); err != nil {
+				return err
+			}
+			if err := requireDaemonHonorsClosingIssueRefs(client, closes); err != nil {
+				return err
+			}
+			if err := requireDaemonHonorsRunPRText(client, prText); err != nil {
+				return err
+			}
+			if profile != nil {
+				var resolved agentcfg.PiProfile
+				if err := client.Call(ipc.MethodResolvePiProfile, profile, &resolved); err != nil {
+					return fmt.Errorf("resolve Pi profile: %w", err)
 				}
-				defer client.Close()
-				if err := requireDaemonCallerRestrictions(client, restrictions); err != nil {
+				if err := resolved.Validate(); err != nil {
 					return err
 				}
-				reviewer, err = resolveReviewer(client, repo.ID, reviewer)
-				if err != nil {
-					return err
-				}
-				// A rerun inherits omission from the selected prior run, and
-				// only the daemon knows that selection, so the caller can never
-				// rule omission out: probe unconditionally, whatever the flag
-				// or the global default says.
-				if err := probeDaemonOmitIntent(client); err != nil {
-					return err
-				}
-				if err := requireDaemonHonorsClosingIssueRefs(client, closes); err != nil {
-					return err
-				}
-				if err := requireDaemonHonorsRunPRText(client, prText); err != nil {
-					return err
-				}
-				if profile != nil {
-					var resolved agentcfg.PiProfile
-					if err := client.Call(ipc.MethodResolvePiProfile, profile, &resolved); err != nil {
-						return fmt.Errorf("resolve Pi profile: %w", err)
-					}
-					if err := resolved.Validate(); err != nil {
-						return err
-					}
-					profile = &resolved
-				}
+				profile = &resolved
+			}
 
-				callerHead, err := rerunCallerHead(cmd.Context())
-				if err != nil {
-					return err
-				}
-				if err := client.RequireTranscriptHomes(); err != nil {
-					return err
-				}
-				homes := runenv.CaptureTranscriptHomes()
-				identity, err := captureSubmissionIdentity(cmd.Context(), client, ".")
-				if err != nil {
-					return err
-				}
-				var result ipc.RerunResult
-				if err := client.Call(ipc.MethodRerun, &ipc.RerunParams{CommitIdentity: identity, CallerRestrictions: restrictions, TranscriptHomes: homes, RepoID: repo.ID, Branch: branch, Intent: intent, PRBaseBranch: baseBranch, OmitIntent: noPublishIntent, CallerHeadSHA: callerHead, PiProfile: profile, ReviewerProfile: reviewer, ClosingIssueRefs: closes, PRTitle: prText.Title, PRBody: prText.Body}, &result); err != nil {
-					return fmt.Errorf("rerun pipeline: %w", err)
-				}
+			callerHead, err := rerunCallerHead(cmd.Context())
+			if err != nil {
+				return err
+			}
+			if err := client.RequireTranscriptHomes(); err != nil {
+				return err
+			}
+			homes := runenv.CaptureTranscriptHomes()
+			identity, err := captureSubmissionIdentity(cmd.Context(), client, ".")
+			if err != nil {
+				return err
+			}
+			var result ipc.RerunResult
+			if err := client.Call(ipc.MethodRerun, &ipc.RerunParams{CommitIdentity: identity, CallerRestrictions: restrictions, TranscriptHomes: homes, RepoID: repo.ID, Branch: branch, Intent: intent, PRBaseBranch: baseBranch, OmitIntent: noPublishIntent, CallerHeadSHA: callerHead, PiProfile: profile, ReviewerProfile: reviewer, ClosingIssueRefs: closes, PRTitle: prText.Title, PRBody: prText.Body}, &result); err != nil {
+				return fmt.Errorf("rerun pipeline: %w", err)
+			}
 
-				fmt.Fprintf(cmd.OutOrStdout(), "  %s Rerun started for %s %s\n", sGreen.Render("✓"), branch, sDim.Render(result.RunID))
-				return nil
-			})
+			fmt.Fprintf(cmd.OutOrStdout(), "  %s Rerun started for %s %s\n", sGreen.Render("✓"), branch, sDim.Render(result.RunID))
+			return nil
 		},
 	}
 	cmd.Flags().StringVar(&intent, "intent", "", "explicit intent for this rerun (overrides inherited intent or fresh inference)")

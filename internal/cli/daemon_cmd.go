@@ -628,39 +628,37 @@ func newDaemonStartCmd() *cobra.Command {
 		Use:   "start",
 		Short: "Install or refresh the managed daemon service and start it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackCommand("daemon.start", func() error {
-				p, err := paths.New()
-				if err != nil {
+			p, err := paths.New()
+			if err != nil {
+				return err
+			}
+			if err := ipc.CheckEndpointPath(p.Socket()); err != nil {
+				return err
+			}
+			if err := p.EnsureDirs(); err != nil {
+				return err
+			}
+			// Restarting for service drift or an older daemon must pass
+			// the active-run guard before stopping or rewriting anything.
+			guard := func() error {
+				logLifecycleInvocation("daemon.start", force)
+				return guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon start", force)
+			}
+			if older, _ := cmd.Context().Value(olderDaemonContextKey{}).(bool); older {
+				if err := guard(); err != nil {
 					return err
 				}
-				if err := ipc.CheckEndpointPath(p.Socket()); err != nil {
-					return err
+				if err := daemonStopFn(p); err != nil {
+					return fmt.Errorf("stop older daemon: %w", err)
 				}
-				if err := p.EnsureDirs(); err != nil {
-					return err
+				if err := daemonStartFn(p); err != nil {
+					return fmt.Errorf("start daemon: %w", err)
 				}
-				// Restarting for service drift or an older daemon must pass
-				// the active-run guard before stopping or rewriting anything.
-				guard := func() error {
-					logLifecycleInvocation("daemon.start", force)
-					return guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon start", force)
-				}
-				if older, _ := cmd.Context().Value(olderDaemonContextKey{}).(bool); older {
-					if err := guard(); err != nil {
-						return err
-					}
-					if err := daemonStopFn(p); err != nil {
-						return fmt.Errorf("stop older daemon: %w", err)
-					}
-					if err := daemonStartFn(p); err != nil {
-						return fmt.Errorf("start daemon: %w", err)
-					}
-				} else if err := daemonStartGuardedFn(p, guard); err != nil {
-					return err
-				}
-				fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon started\n", sGreen.Render("✓"))
-				return nil
-			})
+			} else if err := daemonStartGuardedFn(p, guard); err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon started\n", sGreen.Render("✓"))
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "restart a running daemon to refresh its service definition even when pipeline runs are active")
@@ -674,23 +672,21 @@ func newDaemonStopCmd() *cobra.Command {
 		Short: "Stop the running daemon",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logLifecycleInvocation("daemon.stop", force)
-			return trackCommand("daemon.stop", func() error {
-				p, err := paths.New()
-				if err != nil {
-					return err
-				}
-				if err := guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon stop", force); err != nil {
-					return err
-				}
-				if err := daemonStopFn(p); err != nil {
-					return err
-				}
-				fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon stopped\n", sGreen.Render("✓"))
-				if path := daemonLaunchAgentPathFn(p); path != "" {
-					fmt.Fprintf(cmd.OutOrStdout(), "  Service starts again at the next login; LaunchAgent remains at %s. Remove it with `alamino daemon uninstall`.\n", path)
-				}
-				return nil
-			})
+			p, err := paths.New()
+			if err != nil {
+				return err
+			}
+			if err := guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon stop", force); err != nil {
+				return err
+			}
+			if err := daemonStopFn(p); err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon stopped\n", sGreen.Render("✓"))
+			if path := daemonLaunchAgentPathFn(p); path != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "  Service starts again at the next login; LaunchAgent remains at %s. Remove it with `alamino daemon uninstall`.\n", path)
+			}
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "stop the daemon even when pipeline runs are active")
@@ -705,29 +701,27 @@ func newDaemonUninstallCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logLifecycleInvocation("daemon.uninstall", force)
-			return trackCommand("daemon.uninstall", func() error {
-				if !daemonUninstallSupportedFn() {
-					fmt.Fprintln(cmd.OutOrStdout(), "  No service removal is available on this platform; daemon uninstall changed nothing.")
-					return nil
-				}
-				p, err := paths.New()
-				if err != nil {
-					return err
-				}
-				if err := guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon uninstall", force); err != nil {
-					return err
-				}
-				definition, err := daemonUninstallFn(p)
-				if err != nil {
-					return err
-				}
-				if definition == "" {
-					fmt.Fprintf(cmd.OutOrStdout(), "  No managed daemon service is installed for ALAMINO_HOME %s.\n", p.Root())
-				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "  %s removed managed daemon service: %s\n", sGreen.Render("✓"), definition)
-				}
+			if !daemonUninstallSupportedFn() {
+				fmt.Fprintln(cmd.OutOrStdout(), "  No service removal is available on this platform; daemon uninstall changed nothing.")
 				return nil
-			})
+			}
+			p, err := paths.New()
+			if err != nil {
+				return err
+			}
+			if err := guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon uninstall", force); err != nil {
+				return err
+			}
+			definition, err := daemonUninstallFn(p)
+			if err != nil {
+				return err
+			}
+			if definition == "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "  No managed daemon service is installed for ALAMINO_HOME %s.\n", p.Root())
+			} else {
+				fmt.Fprintf(cmd.OutOrStdout(), "  %s removed managed daemon service: %s\n", sGreen.Render("✓"), definition)
+			}
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "uninstall the daemon service even when pipeline runs are active")
@@ -741,43 +735,41 @@ func newDaemonRestartCmd() *cobra.Command {
 		Short: "Restart the daemon (stop if running, then start)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logLifecycleInvocation("daemon.restart", force)
-			return trackCommand("daemon.restart", func() error {
-				p, err := paths.New()
+			p, err := paths.New()
+			if err != nil {
+				return err
+			}
+			if err := ipc.CheckEndpointPath(p.Socket()); err != nil {
+				return err
+			}
+			if err := p.EnsureDirs(); err != nil {
+				return err
+			}
+			if whenIdle && !force {
+				alive, err := daemonIsRunningFn(p)
 				if err != nil {
 					return err
 				}
-				if err := ipc.CheckEndpointPath(p.Socket()); err != nil {
-					return err
-				}
-				if err := p.EnsureDirs(); err != nil {
-					return err
-				}
-				if whenIdle && !force {
-					alive, err := daemonIsRunningFn(p)
+				if alive {
+					status, err := daemonScheduleRestartFn(p)
 					if err != nil {
 						return err
 					}
-					if alive {
-						status, err := daemonScheduleRestartFn(p)
-						if err != nil {
-							return err
-						}
-						fmt.Fprintf(cmd.OutOrStdout(), "  %s %s\n", sGreen.Render("✓"), daemon.DescribeScheduledRestart(status))
-						return nil
-					}
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s %s\n", sGreen.Render("✓"), daemon.DescribeScheduledRestart(status))
+					return nil
 				}
-				if err := guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon restart", force); err != nil {
-					return err
-				}
-				if err := daemonStopFn(p); err != nil {
-					return fmt.Errorf("stop daemon: %w", err)
-				}
-				if err := daemonStartFn(p); err != nil {
-					return fmt.Errorf("start daemon: %w", err)
-				}
-				fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon restarted\n", sGreen.Render("✓"))
-				return nil
-			})
+			}
+			if err := guardDestructiveDaemonLifecycle(p, cmd.ErrOrStderr(), "daemon restart", force); err != nil {
+				return err
+			}
+			if err := daemonStopFn(p); err != nil {
+				return fmt.Errorf("stop daemon: %w", err)
+			}
+			if err := daemonStartFn(p); err != nil {
+				return fmt.Errorf("start daemon: %w", err)
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon restarted\n", sGreen.Render("✓"))
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "restart the daemon even when pipeline runs are active")
@@ -806,33 +798,31 @@ func newDaemonStatusCmd() *cobra.Command {
 		Use:   "status",
 		Short: "Check if the daemon is running",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackCommand("daemon.status", func() error {
-				p, err := paths.New()
-				if err != nil {
-					return err
-				}
-				if err := ipc.CheckEndpointPath(p.Socket()); err != nil {
-					return err
-				}
-				alive, err := daemonIsRunningFn(p)
-				if err != nil {
-					return err
-				}
-				if alive {
-					pid, _ := daemon.ReadPID(p)
-					if pid > 0 {
-						fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon running %s\n", sGreen.Render("●"), sDim.Render(fmt.Sprintf("(pid %d)", pid)))
-					} else {
-						fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon running\n", sGreen.Render("●"))
-					}
-					if status, err := daemon.RestartStatus(p); err == nil && status.Pending {
-						fmt.Fprintf(cmd.OutOrStdout(), "  %s %s\n", sDim.Render("↻"), daemon.DescribePendingRestart(status))
-					}
+			p, err := paths.New()
+			if err != nil {
+				return err
+			}
+			if err := ipc.CheckEndpointPath(p.Socket()); err != nil {
+				return err
+			}
+			alive, err := daemonIsRunningFn(p)
+			if err != nil {
+				return err
+			}
+			if alive {
+				pid, _ := daemon.ReadPID(p)
+				if pid > 0 {
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon running %s\n", sGreen.Render("●"), sDim.Render(fmt.Sprintf("(pid %d)", pid)))
 				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon not running\n", sDim.Render("○"))
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon running\n", sGreen.Render("●"))
 				}
-				return nil
-			})
+				if status, err := daemon.RestartStatus(p); err == nil && status.Pending {
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s %s\n", sDim.Render("↻"), daemon.DescribePendingRestart(status))
+				}
+			} else {
+				fmt.Fprintf(cmd.OutOrStdout(), "  %s daemon not running\n", sDim.Render("○"))
+			}
+			return nil
 		},
 	}
 }

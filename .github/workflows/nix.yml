@@ -61,15 +61,5 @@ jobs:
       - name: Check stamped version
         run: ./result/bin/alamino --version | grep -F "v$(jq -r '.["."]' .release-please-manifest.json) "
 
-      # Telemetry is on only when a website ID is embedded; the host has a
-      # source-level fallback, so the ID is the value that must match.
-      - name: Check embedded telemetry website ID
-        run: |
-          id=$(printf 'print-id:\n\t@echo $(DEFAULT_UMAMI_WEBSITE_ID)\n' | make -s --no-print-directory -f Makefile -f - print-id)
-          if [ -z "$id" ] || ! grep -qaF "$id" result/bin/alamino; then
-            echo "::error file=package.nix::the Nix binary does not embed the Makefile's DEFAULT_UMAMI_WEBSITE_ID ($id)"
-            exit 1
-          fi
-
       - name: Build through flake-compat
         run: nix-build default.nix -A packages.x86_64-linux.default --no-out-link

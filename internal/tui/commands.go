@@ -408,14 +408,7 @@ func (m Model) refreshSyncCmd() tea.Cmd {
 		return nil
 	}
 	return func() tea.Msg {
-		started := time.Now()
-		state := refresh()
-		result := "refused"
-		if branchsync.CanApply(state) || state.State == branchsync.StateSynchronized || state.State == branchsync.StateMergedRemoteRemoved {
-			result = "noop"
-		}
-		trackTUISyncAttempt("check", state, result, started)
-		return syncRefreshedMsg{state: state}
+		return syncRefreshedMsg{state: refresh()}
 	}
 }
 
@@ -425,16 +418,7 @@ func (m Model) applySyncCmd() tea.Cmd {
 		return nil
 	}
 	return func() tea.Msg {
-		started := time.Now()
-		state := apply()
-		result := "refused"
-		if state.Changed && state.State == branchsync.StateSynchronized {
-			result = "applied"
-		} else if state.State == branchsync.StateSynchronized || state.State == branchsync.StateMergedRemoteRemoved {
-			result = "noop"
-		}
-		trackTUISyncAttempt("apply", state, result, started)
-		return syncAppliedMsg{state: state}
+		return syncAppliedMsg{state: apply()}
 	}
 }
 
@@ -445,20 +429,7 @@ func (m Model) applyRecoverCmd() tea.Cmd {
 	}
 	keepLocal := m.branchSync != nil && m.branchSync.Recovery != nil && m.branchSync.Recovery.KeepLocal
 	return func() tea.Msg {
-		started := time.Now()
-		state := recover(keepLocal)
-		result := "refused"
-		if state.Recovered && state.Changed {
-			result = "applied"
-		} else if state.Recovered {
-			result = "noop"
-		}
-		mode := "recover"
-		if keepLocal {
-			mode = "recover_keep_local"
-		}
-		trackTUISyncAttempt(mode, state, result, started)
-		return syncAppliedMsg{state: state}
+		return syncAppliedMsg{state: recover(keepLocal)}
 	}
 }
 

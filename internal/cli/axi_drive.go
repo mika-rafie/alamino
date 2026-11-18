@@ -31,7 +31,6 @@ import (
 	"github.com/mika-rafie/alamino/internal/pipeline"
 	"github.com/mika-rafie/alamino/internal/pipeline/steps"
 	"github.com/mika-rafie/alamino/internal/runenv"
-	"github.com/mika-rafie/alamino/internal/telemetry"
 	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/mika-rafie/alamino/internal/verificationplan"
 	"github.com/spf13/cobra"
@@ -259,28 +258,16 @@ func newAxiRunCmd() *cobra.Command {
 			if err != nil {
 				return emitError(cmd, 2, err.Error())
 			}
-			return trackAxiSurface("axi-run", "/axi/run", telemetry.Fields{
-				"auto_yes":          autoYes,
-				"has_intent":        strings.TrimSpace(resolvedIntent) != "",
-				"has_skip":          strings.TrimSpace(skipValue) != "",
-				"has_base_branch":   strings.TrimSpace(baseBranch) != "",
-				"has_launch_nonce":  launchNonce != "",
-				"no_publish_intent": noPublishIntent,
-				"has_closes":        len(closesIssues) > 0,
-				"has_pr_title":      prText.Title != "",
-				"has_pr_body":       prText.Body != "",
-			}, func() error {
-				skipSteps, err := parseSkipSteps(skipValue)
-				if err != nil {
-					return emitError(cmd, 2, err.Error(),
-						"Valid steps: intent, rebase, review, test, document, lint, push, pr, ci")
-				}
-				profile, err := piProfileFromFlags(cmd, model, effort)
-				if err != nil {
-					return emitError(cmd, 2, err.Error())
-				}
-				return runAxiRunWithPRText(cmd, autoYes, skipSteps, resolvedIntent, baseBranch, noPublishIntent, launchNonce, validationGeneration, wait, prText, profile)
-			})
+			skipSteps, err := parseSkipSteps(skipValue)
+			if err != nil {
+				return emitError(cmd, 2, err.Error(),
+					"Valid steps: intent, rebase, review, test, document, lint, push, pr, ci")
+			}
+			profile, err := piProfileFromFlags(cmd, model, effort)
+			if err != nil {
+				return emitError(cmd, 2, err.Error())
+			}
+			return runAxiRunWithPRText(cmd, autoYes, skipSteps, resolvedIntent, baseBranch, noPublishIntent, launchNonce, validationGeneration, wait, prText, profile)
 		},
 	}
 	cmd.Flags().BoolVarP(&autoYes, "yes", "y", false, "auto-resolve eligible gates (fix findings, then accept) until a decision point or outcome; protected-path and Test unvalidated-work refusals require an explicit response, and an open review question requires `axi answer`")
@@ -1835,25 +1822,20 @@ func newAxiRespondCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackAxiSurface("axi-respond", "/axi/respond", telemetry.Fields{
-				"action":   sanitizeAxiTelemetryAction(action),
-				"auto_yes": autoYes,
-			}, func() error {
-				return runAxiRespond(cmd, respondArgs{
-					action:           action,
-					step:             step,
-					findings:         findings,
-					ignore:           ignore,
-					instructions:     instructions,
-					instructionsFile: instructionsFile,
-					addFinding:       addFinding,
-					addFindingFile:   addFindingFile,
-					reason:           reason,
-					autoYes:          autoYes,
-					wait:             wait,
-					runID:            strings.TrimSpace(runID),
-					runFlagSet:       cmd.Flags().Changed("run"),
-				})
+			return runAxiRespond(cmd, respondArgs{
+				action:           action,
+				step:             step,
+				findings:         findings,
+				ignore:           ignore,
+				instructions:     instructions,
+				instructionsFile: instructionsFile,
+				addFinding:       addFinding,
+				addFindingFile:   addFindingFile,
+				reason:           reason,
+				autoYes:          autoYes,
+				wait:             wait,
+				runID:            strings.TrimSpace(runID),
+				runFlagSet:       cmd.Flags().Changed("run"),
 			})
 		},
 	}
@@ -2140,9 +2122,7 @@ func newAxiAbortCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackAxiSurface("axi-abort", "/axi/abort", nil, func() error {
-				return runAxiAbort(cmd, strings.TrimSpace(runID))
-			})
+			return runAxiAbort(cmd, strings.TrimSpace(runID))
 		},
 	}
 	cmd.Flags().StringVar(&runID, "run", "", "cancel this run id directly, without resolving the current branch or worktree")

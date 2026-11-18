@@ -495,7 +495,7 @@ Cached home and status rendering performs no network read and labels the remote 
 
 ### Branch publication snapshot
 
-`axi status --branch <name>` is a separate, read-only TOON surface (`schema: branch-publication.v1`) for a user or an automation that merges pull requests. It selects the **newest-created** run, not the active-run-preferred selection used by ordinary status. The exact branch need not be checked out or even exist as a local ref. Linked worktrees resolve to their registered repository. This mode reads existing storage without creating or migrating it, contacting the daemon or forge, fetching, updating refs, or advancing the pipeline. It emits no telemetry and successful snapshots offer no mutation commands. An unregistered-repository error may suggest `alamino init`; the query itself never initializes it.
+`axi status --branch <name>` is a separate, read-only TOON surface (`schema: branch-publication.v1`) for a user or an automation that merges pull requests. It selects the **newest-created** run, not the active-run-preferred selection used by ordinary status. The exact branch need not be checked out or even exist as a local ref. Linked worktrees resolve to their registered repository. This mode reads existing storage without creating or migrating it, contacting the daemon or forge, fetching, updating refs, or advancing the pipeline. Successful snapshots offer no mutation commands. An unregistered-repository error may suggest `alamino init`; the query itself never initializes it.
 
 The complete branch inventory, selected run, pinned plan and step states come from **one database read transaction**. Gate pins are read with the inventory, and step records are read in one batch for the entire inventory. The snapshot proves recorded state at query time, not live forge state, and is not a lock against a new run or publication after the read. It does not decide whether to merge or whether a published descendant of the reviewed head is acceptable.
 
@@ -632,7 +632,7 @@ They also include fix-loop markers such as `auto-fix round 1/3 starting after ro
 
 Read the stored findings and decisions for every execution round of one step, in ascending round order.
 This is a read-only export for local tools that need round history without depending on the SQLite schema.
-It does not start or contact the daemon, run migrations, change a gate, or emit telemetry.
+It does not start or contact the daemon, run migrations, or change a gate.
 
 ```sh
 alamino axi rounds --step review
@@ -944,7 +944,7 @@ alamino export --run <id> --json
 
 Both flags are required. The command reads the existing `ALAMINO_HOME` database in a
 single read-only snapshot. It never creates a database, migrates its schema, runs agents,
-queries a forge, or sends telemetry. A missing run, damaged database, or schema
+or queries a forge. A missing run, damaged database, or schema
 missing required columns returns a nonzero exit status and no JSON document.
 SQLite may create its normal `-wal` and `-shm` sidecars while reading a WAL database.
 
@@ -1022,7 +1022,7 @@ Use `--agents` for local, per-purpose agent performance aggregates: duration and
 Use `--run <id>` to inspect the individual agent invocations for one run - including each invocation's per-round token deltas next to the adapter counters, tool-category breakdown, workload size, finding count, and fallback reason - plus the total time parked at approval gates; it implies `--agents`.
 Pinned runs also print the requested [Pi profile](/alamino/reference/global-config/#per-run-pi-profiles) and independent [reviewer profile](/alamino/reference/global-config/#per-run-reviewer-profiles), when present, above that table. When both are present, the Pi profile is labeled as the primary selection and the reviewer is listed separately. `MODEL` in the invocation table is served evidence, not the pin.
 The combined Document/Lint invocation is labeled `housekeeping (document+lint)` and attributed to `document+lint`, making its shared duration and tokens explicit without adding a second agent call.
-See [local telemetry](/alamino/reference/environment/#what-stays-local-and-what-leaves-the-machine) for token definitions and missing-value semantics.
+See [local performance records](/alamino/reference/environment/#local-performance-records) for token definitions and missing-value semantics.
 A `--agents` token total is all-or-nothing: it reads `-` for the whole purpose unless every invocation in it reported that field, so one failed round that reported no usage leaves the group's total unknown instead of silently under-counted.
 
 ```sh
@@ -1030,8 +1030,8 @@ alamino stats --agents
 alamino stats --run <id>
 ```
 
-This detailed performance evidence stays local in `state.sqlite`; it is not sent to telemetry.
-The field definitions and their local/remote split are owned by [the environment reference](/reference/environment/#what-stays-local-and-what-leaves-the-machine).
+This detailed performance evidence stays local in `state.sqlite`; it is never sent anywhere.
+The field definitions are owned by [the environment reference](/alamino/reference/environment/#local-performance-records).
 
 ## alamino doctor
 
@@ -1090,8 +1090,6 @@ On macOS, removes the quarantine extended attribute.
 [Daemon & Worktrees](/alamino/concepts/daemon/#starting-and-stopping)
 owns the active-run guard, the scope of `--force` and `--yes`, and recursive
 validation-step containment.
-
-Because `update` installs the latest release binary, its telemetry settings are the ones that release was built with. Release binaries embed a telemetry host and website ID only when the publishing repository sets the `UMAMI_HOST` and `UMAMI_WEBSITE_ID` Actions variables, so telemetry is off unless the publisher opted in. Disable it explicitly with `ALAMINO_TELEMETRY=0`, or point it at your own instance with `ALAMINO_UMAMI_HOST` and `ALAMINO_UMAMI_WEBSITE_ID`.
 
 Background update checks run automatically on each CLI invocation (except `update` itself and version queries `--version` / `-v`, which stay side-effect-free). If a newer version is available, a notification is printed to stderr. Suppressed for dev builds, for Nix-store installs, or when `ALAMINO_NO_UPDATE_CHECK=1` is set.
 

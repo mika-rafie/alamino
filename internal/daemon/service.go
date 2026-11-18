@@ -171,10 +171,9 @@ func serviceProxyEnv() [][2]string {
 	return out
 }
 
-// serviceEnv resolves the forwarded proxy and telemetry environment for both
-// installation and drift detection. Proxies retain their existing group override
-// semantics. Telemetry is resolved independently so a proxy change cannot discard
-// a stored opt-out, and changing telemetry cannot discard the stored proxies.
+// serviceEnv resolves the forwarded proxy environment for both installation
+// and drift detection. Proxies set in the current environment override the
+// stored group as a whole; with none set, the stored proxies are inherited.
 func serviceEnv(inherited [][2]string) [][2]string {
 	out := serviceProxyEnv()
 	if len(out) == 0 {
@@ -184,21 +183,12 @@ func serviceEnv(inherited [][2]string) [][2]string {
 			}
 		}
 	}
-	const telemetryKey = "ALAMINO_TELEMETRY"
-	if value := os.Getenv(telemetryKey); strings.TrimSpace(value) != "" {
-		return append(out, [2]string{telemetryKey, value})
-	}
-	for _, kv := range inherited {
-		if kv[0] == telemetryKey {
-			out = append(out, kv)
-		}
-	}
 	return out
 }
 
 // writeServiceFile renders a generated service definition (systemd unit or
 // launchd plist) via render and writes it with a permission mode that depends
-// on whether proxy or telemetry values were forwarded into it. Any forwarded
+// on whether proxy values were forwarded into it. Any forwarded
 // values select owner-only 0600, protecting proxy URLs that may embed credentials
 // (e.g. http://user:pass@host). With no forwarded values, the mode is 0644.
 //
@@ -209,10 +199,10 @@ func serviceEnv(inherited [][2]string) [][2]string {
 // bake proxy credentials into the content yet have it written under the
 // world-readable 0644 mode.
 //
-// Existing proxy and telemetry values are inherited via parseExistingProxyEnv
-// when absent from the current environment, using the same serviceEnv resolver
-// as drift detection. An env-less binary upgrade therefore retains the opt-out
-// as well as the proxies. The parser may be nil when there is no existing file.
+// Existing proxy values are inherited via parseExistingProxyEnv when absent
+// from the current environment, using the same serviceEnv resolver as drift
+// detection. An env-less binary upgrade therefore retains the proxies. The
+// parser may be nil when there is no existing file.
 //
 // When forwarded values are present the content is written to a sibling temp file
 // created at 0600 and atomically renamed over the target, so credential-bearing

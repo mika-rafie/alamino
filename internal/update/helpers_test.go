@@ -24,7 +24,6 @@ func TestMain(m *testing.M) {
 	}
 	_ = os.Setenv("ALAMINO_HOME", root)
 	_ = os.Setenv("HOME", home)
-	_ = os.Setenv("ALAMINO_TELEMETRY", "off")
 
 	code := m.Run()
 

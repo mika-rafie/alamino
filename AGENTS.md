@@ -16,7 +16,7 @@ Safest local verification sequence after non-trivial changes:
 
 ## Where detail lives
 
-- User-facing semantics: the docs site under `docs/src/content/docs/` (`reference/repo-config.md` and `reference/global-config.md` own config keys, `reference/pipeline-steps.md` owns step behavior, `reference/environment.md` owns env vars and telemetry, `concepts/gate-model.md` and `concepts/daemon.md` own those models).
+- User-facing semantics: the docs site under `docs/src/content/docs/` (`reference/repo-config.md` and `reference/global-config.md` own config keys, `reference/pipeline-steps.md` owns step behavior, `reference/environment.md` owns env vars and the local performance records, `concepts/gate-model.md` and `concepts/daemon.md` own those models).
 - Per-area implementation maps (owning functions, invariants, regression lists): `.agents/skills/<area>/SKILL.md` (`.claude/skills` is a symlink to it). Read the matching skill before changing that area.
 - Provider CLI traps (glab flag drift, tea JSON shapes, Origin's draft-by-default create, GitHub user-attachments, opencode failure wire shape and retry gating) are owned by the comments in `internal/scm/gitlab/gitlab.go`, `internal/scm/gitea/gitea.go`, `internal/scm/origin/origin.go`, `internal/scm/github/attachments.go`, and `internal/agent/opencode*.go`; extend them there when you hit new drift.
 - `skills/alamino/SKILL.md` is generated from `internal/skill/skill.go`; never hand-edit it, `CHANGELOG.md`, or other generated files.
@@ -53,8 +53,8 @@ Safest local verification sequence after non-trivial changes:
 - `runs.awaiting_agent_since` is observability only and never changes gate resolution.
 - `runs.awaiting_agent_since` is set exactly while a gate is parked. Owner: `.agents/skills/pipeline-review-and-agents/SKILL.md`.
 - The daemon's effective environment comes from the login-shell probe at startup, never from the service definition's bootstrap `PATH`; only a missing shell binary is waited for, and only at startup. The probe runs in its own session (Setsid); do not fold it into `ConfigureShellCommand` (Setpgid and Setsid cannot be combined). Owner: `daemon-runtime` skill.
-- Telemetry: read-only surfaces (`axi` home/status/logs, `status`, `runs`) emit no remote telemetry. Performance detail stays local; prompts, outputs, diffs, and raw command arguments are never stored (`TestAgentInvocations_PrivacySafeShape`), and run IDs, paths, and session identities are never sent remotely; a not-reported metric is stored as NULL, never a fabricated zero. Owner: `reference/environment.md`.
-- `alamino update` reads only `channels.json` from the release-asset CDN, never `api.github.com`, and `release.yml` must call the channel publisher after `finalize`. Owner: `release-signing` skill.
+- No telemetry: the binary has no analytics client and no change may add a remote usage sender or an embedded analytics endpoint (`TestMakeBuildStampsVersionMetadataOnly`, `TestReleaseWorkflowHasNoAppleSigningOrTelemetry`). Performance detail stays in the local state database; prompts, outputs, diffs, and raw command arguments are never stored (`TestAgentInvocations_PrivacySafeShape`); a not-reported metric is stored as NULL, never a fabricated zero. Owner: `reference/environment.md`.
+- `alamino update` reads only `channels.json` from the release-asset CDN, never `api.github.com`, and `release.yml` must call the channel publisher after `finalize`. Release binaries are cross-compiled on ubuntu and are not Apple Developer ID signed or notarized. Owner: `release-workflow` skill.
 - The retired `jev` config key stays a parse-only tombstone; do not repurpose it.
 
 ## Test and CI conventions

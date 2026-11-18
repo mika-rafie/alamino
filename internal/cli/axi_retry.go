@@ -59,9 +59,7 @@ func newAxiRetryCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackAxiSurface("axi-retry", "/axi/retry", nil, func() error {
-				return runAxiRetry(cmd, strings.TrimSpace(runID), wait)
-			})
+			return runAxiRetry(cmd, strings.TrimSpace(runID), wait)
 		},
 	}
 	cmd.Flags().StringVar(&runID, "run", "", "id of the failed run, which must be the current branch's latest run (required)")

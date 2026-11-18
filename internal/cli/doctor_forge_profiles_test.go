@@ -7,14 +7,9 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 func TestDoctorValidatesForgeProfileWithItsAuthoritativeEnvironment(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	profileDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(profileDir, "hosts.yml"), []byte("github.com:\n    user: personal\n"), 0o644); err != nil {
@@ -43,9 +38,6 @@ func TestDoctorValidatesForgeProfileWithItsAuthoritativeEnvironment(t *testing.T
 }
 
 func TestDoctorReportsForgeProfileAuthenticationFailureWithoutChangingExitContract(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	profileDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(profileDir, "hosts.yml"), []byte("github.com:\n    user: personal\n"), 0o644); err != nil {
@@ -74,9 +66,6 @@ func TestDoctorReportsForgeProfileAuthenticationFailureWithoutChangingExitContra
 }
 
 func TestDoctorValidatesGitLabForgeProfile(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	profileDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(profileDir, "config.yml"), []byte("hosts:\n    gitlab.com:\n        user: work\n"), 0o644); err != nil {
@@ -129,9 +118,6 @@ func writeDoctorFailingBinary(t *testing.T, dir, base string) {
 }
 
 func TestDoctorValidatesOwnerScopedGHUserProfileAsThatLogin(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	global := "agent: codex\nforge_profiles:\n  github.com/remicaesar:\n    gh_user: remicaesar\n"
 	if err := os.WriteFile(filepath.Join(nmHome, "config.yaml"), []byte(global), 0o644); err != nil {

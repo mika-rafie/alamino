@@ -11,175 +11,16 @@ import (
 	"time"
 )
 
-func TestMakeBuildPrioritizesDotEnvUmamiWebsiteID(t *testing.T) {
-	skipMakeBuildTestsOnWindows(t)
-
-	makePath, err := exec.LookPath("make")
-	if err != nil {
-		t.Skip("make not available")
-	}
-
-	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_WEBSITE_ID=website-from-dotenv\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	output := runMakeDryBuild(t, makePath, workDir, map[string]string{
-		"UMAMI_WEBSITE_ID": "website-from-env",
-	})
-
-	if !strings.Contains(output, "TelemetryWebsiteID=website-from-dotenv") {
-		t.Fatalf("make build output should embed .env website id, got:\n%s", output)
-	}
-	if strings.Contains(output, "TelemetryWebsiteID=website-from-env") {
-		t.Fatalf("make build output should not prefer env website id when .env exists, got:\n%s", output)
-	}
-}
-
-func TestMakeBuildUsesEnvUmamiWebsiteIDWhenDotEnvMissing(t *testing.T) {
-	skipMakeBuildTestsOnWindows(t)
-
-	makePath, err := exec.LookPath("make")
-	if err != nil {
-		t.Skip("make not available")
-	}
-
-	workDir := writeTestMakeWorkspace(t)
-	output := runMakeDryBuild(t, makePath, workDir, map[string]string{
-		"UMAMI_WEBSITE_ID": "website-from-env",
-	})
-
-	if !strings.Contains(output, "TelemetryWebsiteID=website-from-env") {
-		t.Fatalf("make build output should embed env website id when .env is absent, got:\n%s", output)
-	}
-}
-
-func TestMakeBuildEmbedsNoTelemetryConfigByDefault(t *testing.T) {
-	skipMakeBuildTestsOnWindows(t)
-
-	makePath, err := exec.LookPath("make")
-	if err != nil {
-		t.Skip("make not available")
-	}
-
-	workDir := writeTestMakeWorkspace(t)
-	output := runMakeDryBuild(t, makePath, workDir, nil)
-
-	for _, flag := range []string{"TelemetryHost=", "TelemetryWebsiteID="} {
-		idx := strings.Index(output, flag)
-		if idx < 0 {
-			t.Fatalf("make build output should pass %s, got:\n%s", flag, output)
-		}
-		rest := output[idx+len(flag):]
-		if rest != "" && !strings.ContainsAny(rest[:1], " \"\n\\") {
-			t.Fatalf("make build output should embed an empty %s by default, got:\n%s", flag, output)
-		}
-	}
-}
-
-func TestMakeBuildPrioritizesDotEnvUmamiHost(t *testing.T) {
-	skipMakeBuildTestsOnWindows(t)
-
-	makePath, err := exec.LookPath("make")
-	if err != nil {
-		t.Skip("make not available")
-	}
-
-	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_HOST=https://dotenv.example\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	output := runMakeDryBuild(t, makePath, workDir, map[string]string{
-		"UMAMI_HOST": "https://env.example",
-	})
-
-	if !strings.Contains(output, "TelemetryHost=https://dotenv.example") {
-		t.Fatalf("make build output should embed .env telemetry host, got:\n%s", output)
-	}
-	if strings.Contains(output, "TelemetryHost=https://env.example") {
-		t.Fatalf("make build output should not prefer env telemetry host when .env exists, got:\n%s", output)
-	}
-}
-
-func TestMakeBuildIgnoresUnrelatedDotEnvEntries(t *testing.T) {
-	skipMakeBuildTestsOnWindows(t)
-
-	makePath, err := exec.LookPath("make")
-	if err != nil {
-		t.Skip("make not available")
-	}
-
-	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("VERSION=from-dotenv\nALAMINO_UMAMI_WEBSITE_ID=website-from-dotenv\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	output := runMakeDryBuild(t, makePath, workDir, nil)
-
-	if !strings.Contains(output, "TelemetryWebsiteID=website-from-dotenv") {
-		t.Fatalf("make build output should still embed dotenv website id, got:\n%s", output)
-	}
-	if strings.Contains(output, "/internal/buildinfo.Version=from-dotenv") {
-		t.Fatalf("make build should ignore unrelated dotenv entries, got:\n%s", output)
-	}
-}
-
-func TestMakeBuildStripsInlineCommentsFromDotEnvUmamiWebsiteID(t *testing.T) {
-	skipMakeBuildTestsOnWindows(t)
-
-	makePath, err := exec.LookPath("make")
-	if err != nil {
-		t.Skip("make not available")
-	}
-
-	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_WEBSITE_ID=website-from-dotenv # dev\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	output := runMakeDryBuild(t, makePath, workDir, nil)
-
-	if !strings.Contains(output, "TelemetryWebsiteID=website-from-dotenv") {
-		t.Fatalf("make build output should strip inline comments from dotenv website id, got:\n%s", output)
-	}
-	if strings.Contains(output, "TelemetryWebsiteID=website-from-dotenv # dev") {
-		t.Fatalf("make build output should not embed inline comments in website id, got:\n%s", output)
-	}
-}
-
-func TestMakeBuildPreservesQuotedHashInDotEnvUmamiWebsiteID(t *testing.T) {
-	skipMakeBuildTestsOnWindows(t)
-
-	makePath, err := exec.LookPath("make")
-	if err != nil {
-		t.Skip("make not available")
-	}
-
-	workDir := writeTestMakeWorkspace(t)
-	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte("ALAMINO_UMAMI_WEBSITE_ID=\"website # dev\"\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	output := runMakeDryBuild(t, makePath, workDir, nil)
-
-	if !strings.Contains(output, "TelemetryWebsiteID=website # dev") {
-		t.Fatalf("make build output should preserve quoted hashes in dotenv website id, got:\n%s", output)
-	}
-	if strings.Contains(output, "TelemetryWebsiteID=\"website") {
-		t.Fatalf("make build output should not truncate quoted dotenv website id, got:\n%s", output)
-	}
-}
-
-func skipMakeBuildTestsOnWindows(t *testing.T) {
-	t.Helper()
+// The build stamps version metadata only. No analytics endpoint or site ID is
+// embedded, whatever the environment or a local .env file says.
+func TestMakeBuildStampsVersionMetadataOnly(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("make build tests are POSIX-oriented")
 	}
-}
-
-func writeTestMakeWorkspace(t *testing.T) string {
-	t.Helper()
+	makePath, err := exec.LookPath("make")
+	if err != nil {
+		t.Skip("make not available")
+	}
 
 	data, err := os.ReadFile("Makefile")
 	if err != nil {
@@ -189,24 +30,30 @@ func writeTestMakeWorkspace(t *testing.T) string {
 	if err := os.WriteFile(filepath.Join(workDir, "Makefile"), data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	return workDir
-}
-
-func runMakeDryBuild(t *testing.T, makePath, workDir string, extraEnv map[string]string) string {
-	t.Helper()
+	dotenv := "VERSION=from-dotenv\nALAMINO_UMAMI_HOST=https://dotenv.example\nALAMINO_UMAMI_WEBSITE_ID=website-from-dotenv\n"
+	if err := os.WriteFile(filepath.Join(workDir, ".env"), []byte(dotenv), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
 	cmd := exec.CommandContext(ctx, makePath, "-n", "build")
 	cmd.Dir = workDir
-	cmd.Env = filteredEnv(os.Environ(), "UMAMI_HOST", "UMAMI_WEBSITE_ID", "ALAMINO_UMAMI_HOST", "ALAMINO_UMAMI_WEBSITE_ID")
-	for key, value := range extraEnv {
-		cmd.Env = append(cmd.Env, key+"="+value)
-	}
+	cmd.Env = append(os.Environ(), "UMAMI_HOST=https://env.example", "UMAMI_WEBSITE_ID=website-from-env")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("make -n build failed: %v\n%s", err, out)
 	}
-	return string(out)
+	output := string(out)
+
+	for _, want := range []string{"buildinfo.Version=", "buildinfo.Commit=", "buildinfo.Date="} {
+		if !strings.Contains(output, want) {
+			t.Errorf("make build must stamp %s, got:\n%s", want, output)
+		}
+	}
+	for _, forbidden := range []string{"Telemetry", "dotenv.example", "env.example", "website-from-", "buildinfo.Version=from-dotenv"} {
+		if strings.Contains(output, forbidden) {
+			t.Errorf("make build must not embed %q, got:\n%s", forbidden, output)
+		}
+	}
 }

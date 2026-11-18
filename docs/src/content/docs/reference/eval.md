@@ -6,7 +6,7 @@ title: Evaluation toolkit
 
 The corpus collects itself: eligible finished runs' decided review passes become cases, so the sets are populated by the time you want to compare something. Replay and reporting stay explicit commands you run.
 
-The `eval` commands do not start or use the shared daemon, alter a gate, emit remote telemetry, push a branch, open a PR, or run CI. Cases, source findings, decisions, candidate outputs, and metrics are stored only under `<ALAMINO_HOME>/eval/`; there is no export, sharing, synchronization, or remote case store.
+The `eval` commands do not start or use the shared daemon, alter a gate, push a branch, open a PR, or run CI. Cases, source findings, decisions, candidate outputs, and metrics are stored only under `<ALAMINO_HOME>/eval/`; there is no export, sharing, synchronization, or remote case store.
 
 Replay does invoke the selected agent normally, so that agent may send the restored code and review context to its configured model provider. The local-only guarantee concerns eval storage and transport added by alamino, not the selected agent's ordinary provider traffic.
 

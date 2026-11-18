@@ -6,14 +6,9 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 func TestDoctorReportsGateCannotValidateWithoutAgent(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	t.Setenv("ALAMINO_HOME", t.TempDir())
 	binDir := t.TempDir()
 	writeDoctorGitBinary(t, binDir)
@@ -31,9 +26,6 @@ func TestDoctorReportsGateCannotValidateWithoutAgent(t *testing.T) {
 }
 
 func TestDoctorAcceptsConfiguredACPBridge(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	t.Setenv("ALAMINO_HOME", nmHome)
 	if err := os.WriteFile(filepath.Join(nmHome, "config.yaml"), []byte("agent: acp:gemini\n"), 0o644); err != nil {

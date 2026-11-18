@@ -2,7 +2,7 @@
 //
 // It deliberately owns a separate registry under <ALAMINO_HOME>/eval, so opening the
 // normal pipeline database never creates an eval table or runs an eval
-// migration, and nothing here emits telemetry or reaches the network.
+// migration, and nothing here reaches the network.
 //
 // The dependency runs one way: the daemon calls AutoCapture when a run finishes
 // (see RunManager.autoCaptureEvalCase) and RelabelRun when a source PR merges

@@ -175,7 +175,7 @@ func reinstallManagedServiceIfChanged(p *paths.Paths, beforeRestart func() error
 	}
 
 	existing, readErr := os.ReadFile(installPath)
-	// Inherit proxy and telemetry values already baked into the definition so an
+	// Inherit proxy values already baked into the definition so an
 	// env-less `daemon start` does not render a no-proxy target, falsely detect
 	// drift, and reinstall - which would strip the proxy and re-break the daemon
 	// with "403 Request not allowed". This mirrors the executable inheritance

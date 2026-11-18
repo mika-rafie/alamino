@@ -187,7 +187,7 @@ func renderLaunchAgent(exe string, p *paths.Paths, home string) string {
 }
 
 // renderLaunchAgentWithProxyEnv renders the launchd plist using the forwarded
-// proxy and telemetry environment supplied by the caller (see serviceEnv).
+// proxy environment supplied by the caller (see serviceEnv).
 func renderLaunchAgentWithProxyEnv(exe string, p *paths.Paths, home string, proxyEnv [][2]string) string {
 	values := []string{exe, "daemon", "run", "--root", p.Root()}
 	var args strings.Builder

@@ -10,9 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// newEvalCmd deliberately does not call trackCommand. Eval cases and candidate
-// results are local code data, so this command surface has no remote telemetry
-// event and does not use the daemon.
+// Eval cases and candidate results are local code data, so this command
+// surface does not use the daemon.
 func newEvalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "eval",

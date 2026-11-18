@@ -155,7 +155,6 @@ func tryDaemonStop(e Entry) bool {
 	cmd.Env = append(os.Environ(),
 		"ALAMINO_HOME="+e.NMHome,
 		"ALAMINO_TEST_START_DAEMON=1",
-		"ALAMINO_TELEMETRY=off",
 		"ALAMINO_NO_UPDATE_CHECK=1",
 	)
 	cmd.Dir = os.TempDir()

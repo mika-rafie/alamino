@@ -37,87 +37,85 @@ func newInitCmd() *cobra.Command {
 			"Run this from inside a git repository that has an \"origin\" remote.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackCommand("init", func() error {
-				p, d, err := openResources()
+			p, d, err := openResources()
+			if err != nil {
+				return err
+			}
+			defer d.Close()
+
+			if cmd.Flags().Changed("fork-url") && strings.TrimSpace(forkURL) == "" {
+				return fmt.Errorf("init: --fork-url must not be empty")
+			}
+			if err := assertCheckoutHoldsNoConfiguredWorktreeRoot(p, "."); err != nil {
+				return err
+			}
+			resolvedWorktreeRoot := ""
+			if cmd.Flags().Changed("worktree-root") {
+				resolvedWorktreeRoot, err = resolveWorktreeRoot(p, d, ".", worktreeRoot)
 				if err != nil {
 					return err
 				}
-				defer d.Close()
-
-				if cmd.Flags().Changed("fork-url") && strings.TrimSpace(forkURL) == "" {
-					return fmt.Errorf("init: --fork-url must not be empty")
-				}
-				if err := assertCheckoutHoldsNoConfiguredWorktreeRoot(p, "."); err != nil {
-					return err
-				}
-				resolvedWorktreeRoot := ""
-				if cmd.Flags().Changed("worktree-root") {
-					resolvedWorktreeRoot, err = resolveWorktreeRoot(p, d, ".", worktreeRoot)
-					if err != nil {
-						return err
+			}
+			repo, created, err := gate.InitWithFork(cmd.Context(), d, p, ".", forkURL)
+			if err != nil {
+				return fmt.Errorf("init: %w", err)
+			}
+			if err := daemon.EnsureDaemon(p); err != nil {
+				// Only roll back a gate we created in this run; a re-init
+				// must never eject a user's pre-existing gate.
+				if created {
+					if _, ejectErr := gate.Eject(cmd.Context(), d, p, "."); ejectErr != nil {
+						return fmt.Errorf("start daemon: %w, rollback init: %v", err, ejectErr)
 					}
 				}
-				repo, created, err := gate.InitWithFork(cmd.Context(), d, p, ".", forkURL)
-				if err != nil {
-					return fmt.Errorf("init: %w", err)
-				}
-				if err := daemon.EnsureDaemon(p); err != nil {
-					// Only roll back a gate we created in this run; a re-init
-					// must never eject a user's pre-existing gate.
-					if created {
-						if _, ejectErr := gate.Eject(cmd.Context(), d, p, "."); ejectErr != nil {
-							return fmt.Errorf("start daemon: %w, rollback init: %v", err, ejectErr)
-						}
-					}
-					return fmt.Errorf("start daemon: %w", err)
-				}
+				return fmt.Errorf("start daemon: %w", err)
+			}
 
-				// Install the agent skill at user level so agents can drive
-				// alamino via `/alamino` in any repo. Best-effort: a
-				// skill write failure must not undo a successful gate setup. With
-				// --skip-user-skill the installer is not invoked at all.
-				var skillErr error
-				if !skipUserSkill {
-					_, skillErr = installUserSkill()
-				}
+			// Install the agent skill at user level so agents can drive
+			// alamino via `/alamino` in any repo. Best-effort: a
+			// skill write failure must not undo a successful gate setup. With
+			// --skip-user-skill the installer is not invoked at all.
+			var skillErr error
+			if !skipUserSkill {
+				_, skillErr = installUserSkill()
+			}
 
-				w := cmd.OutOrStdout()
-				fmt.Fprintln(w, sCyan.Render(banner))
-				fmt.Fprintln(w)
-				headline := "Gate initialized"
-				if !created {
-					headline = "Gate already initialized (refreshed)"
-				}
-				fmt.Fprintf(w, "  %s %s\n", sGreen.Render("✓"), headline)
-				fmt.Fprintln(w)
-				fmt.Fprintf(w, "  %s  %s\n", sDim.Render("  repo"), repo.WorkingPath)
-				fmt.Fprintf(w, "  %s  alamino → %s\n", sDim.Render("  gate"), p.RepoDir(repo.ID))
-				remoteURL := repo.UpstreamURL
-				if repo.ForkURL != "" {
-					remoteURL = safeurl.Redact(remoteURL)
-				}
-				fmt.Fprintf(w, "  %s  %s\n", sDim.Render("remote"), remoteURL)
-				if repo.ForkURL != "" {
-					fmt.Fprintf(w, "  %s  %s\n", sDim.Render("  fork"), safeurl.Redact(repo.ForkURL))
-				}
-				if skipUserSkill {
-					fmt.Fprintf(w, "  %s  %s\n", sDim.Render(" skill"), sDim.Render("skipped: --skip-user-skill"))
-				} else if skillErr != nil {
-					fmt.Fprintf(w, "  %s  %s\n", sDim.Render(" skill"), sYellow.Render("skipped: "+skillErr.Error()))
-				} else {
-					fmt.Fprintf(w, "  %s  %s %s\n", sDim.Render(" skill"), sGreen.Render("/alamino"), sDim.Render("installed for agents at user level"))
-				}
-				if resolvedWorktreeRoot != "" {
-					printWorktreeRootGuidance(w, p, repo.WorkingPath, resolvedWorktreeRoot)
-				}
-				if legacy := skill.Vendored(repo.WorkingPath); len(legacy) > 0 {
-					fmt.Fprintf(w, "  %s  %s\n", sDim.Render("  note"), sDim.Render("vendored skill copy ("+strings.Join(legacy, ", ")+") is no longer needed and can be removed"))
-				}
-				fmt.Fprintln(w)
-				fmt.Fprintf(w, "  %s\n", sDim.Render("Push through the gate with:"))
-				fmt.Fprintf(w, "  %s\n", sBold.Render("git push alamino <branch>"))
-				return nil
-			})
+			w := cmd.OutOrStdout()
+			fmt.Fprintln(w, sCyan.Render(banner))
+			fmt.Fprintln(w)
+			headline := "Gate initialized"
+			if !created {
+				headline = "Gate already initialized (refreshed)"
+			}
+			fmt.Fprintf(w, "  %s %s\n", sGreen.Render("✓"), headline)
+			fmt.Fprintln(w)
+			fmt.Fprintf(w, "  %s  %s\n", sDim.Render("  repo"), repo.WorkingPath)
+			fmt.Fprintf(w, "  %s  alamino → %s\n", sDim.Render("  gate"), p.RepoDir(repo.ID))
+			remoteURL := repo.UpstreamURL
+			if repo.ForkURL != "" {
+				remoteURL = safeurl.Redact(remoteURL)
+			}
+			fmt.Fprintf(w, "  %s  %s\n", sDim.Render("remote"), remoteURL)
+			if repo.ForkURL != "" {
+				fmt.Fprintf(w, "  %s  %s\n", sDim.Render("  fork"), safeurl.Redact(repo.ForkURL))
+			}
+			if skipUserSkill {
+				fmt.Fprintf(w, "  %s  %s\n", sDim.Render(" skill"), sDim.Render("skipped: --skip-user-skill"))
+			} else if skillErr != nil {
+				fmt.Fprintf(w, "  %s  %s\n", sDim.Render(" skill"), sYellow.Render("skipped: "+skillErr.Error()))
+			} else {
+				fmt.Fprintf(w, "  %s  %s %s\n", sDim.Render(" skill"), sGreen.Render("/alamino"), sDim.Render("installed for agents at user level"))
+			}
+			if resolvedWorktreeRoot != "" {
+				printWorktreeRootGuidance(w, p, repo.WorkingPath, resolvedWorktreeRoot)
+			}
+			if legacy := skill.Vendored(repo.WorkingPath); len(legacy) > 0 {
+				fmt.Fprintf(w, "  %s  %s\n", sDim.Render("  note"), sDim.Render("vendored skill copy ("+strings.Join(legacy, ", ")+") is no longer needed and can be removed"))
+			}
+			fmt.Fprintln(w)
+			fmt.Fprintf(w, "  %s\n", sDim.Render("Push through the gate with:"))
+			fmt.Fprintf(w, "  %s\n", sBold.Render("git push alamino <branch>"))
+			return nil
 		},
 	}
 	cmd.Flags().StringVar(&forkURL, "fork-url", "", "GitHub fork remote URL to push branches to while opening PRs against origin")

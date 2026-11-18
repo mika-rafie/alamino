@@ -17,17 +17,12 @@ import (
 	"github.com/mika-rafie/alamino/internal/eval"
 	"github.com/mika-rafie/alamino/internal/git"
 	"github.com/mika-rafie/alamino/internal/paths"
-	"github.com/mika-rafie/alamino/internal/telemetry"
 	"github.com/mika-rafie/alamino/internal/types"
 )
 
-func TestEvalSetsIsLocalOnlyAndEmitsNoTelemetry(t *testing.T) {
+func TestEvalSetsIsLocalOnly(t *testing.T) {
 	t.Setenv("ALAMINO_HOME", t.TempDir())
 	chdir(t, t.TempDir())
-
-	recorder := &telemetryRecorder{}
-	restore := telemetry.SetDefaultForTesting(recorder)
-	defer restore()
 
 	out, err := executeCmd("eval", "sets")
 	if err != nil {
@@ -38,9 +33,6 @@ func TestEvalSetsIsLocalOnlyAndEmitsNoTelemetry(t *testing.T) {
 	}
 	if strings.Contains(out, "verdict") || strings.Contains(out, "park") || strings.Contains(out, ", pass ") {
 		t.Fatalf("eval sets still uses park/pass accuracy language: %q", out)
-	}
-	if recorder.count("command") != 0 || recorder.count("pageview") != 0 {
-		t.Fatalf("eval emitted remote telemetry: %#v", recorder.events)
 	}
 }
 

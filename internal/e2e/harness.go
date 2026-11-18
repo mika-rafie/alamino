@@ -164,9 +164,6 @@ func NewHarness(t *testing.T, opts SetupOpts) *Harness {
 	// the login-shell environment before the IPC socket is opened.
 	t.Setenv("ALAMINO_TEST_DAEMON_START_TIMEOUT", e2eDaemonStartTimeout)
 
-	// Disable telemetry attempts (the package would no-op anyway, but
-	// avoid a network DNS lookup on each command).
-	t.Setenv("ALAMINO_TELEMETRY", "off")
 	// Disable background update checks so helper processes do not write
 	// update-check.json while testing.T is removing the temp directory.
 	t.Setenv("ALAMINO_NO_UPDATE_CHECK", "1")

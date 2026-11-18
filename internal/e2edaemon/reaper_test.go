@@ -86,7 +86,6 @@ func startDetachedTestDaemon(t *testing.T, bin, nmHome string) int {
 	cmd.Env = append(os.Environ(),
 		"ALAMINO_HOME="+nmHome,
 		"ALAMINO_TEST_START_DAEMON=1",
-		"ALAMINO_TELEMETRY=off",
 		"ALAMINO_NO_UPDATE_CHECK=1",
 	)
 	cmd.Stdout = logFile
@@ -108,7 +107,6 @@ func startDetachedTestDaemon(t *testing.T, bin, nmHome string) int {
 			status.Env = append(os.Environ(),
 				"ALAMINO_HOME="+nmHome,
 				"ALAMINO_TEST_START_DAEMON=1",
-				"ALAMINO_TELEMETRY=off",
 				"ALAMINO_NO_UPDATE_CHECK=1",
 			)
 			out, _ := status.CombinedOutput()
@@ -397,7 +395,6 @@ func runSigkillChildHelper() {
 	cmd.Env = append(os.Environ(),
 		"ALAMINO_HOME="+nmHome,
 		"ALAMINO_TEST_START_DAEMON=1",
-		"ALAMINO_TELEMETRY=off",
 		"ALAMINO_NO_UPDATE_CHECK=1",
 	)
 	cmd.Stdout = logFile

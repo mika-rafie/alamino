@@ -29,8 +29,8 @@ const (
 // AgentInvocation is one agent process invocation's local performance
 // evidence. It stores identity, timing, session mode, bounded activity counts,
 // and token usage only - never prompts, model outputs, diffs, raw command
-// arguments, or credentials - and it stays local: no per-invocation record is
-// ever sent to remote telemetry.
+// arguments, or credentials - and it stays local: no per-invocation record
+// ever leaves the machine.
 //
 // Fields typed as pointers are nullable: a nil value means the datum was not
 // reported for this invocation and is recorded as unknown, never a fabricated
@@ -345,29 +345,4 @@ func (d *DB) AgentInvocationAggregates() ([]AgentInvocationAggregate, error) {
 		aggregates = append(aggregates, a)
 	}
 	return aggregates, rows.Err()
-}
-
-// RunInvocationSummary is the low-cardinality per-run rollup used for the
-// bounded terminal remote summary (counts only - no ids, paths, or models).
-type RunInvocationSummary struct {
-	Count           int
-	Resumed         int
-	Fallback        int
-	TotalDurationMS int64
-}
-
-// AgentInvocationSummaryForRun returns the run's invocation rollup.
-func (d *DB) AgentInvocationSummaryForRun(runID string) (RunInvocationSummary, error) {
-	var s RunInvocationSummary
-	err := d.sql.QueryRow(`
-		SELECT COUNT(*),
-		       COALESCE(SUM(CASE WHEN session_mode = 'resumed' THEN 1 ELSE 0 END), 0),
-		       COALESCE(SUM(CASE WHEN session_mode = 'fallback' THEN 1 ELSE 0 END), 0),
-		       COALESCE(SUM(duration_ms), 0)
-		FROM agent_invocations WHERE run_id = ?`, runID).
-		Scan(&s.Count, &s.Resumed, &s.Fallback, &s.TotalDurationMS)
-	if err != nil {
-		return RunInvocationSummary{}, fmt.Errorf("agent invocation summary: %w", err)
-	}
-	return s, nil
 }

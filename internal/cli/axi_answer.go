@@ -64,13 +64,11 @@ func newAxiAnswerCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackAxiSurface("axi-answer", "/axi/answer", nil, func() error {
-				return runAxiAnswer(cmd, answerArgs{
-					questionID: strings.TrimSpace(questionID),
-					answer:     strings.TrimSpace(answer),
-					answeredBy: strings.TrimSpace(answeredBy),
-					wait:       wait,
-				})
+			return runAxiAnswer(cmd, answerArgs{
+				questionID: strings.TrimSpace(questionID),
+				answer:     strings.TrimSpace(answer),
+				answeredBy: strings.TrimSpace(answeredBy),
+				wait:       wait,
 			})
 		},
 	}

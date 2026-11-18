@@ -22,7 +22,7 @@ document:
   instructions: |
     Configuration keys are owned by docs/src/content/docs/reference/global-config.md
     (global fields) and docs/src/content/docs/reference/repo-config.md (repo fields).
-    Environment variables and the telemetry local/remote split are owned by
+    Environment variables and the local performance records are owned by
     docs/src/content/docs/reference/environment.md.
     The daemon lifecycle model (singleton lock, lifecycle guard, crash recovery)
     is owned by docs/src/content/docs/concepts/daemon.md.

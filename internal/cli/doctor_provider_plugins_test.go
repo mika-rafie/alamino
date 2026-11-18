@@ -5,14 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 func TestDoctorReportsProviderPlugins(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	global := "agent: codex\nprovider_plugins:\n" +
 		"  ssm:\n    command: alamino-ssm\n    hosts: [\"*.sourcemanager.dev\"]\n" +

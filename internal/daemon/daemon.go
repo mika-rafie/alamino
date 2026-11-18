@@ -31,7 +31,6 @@ import (
 	"github.com/mika-rafie/alamino/internal/pipeline"
 	"github.com/mika-rafie/alamino/internal/procreap"
 	"github.com/mika-rafie/alamino/internal/shellenv"
-	"github.com/mika-rafie/alamino/internal/telemetry"
 	"github.com/mika-rafie/alamino/internal/types"
 	"github.com/mika-rafie/alamino/internal/verificationplan"
 	"github.com/mika-rafie/alamino/internal/worktrees"
@@ -138,16 +137,11 @@ func prepareDaemonEnvironment() error {
 
 // applyLoginShellEnvironment applies a login-shell probe to the process and
 // keeps the service-supplied ALAMINO_HOME authoritative over anything the shell's
-// rc files export. A supplied telemetry opt-out also survives the probe, while
-// an enabling value may still be replaced by the shell's opt-out.
+// rc files export.
 func applyLoginShellEnvironment(apply func(...string) error, nmHome string) error {
 	var excluded []string
 	if nmHome != "" {
 		excluded = append(excluded, "ALAMINO_HOME")
-	}
-	switch strings.ToLower(strings.TrimSpace(os.Getenv("ALAMINO_TELEMETRY"))) {
-	case "0", "false", "off":
-		excluded = append(excluded, "ALAMINO_TELEMETRY")
 	}
 	return apply(excluded...)
 }
@@ -235,12 +229,6 @@ func runWithOptionsLocked(p *paths.Paths, d *db.DB, globalCfg *config.GlobalConf
 	agent.SetManagedServerOutput(managedServerLog)
 	defer managedServerLog.Close()
 	defer agent.SetManagedServerOutput(nil)
-
-	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 750*time.Millisecond)
-		defer cancel()
-		_ = telemetry.Close(ctx)
-	}()
 
 	// Point the agent package at our PID tracking dir so any managed
 	// servers we spawn from here on leave crash-recovery breadcrumbs.

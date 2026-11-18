@@ -13,7 +13,9 @@ The installer keeps the real binary in `~/.alamino/bin` and exposes `alamino` th
 
 It also installs or refreshes the background daemon for you by running `alamino daemon restart`, preferring a managed service (launchd on macOS, systemd user service on Linux) and falling back to a detached daemon if that path is unavailable. If the restart fails, the install command fails.
 
-Release binaries embed a telemetry host and website ID only when the publishing repository sets the `UMAMI_HOST` and `UMAMI_WEBSITE_ID` Actions variables, so telemetry is off unless the publisher opted in. Disable it explicitly with `ALAMINO_TELEMETRY=0`, or point it at your own instance with `ALAMINO_UMAMI_HOST` and `ALAMINO_UMAMI_WEBSITE_ID`.
+The macOS release binaries are not Developer ID signed or notarized.
+Installing with the script above or updating with `alamino update` leaves no quarantine attribute on the binary, so it runs as-is.
+A binary downloaded through a browser is quarantined by Gatekeeper until you clear it with `xattr -d com.apple.quarantine <path>`.
 
 ## Windows (PowerShell)
 
@@ -25,15 +27,11 @@ Installs the binary and restarts the background daemon automatically with `alami
 
 Run `alamino` from a terminal. On Windows 11 24H2, Windows Server 2025, and later, `alamino.exe` only uses a console it can share with whatever started it, which is what keeps the [background daemon](/alamino/concepts/daemon/) from opening a window. It also means that double-clicking `alamino.exe`, or starting it with `Start-Process` without `-NoNewWindow`, runs it without a window, so you see none of its output.
 
-Release binaries embed a telemetry host and website ID only when the publishing repository sets the `UMAMI_HOST` and `UMAMI_WEBSITE_ID` Actions variables, so telemetry is off unless the publisher opted in. Disable it explicitly with `ALAMINO_TELEMETRY=0`, or point it at your own instance with `ALAMINO_UMAMI_HOST` and `ALAMINO_UMAMI_WEBSITE_ID`.
-
 ## Go install
 
 ```sh
 go install github.com/mika-rafie/alamino/cmd/alamino@latest
 ```
-
-`go install` builds the CLI without an embedded telemetry host or website ID, so telemetry stays off unless you later set both `ALAMINO_UMAMI_HOST` and `ALAMINO_UMAMI_WEBSITE_ID` at runtime.
 
 ## Nix
 
@@ -63,8 +61,6 @@ inputs:
 
 Without flakes, `default.nix` exposes the same packages through flake-compat, for example `nix-build -A packages.x86_64-linux.default`.
 
-The flake embeds no telemetry host or website ID, so telemetry stays off unless you set both `ALAMINO_UMAMI_HOST` and `ALAMINO_UMAMI_WEBSITE_ID` at runtime.
-
 `alamino update` refuses to run on a binary in the Nix store, and the background update notice stays off. Upgrade through Nix (for example `nix profile upgrade alamino` or a flake input update), then run `alamino daemon restart`. The restart points the managed service at the new store path; until then the daemon keeps running the old one, which garbage collection can delete.
 
 ## From source
@@ -75,8 +71,6 @@ cd alamino
 make build
 make install
 ```
-
-`make build` embeds the telemetry host from `ALAMINO_UMAMI_HOST` in a repo-local `.env` first, then `UMAMI_HOST` from the shell. It embeds the telemetry website ID from `ALAMINO_UMAMI_WEBSITE_ID` in `.env` first, then `UMAMI_WEBSITE_ID` from the shell. With neither set, the build embeds nothing and telemetry stays off.
 
 ## Prerequisites
 
@@ -111,8 +105,6 @@ This downloads the latest release from GitHub, verifies the SHA-256 checksum, at
 Use `alamino update --beta` to opt into prereleases and install the latest beta when one is newer than the current stable release.
 Use `alamino update -y` to answer yes to the daemon-executable-mismatch prompt described below.
 Version discovery uses the GitHub release-asset CDN rather than the rate-limited REST API; see [`alamino update`](/alamino/reference/cli/#alamino-update).
-
-Because `update` installs the latest release binary, its telemetry settings are the ones that release was built with. Release binaries embed a telemetry host and website ID only when the publishing repository sets the `UMAMI_HOST` and `UMAMI_WEBSITE_ID` Actions variables, so telemetry is off unless the publisher opted in. Disable it explicitly with `ALAMINO_TELEMETRY=0`, or point it at your own instance with `ALAMINO_UMAMI_HOST` and `ALAMINO_UMAMI_WEBSITE_ID`.
 
 If pending or running pipeline runs exist, the update refuses to restart the daemon and prints each active run's ID, status, branch, and short head SHA. Pass `--force` to restart the daemon anyway and accept that those runs may fail; `-y`/`--yes` does **not** bypass this guard.
 Pass `--when-idle` to let those runs finish on the current version instead: the update installs the new binary, the daemon restarts on it once no run is executing, and pushes that arrive meanwhile run after the restart. [Daemon & Worktrees](/alamino/concepts/daemon/#starting-and-stopping) owns the details.

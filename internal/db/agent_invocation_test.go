@@ -213,14 +213,6 @@ func TestAgentInvocationAggregatesAndRunSummary(t *testing.T) {
 	if fix.Count != 1 || fix.Fallback != 1 || fix.Errors != 1 {
 		t.Fatalf("review-fix aggregate = %+v", fix)
 	}
-
-	summary, err := d.AgentInvocationSummaryForRun(run.ID)
-	if err != nil {
-		t.Fatalf("run summary: %v", err)
-	}
-	if summary.Count != 3 || summary.Resumed != 1 || summary.Fallback != 1 || summary.TotalDurationMS != 220 {
-		t.Fatalf("run summary = %+v", summary)
-	}
 }
 
 func TestAgentInvocationAggregatesPreserveUnknownMetrics(t *testing.T) {

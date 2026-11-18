@@ -44,7 +44,7 @@ func newAxiStatusCmd() *cobra.Command {
 }
 
 // runAxiStatus renders the run status for the current branch or an explicit
-// --run selection. It is a read-only query: it does not emit telemetry.
+// --run selection. It is a read-only query.
 func runAxiStatus(cmd *cobra.Command, runID string) error {
 	env, err := openAxiQueryEnv(runID)
 	if err != nil {
@@ -222,8 +222,7 @@ func newAxiLogsCmd() *cobra.Command {
 const validLogStepsHelp = "Valid steps: intent, rebase, review, test, document, lint, push, pr, ci, " +
 	"or a repository gate step name as shown in `alamino axi status` (for example gate.test.mutation-budget)"
 
-// runAxiLogs renders a step log. It is a read-only query: it does not emit
-// telemetry.
+// runAxiLogs renders a step log. It is a read-only query.
 func runAxiLogs(cmd *cobra.Command, step, runID string, full bool) error {
 	step = strings.TrimSpace(step)
 	if step == "" {

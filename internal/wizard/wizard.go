@@ -46,7 +46,6 @@ type Config struct {
 	Push          func(ctx context.Context, branch string) error
 	SuggestBranch func(ctx context.Context) (string, error)
 	SuggestCommit func(ctx context.Context) (string, error)
-	Track         func(action string, fields map[string]any)
 	// WaitForRun, if set, runs after push succeeds and blocks while the
 	// daemon-created run is still catching up. Keeps the alt screen up so the
 	// handoff to the attach TUI has no visible gap. Only used by the
@@ -83,7 +82,6 @@ type step struct {
 	result     string // displayed when done
 	skipReason string // displayed when skipped
 	errMsg     string
-	source     string
 }
 
 // Model is the bubbletea model for the wizard.
@@ -266,13 +264,6 @@ func (m Model) setupActive() Model {
 		// success silently masks broken-gate cases like husky disabling
 		// the post-receive hook (issue #122).
 		m.success = m.pushed && m.err == nil
-		if m.success {
-			m.track("completed", map[string]any{
-				"branch_created": m.branchCreated,
-				"commit_made":    m.commitMade,
-				"pushed":         m.pushed,
-			})
-		}
 		m.quitting = true
 		m.cancel()
 		return m
@@ -317,7 +308,6 @@ func (m Model) handleAutoAdvance() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	if s.status == statConfirm {
-		s.source = "auto"
 		return m.executeStep(s, "")
 	}
 	return m.handleKey(tea.KeyMsg{Type: tea.KeyEnter})
@@ -343,7 +333,6 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	switch msg.String() {
 	case "ctrl+c":
-		m.trackAbort("interrupt")
 		m.aborted = true
 		m.quitting = true
 		m.cancel()
@@ -353,7 +342,6 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.confirmQuit = true
 			return m, nil
 		}
-		m.trackAbort("quit")
 		m.aborted = true
 		m.quitting = true
 		m.cancel()
@@ -382,10 +370,8 @@ func (m Model) handleInputKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if value == "" {
 			// Agent suggestion path.
 			s.status = statAgent
-			s.source = "agent"
 			return m, tea.Batch(m.suggestCmd(s.id), m.scheduleSpinner())
 		}
-		s.source = "user"
 		return m.executeStep(s, value)
 	}
 	var cmd tea.Cmd
@@ -397,10 +383,8 @@ func (m Model) handleConfirmKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	s := m.activeStep()
 	switch msg.String() {
 	case "y", "Y", "enter":
-		s.source = "user"
 		return m.executeStep(s, "")
 	case "n", "N":
-		m.trackAbort("decline_push")
 		m.aborted = true
 		m.quitting = true
 		m.cancel()
@@ -455,7 +439,6 @@ func (m Model) handleSuggestion(msg suggestionMsg) (tea.Model, tea.Cmd) {
 		}
 		// Fall back to asking the user to type.
 		s.status = statInput
-		s.source = ""
 		m.input.SetValue("")
 		m.input.Placeholder = "agent unavailable: " + truncate(msg.err.Error(), 40)
 		m.input.Focus()
@@ -485,13 +468,10 @@ func (m Model) handleAction(msg actionMsg) (tea.Model, tea.Cmd) {
 	case stepBranch:
 		m.branchCreated = true
 		m.targetBranch = s.result
-		m.track("branch_created", map[string]any{"step": stepName(s.id), "source": stepSource(s.source)})
 	case stepCommit:
 		m.commitMade = true
-		m.track("committed", map[string]any{"step": stepName(s.id), "source": stepSource(s.source)})
 	case stepPush:
 		m.pushed = true
-		m.track("pushed", map[string]any{"step": stepName(s.id), "source": stepSource(s.source)})
 	}
 	s.status = statDone
 	m.active = m.firstPending()
@@ -586,24 +566,6 @@ func resetTerminalTitle(output io.Writer) {
 		output = os.Stdout
 	}
 	_, _ = io.WriteString(output, setTerminalTitle(""))
-}
-
-func (m Model) track(action string, fields map[string]any) {
-	if m.cfg.Track == nil {
-		return
-	}
-	if fields == nil {
-		fields = map[string]any{}
-	}
-	m.cfg.Track(action, fields)
-}
-
-func (m Model) trackAbort(reason string) {
-	fields := map[string]any{"reason": reason}
-	if s := m.activeStep(); s != nil {
-		fields["step"] = stepName(s.id)
-	}
-	m.track("aborted", fields)
 }
 
 func (m Model) anySpinnerActive() bool {
@@ -748,16 +710,6 @@ func RunAuto(cfg Config) (Result, error) {
 	ctx, cancel := context.WithCancel(baseCtx)
 	defer cancel()
 
-	track := func(action string, fields map[string]any) {
-		if cfg.Track == nil {
-			return
-		}
-		if fields == nil {
-			fields = map[string]any{}
-		}
-		cfg.Track(action, fields)
-	}
-
 	if cfg.NeedsBranch {
 		if cfg.SuggestBranch == nil {
 			err := errors.New("no branch suggester configured")
@@ -784,7 +736,6 @@ func RunAuto(cfg Config) (Result, error) {
 		}
 		res.BranchCreated = true
 		res.TargetBranch = branch
-		track("branch_created", map[string]any{"step": stepName(stepBranch), "source": "agent"})
 	}
 
 	if cfg.IsDirty {
@@ -812,7 +763,6 @@ func RunAuto(cfg Config) (Result, error) {
 			return res, err
 		}
 		res.CommitMade = true
-		track("committed", map[string]any{"step": stepName(stepCommit), "source": "agent"})
 	}
 
 	if cfg.Push == nil {
@@ -827,12 +777,6 @@ func RunAuto(cfg Config) (Result, error) {
 	}
 	res.Pushed = true
 	res.Success = true
-	track("pushed", map[string]any{"step": stepName(stepPush), "source": "auto"})
-	track("completed", map[string]any{
-		"branch_created": res.BranchCreated,
-		"commit_made":    res.CommitMade,
-		"pushed":         res.Pushed,
-	})
 	return res, nil
 }
 
@@ -860,13 +804,6 @@ func stepActionLabel(id stepID) string {
 	default:
 		return stepName(id)
 	}
-}
-
-func stepSource(source string) string {
-	if source == "" {
-		return "user"
-	}
-	return source
 }
 
 func truncate(s string, n int) string {

@@ -13,8 +13,6 @@ curl -fsSL https://raw.githubusercontent.com/mika-rafie/alamino/main/docs/instal
 
 The installer drops the binary in `~/.alamino/bin`, links it into `~/.local/bin` or `/usr/local/bin`, and restarts the background daemon. If the restart fails, the install command fails.
 
-Release binaries embed a telemetry host and website ID only when the publishing repository sets the `UMAMI_HOST` and `UMAMI_WEBSITE_ID` Actions variables, so telemetry is off unless the publisher opted in. Disable it explicitly with `ALAMINO_TELEMETRY=0`, or point it at your own instance with `ALAMINO_UMAMI_HOST` and `ALAMINO_UMAMI_WEBSITE_ID`.
-
 ## 2. Check prerequisites
 
 ```sh

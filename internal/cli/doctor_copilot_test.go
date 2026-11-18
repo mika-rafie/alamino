@@ -6,8 +6,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/mika-rafie/alamino/internal/telemetry"
 )
 
 // TestDoctorListsCopilotAgent exercises the user-facing `alamino doctor`
@@ -16,9 +14,6 @@ import (
 // first-class agents. The full rendered report is logged so it can be captured
 // as reviewer-visible evidence.
 func TestDoctorListsCopilotAgent(t *testing.T) {
-	restore := telemetry.SetDefaultForTesting(&telemetryRecorder{})
-	defer restore()
-
 	nmHome := t.TempDir()
 	t.Setenv("ALAMINO_HOME", nmHome)
 

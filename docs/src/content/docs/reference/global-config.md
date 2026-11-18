@@ -472,7 +472,7 @@ using that role stay on its selected reviewer rather than retrying exhausted
 candidates. The base and later-round reviewer roles have separate fallback chains.
 If all configured reviewers exhaust their quota, review fails without approval.
 The fallback log names both configured candidates, including same-harness profiles.
-See [local invocation evidence](/alamino/reference/environment/#what-stays-local-and-what-leaves-the-machine)
+See [local invocation evidence](/alamino/reference/environment/#local-performance-records)
 for the recorded identities.
 An OpenCode turn that ran tools, or whose tool activity is unknown, cannot fall
 back to a fresh reviewer session.
@@ -993,7 +993,7 @@ When `enabled: true`, alamino reads **one** snapshot with the locally installed 
 
 Native `claude` and `codex` retain account, profile, and model-scope matching. All other agents, including Pi, use only provider-level `all_models` or `all_products` scopes for their declared provider. Vendor-specific and named-model scopes do not affect their routing. Without provider-wide evidence, quota is unknown: the agent stays eligible and retains its configured order among unknown candidates.
 
-Each agent keeps its own [`agent_config`](#agent_config) model and effort: only the order changes. A missing, slow, or unreadable `quota-axi` keeps your configured order, logs the reason, and never blocks a run. The mid-run quota switch remains enabled in this case. Inspect the recorded outcome with `alamino axi status` or [`alamino stats`](/alamino/reference/cli/#alamino-stats). See [local telemetry](/alamino/reference/environment/#what-stays-local-and-what-leaves-the-machine) for storage and privacy.
+Each agent keeps its own [`agent_config`](#agent_config) model and effort: only the order changes. A missing, slow, or unreadable `quota-axi` keeps your configured order, logs the reason, and never blocks a run. The mid-run quota switch remains enabled in this case. Inspect the recorded outcome with `alamino axi status` or [`alamino stats`](/alamino/reference/cli/#alamino-stats). See [local performance records](/alamino/reference/environment/#local-performance-records) for storage and privacy.
 
 Mid-run, a recognised quota-exhaustion error advances to the next agent in the chosen order with a fresh session, dropping any resumed session. This can happen once per agent, and later invocations do not return to earlier agents. If no successor remains, the error is returned. The existing agent-unavailable fallback is unchanged. Daemon recovery reuses the recorded order and last recorded switch without reading another snapshot, even if the global opt-in setting has since changed.
 

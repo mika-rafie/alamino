@@ -28,7 +28,6 @@ func TestMain(m *testing.M) {
 	_ = os.Setenv("ALAMINO_HOME", root)
 	_ = os.Setenv("HOME", home)
 	_ = os.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, "gitconfig"))
-	_ = os.Setenv("ALAMINO_TELEMETRY", "off")
 	_ = os.Setenv("ALAMINO_NO_UPDATE_CHECK", "1")
 
 	code := m.Run()

@@ -291,44 +291,13 @@ Kill-switch injected into every pipeline agent subprocess so compact-adviser sta
 
 alamino stamps `COMPACT_ADVISER_DISABLE=1` onto every spawned gate agent, including ACP aliases and managed agent servers that can load host plugins. Forge and profile overlays cannot drop the flag. The daemon process itself is unchanged; this is agent-child policy only, not a user-facing knob for the service environment.
 
-## `ALAMINO_UMAMI_HOST`
+## Local performance records
 
-Override the telemetry collection host.
+`alamino` has no telemetry.
+The binary contains no analytics client and sends no usage data to any host.
+What it records about its own runs is described below, and all of it stays on the machine.
 
-|         |                             |
-| ------- | --------------------------- |
-| Type    | `URL`                       |
-| Default | unset (telemetry stays off) |
-
-When set, telemetry sends events to this host's `/api/send` endpoint. If it is unset in a dev build, `alamino` also checks a repo-local `.env` file for `ALAMINO_UMAMI_HOST`. If no runtime value is found, it falls back to any host embedded at build time. There is no built-in host: with no host from any of these sources, telemetry sends nothing, even when a website ID is set.
-
-## `ALAMINO_UMAMI_WEBSITE_ID`
-
-Override or enable the telemetry website ID.
-
-|         |                                                                                     |
-| ------- | ----------------------------------------------------------------------------------- |
-| Type    | `string`                                                                            |
-| Default | unset unless the build embedded one (`UMAMI_WEBSITE_ID`); telemetry stays off      |
-
-When set, telemetry uses this website ID at runtime. If it is unset in a dev build, `alamino` also checks a repo-local `.env` file for `ALAMINO_UMAMI_WEBSITE_ID`. If no runtime value is found, it falls back to any website ID embedded at build time.
-
-When telemetry is enabled, `alamino` sends command, run, approval, fix, and wizard events, completed step events with `awaiting_approval`, `fix_review`, or `failed` status, and pageviews for the human surfaces `/wizard` and `/tui` and the state-changing agent surfaces `/axi/run`, `/axi/respond`, `/axi/abort`, `/axi/retry`, and `/axi/handoff` to Umami.
-Mutation pageviews are sent alongside command events, so command status and duration remain available.
-They include only flag-derived context: `/axi/run` records booleans such as whether `--yes` or `--skip` was supplied and whether explicit intent was supplied through any [intent input transport](/alamino/reference/cli/#intent-input); `/axi/respond` records the sanitized action and whether `--yes` was present. The intent boolean does not distinguish text, file, and stdin input, and intent input rejected by the CLI resolver emits no `axi-run` command event or pageview.
-
-Read-only surfaces (`axi` home, `axi status`, `axi logs`, `axi rounds`, `status`, `runs`, `export`) emit no telemetry at all, so agent status polling cannot flood remote analytics. Mutation surfaces (`axi run`, `axi respond`, `axi abort`, `axi retry`, `axi handoff`, run lifecycle, approvals, and fixes) stay full-fidelity.
-Each explicit human CLI, AXI, or TUI branch-sync check/apply attempt emits one command event and no additional pageview.
-Its fields are bounded enums and booleans only: surface, mode, state, relation, target kind, pipeline phase, PR state, result, refusal reason, dirty state, and duration.
-It never sends a SHA, run ID, path, branch name, URL, remote name, or command argument.
-
-### What stays local and what leaves the machine
-
-Everything sent remotely is low-cardinality: command names, statuses, durations, counts, flag booleans, agent names, fixed step categories, and - on the single terminal `run finished` event - the bounded performance rollup `agent_invocations`, `resumed_invocations`, and `fallback_invocations` (small counts only).
-Run IDs, repository paths, branch names, session identities, prompts, model outputs, diffs, and per-invocation performance records are never sent.
-Repository-declared [gate](/alamino/reference/repo-config/#gates) labels stay local. Remote step, approval, fix, and failed-step fields record them as the fixed token `gate`.
-
-[Quota-aware routing](/alamino/reference/global-config/#quota_routing) records candidates, quota evidence, the chosen order, and mid-run switches in `runs.quota_routing` in the local state database (`<ALAMINO_HOME>/state.sqlite`). These records are never sent in remote telemetry.
+[Quota-aware routing](/alamino/reference/global-config/#quota_routing) records candidates, quota evidence, the chosen order, and mid-run switches in `runs.quota_routing` in the local state database (`<ALAMINO_HOME>/state.sqlite`). These records never leave the machine.
 
 Detailed performance evidence stays on the machine in the local state database (`<ALAMINO_HOME>/state.sqlite`): one `agent_invocations` row per agent invocation, plus each run's accumulated parked-at-gate time.
 Each row records run and step identity, purpose (such as review/review-fix/housekeeping), the reported model and its provider, the cold/started/resumed/fallback session mode, a truncated session-identity hash, timestamps, duration, exit status, and failure category, alongside the session-fidelity metrics below.
@@ -347,19 +316,6 @@ The count and timing definitions live in one authoritative place (`internal/agen
 Inspect the evidence with `alamino stats --agents` (per-purpose aggregates, including a `METRICS` coverage count so a real zero is distinguishable from missing instrumentation) or `alamino stats --run <id>` (one run's invocations, the per-round-vs-cumulative token split, and parked time).
 For a versioned JSON snapshot of one run's stored delivery facts, use [`alamino export --run <id> --json`](/alamino/reference/cli/#alamino-export).
 
-## `ALAMINO_TELEMETRY`
-
-Disable telemetry collection.
-
-|         |                                                                   |
-| ------- | ----------------------------------------------------------------- |
-| Type    | `0`, `false`, or `off` to disable; anything else to leave enabled |
-| Default | unset                                                             |
-
-When set to a disabling value, telemetry stays off even if a runtime or embedded website ID is available.
-
-On macOS and Linux, set this variable before `alamino init` to include it in the managed daemon's service definition. To change an existing installation, export the new value and run `alamino daemon restart`. Service refreshes and binary upgrades preserve the stored value when the current shell has no nonempty value. To re-enable telemetry, explicitly set `ALAMINO_TELEMETRY=1` and restart the daemon. Windows Task Scheduler inherits the user's logon environment, so set it there for the managed daemon.
-
 ## Git commit environment
 
 Submission identity capture honors `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` from the submitting process. The [pipeline commit identity policy](/alamino/reference/pipeline-steps/) owns how that identity is bound to a run and preserved during correction rewriting.
@@ -370,6 +326,6 @@ Agent and configured-command environments exclude inherited author and committer
 
 ## Environment the daemon sees
 
-When the daemon runs through a managed service (launchd, systemd user service, Task Scheduler), the macOS and Linux service definitions include a default `PATH` with common user and system binary directories. They also bake in any proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `ALL_PROXY`) that were set when you installed or refreshed the service, so the daemon and the agents it spawns can reach the network through your proxy even when the login-shell probe is unavailable. Once baked in, the values are preserved across later service refreshes and restarts even when the proxy variables are not exported in that shell, so a routine `daemon restart` or a binary upgrade will not strip them; export the variables again only when you need to change or remove them. Both the upper- and lower-case spellings are forwarded exactly as you set them, because tooling is inconsistent about which it reads (curl, for example, honors only the lower-case `http_proxy` for plain-HTTP requests). Because a proxy URL can embed credentials (for example `http://user:pass@host`), the generated service file is restricted to owner-only `0600` permissions whenever proxy or telemetry values are forwarded into it. When neither is forwarded, the generated definition keeps the conventional `0644` mode. Windows Task Scheduler inherits your logon environment and needs no forwarding. At daemon startup, the daemon resolves environment once from your login shell on macOS and Linux (`$SHELL -l -i -c 'env -0'` for bash and zsh, run in its own session so an interactive shell never waits on a terminal), preserves your shell `PATH` order, and appends any missing well-known directories such as `~/.local/bin`, `~/go/bin`, `~/.cargo/bin`, `~/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`, and `/bin`. When the login shell binary itself does not exist yet, which happens on macOS with nix-darwin when the daemon starts at login before `/run/current-system` has been recreated, startup waits for it with backoff for up to a minute before giving up. If login-shell resolution still fails or returns no entries, the daemon logs a warning and uses an augmented process-environment fallback that may omit version-manager directories such as nvm, fnm, or volta. Restart the daemon to pick up a login shell that appeared or changed after startup. On Windows it reuses the current process environment.
+When the daemon runs through a managed service (launchd, systemd user service, Task Scheduler), the macOS and Linux service definitions include a default `PATH` with common user and system binary directories. They also bake in any proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `ALL_PROXY`) that were set when you installed or refreshed the service, so the daemon and the agents it spawns can reach the network through your proxy even when the login-shell probe is unavailable. Once baked in, the values are preserved across later service refreshes and restarts even when the proxy variables are not exported in that shell, so a routine `daemon restart` or a binary upgrade will not strip them; export the variables again only when you need to change or remove them. Both the upper- and lower-case spellings are forwarded exactly as you set them, because tooling is inconsistent about which it reads (curl, for example, honors only the lower-case `http_proxy` for plain-HTTP requests). Because a proxy URL can embed credentials (for example `http://user:pass@host`), the generated service file is restricted to owner-only `0600` permissions whenever proxy values are forwarded into it. When none is forwarded, the generated definition keeps the conventional `0644` mode. Windows Task Scheduler inherits your logon environment and needs no forwarding. At daemon startup, the daemon resolves environment once from your login shell on macOS and Linux (`$SHELL -l -i -c 'env -0'` for bash and zsh, run in its own session so an interactive shell never waits on a terminal), preserves your shell `PATH` order, and appends any missing well-known directories such as `~/.local/bin`, `~/go/bin`, `~/.cargo/bin`, `~/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`, and `/bin`. When the login shell binary itself does not exist yet, which happens on macOS with nix-darwin when the daemon starts at login before `/run/current-system` has been recreated, startup waits for it with backoff for up to a minute before giving up. If login-shell resolution still fails or returns no entries, the daemon logs a warning and uses an augmented process-environment fallback that may omit version-manager directories such as nvm, fnm, or volta. Restart the daemon to pick up a login shell that appeared or changed after startup. On Windows it reuses the current process environment.
 
-For variables inherited by the daemon and its child processes, apart from the proxy variables and `ALAMINO_TELEMETRY` forwarded on macOS and Linux, use the login shell's rc files (`.zprofile`, `.zshrc`, `.profile`, `.bash_profile`, `.bashrc`, PowerShell profile) or, on Windows, the logon environment. Put them somewhere the daemon will inherit or load, then restart it to pick them up. Caller-selected [transcript homes](#claude_config_dir) follow their own capture rules above.
+For variables inherited by the daemon and its child processes, apart from the proxy variables forwarded on macOS and Linux, use the login shell's rc files (`.zprofile`, `.zshrc`, `.profile`, `.bash_profile`, `.bashrc`, PowerShell profile) or, on Windows, the logon environment. Put them somewhere the daemon will inherit or load, then restart it to pick them up. Caller-selected [transcript homes](#claude_config_dir) follow their own capture rules above.

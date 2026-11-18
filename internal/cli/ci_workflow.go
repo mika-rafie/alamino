@@ -85,9 +85,7 @@ func newCIWorkflowCmd() *cobra.Command {
 			"Run this from inside a git repository that has been initialized with 'alamino init'.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return trackCommand("ci-workflow", func() error {
-				return generateCIWorkflow(".", force)
-			})
+			return generateCIWorkflow(".", force)
 		},
 	}
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite existing workflow file")

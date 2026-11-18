@@ -111,7 +111,7 @@ type ExportInvocation struct {
 }
 
 // ExportRunFacts reads one consistent SQLite snapshot. It neither migrates
-// storage nor contacts an agent, daemon, forge or telemetry endpoint.
+// storage nor contacts an agent, daemon or forge.
 func (d *DB) ExportRunFacts(ctx context.Context, runID string) (*RunExport, error) {
 	tx, err := d.sql.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
