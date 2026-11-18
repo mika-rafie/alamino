@@ -142,9 +142,14 @@ jobs:
             Write-Host "::warning::Defender exclusions unavailable, Windows tests run untuned: $_"
           }
 
+      # The race-instrumented daemon and pipeline/steps packages need about ten
+      # minutes each on a cold macOS runner, which is Go's default per-package
+      # limit, so a healthy run could fail on the clock alone. The explicit
+      # limit stays well under timeout-minutes so a real hang still ends in a
+      # goroutine dump instead of an evidence-free job cancellation.
       - name: Test on Unix
         if: runner.os != 'Windows'
-        run: go test -race ./...
+        run: go test -race -timeout=20m ./...
 
       # Git-heavy packages are the Windows wall floor. ALAMINO_CI_WINDOWS_GIT_EXCLUDE
       # on the core shard is the union of the git, steps, daemon, and gate

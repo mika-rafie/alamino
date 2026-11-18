@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -76,7 +77,7 @@ func TestCIWorkflow_RetainsFullRaceSuiteAsBroadRegressionOwner(t *testing.T) {
 		t.Fatalf("read ci.yml: %v", err)
 	}
 	content := string(data)
-	if !strings.Contains(content, "run: go test -race ./...") {
+	if !regexp.MustCompile(`(?m)^\s+run: go test -race( -timeout=\S+)? \./\.\.\.$`).MatchString(content) {
 		t.Fatal("CI workflow must still run go test -race ./... as the broad regression owner")
 	}
 	if !strings.Contains(content, "if: runner.os != 'Windows'") {
