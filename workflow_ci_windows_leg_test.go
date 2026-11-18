@@ -23,11 +23,11 @@ import (
 // packages sequentially until timeout-minutes cancelled it with no verdict.
 // These tests pin the properties that keep that from silently coming back - the
 // scan-exclusion step, a shard split (core remainder, git-heavy packages
-// without pipeline/steps/daemon/gate, pipeline/steps alone, daemon alone, and
-// gate alone, with steps/daemon/gate each split by test name across matrix
-// rows) so each job's wall stays inside the cap, and a per-binary Go timeout
-// well inside that cap so a genuine hang lands as a goroutine dump instead of
-// an opaque job cancellation.
+// without pipeline/steps/daemon/gate/cli, pipeline/steps alone, daemon alone,
+// gate alone, and cli alone, with steps/daemon/gate/cli each split by test
+// name across matrix rows) so each job's wall stays inside the cap, and a
+// per-binary Go timeout well inside that cap so a genuine hang lands as a
+// goroutine dump instead of an opaque job cancellation.
 //
 // The workflow cannot be exercised from `go test` (it needs a Windows runner),
 // so it is asserted through a typed workflow, `go list` package sets, and a
@@ -217,7 +217,7 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 		t.Fatalf("test job timeout-minutes = %d, want 40 so a wedged runner cannot burn a full six-hour budget", job.TimeoutMinutes)
 	}
 
-	wantWindowsShards := []string{"core", "daemon", "gate", "git", "steps"}
+	wantWindowsShards := []string{"cli", "core", "daemon", "gate", "git", "steps"}
 	var matrixShards []string
 	for _, row := range job.Strategy.Matrix.Include {
 		if row["os"] != "windows-latest" {
@@ -232,12 +232,12 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 	slices.Sort(matrixShards)
 	matrixShards = slices.Compact(matrixShards)
 	if !slices.Equal(matrixShards, wantWindowsShards) {
-		t.Fatalf("windows matrix shards %v, want %v so daemon, gate, and pipeline/steps run in parallel with the other git-heavy packages", matrixShards, wantWindowsShards)
+		t.Fatalf("windows matrix shards %v, want %v so daemon, gate, cli, and pipeline/steps run in parallel with the other git-heavy packages", matrixShards, wantWindowsShards)
 	}
 
 	tests := windowsGoTestCommands(t)
-	if len(tests) < 5 {
-		t.Fatalf("Windows tests must be split across core, git, steps, daemon, and gate shards so one ./... job cannot exceed the cap without a binary hitting -timeout, got %d go test invocations", len(tests))
+	if len(tests) < 6 {
+		t.Fatalf("Windows tests must be split across core, git, steps, daemon, gate, and cli shards so one ./... job cannot exceed the cap without a binary hitting -timeout, got %d go test invocations", len(tests))
 	}
 
 	jobTimeout := time.Duration(job.TimeoutMinutes) * time.Minute
@@ -270,8 +270,8 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 	if coreCommand.name == "" {
 		t.Fatal("Windows tests must keep a go-list remainder shard")
 	}
-	if len(explicit) != 4 {
-		t.Fatalf("Windows tests must list exactly four explicit package shards (git-heavy remainder, pipeline/steps, daemon, and gate), got %d", len(explicit))
+	if len(explicit) != 5 {
+		t.Fatalf("Windows tests must list exactly five explicit package shards (git-heavy remainder, pipeline/steps, daemon, gate, and cli), got %d", len(explicit))
 	}
 	for _, shard := range wantWindowsShards {
 		if _, ok := stepShards[shard]; !ok {
@@ -287,8 +287,9 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 	stepsWant := goListPackages(t, "./internal/pipeline/steps/...")
 	daemonWant := goListPackages(t, "./internal/daemon")
 	gateWant := goListPackages(t, "./internal/gate")
-	var stepsCommand, gitCommand, daemonCommand, gateCommand workflowCommand
-	var stepsFromArgs, gitFromArgs, daemonFromArgs, gateFromArgs []string
+	cliWant := goListPackages(t, "./internal/cli")
+	var stepsCommand, gitCommand, daemonCommand, gateCommand, cliCommand workflowCommand
+	var stepsFromArgs, gitFromArgs, daemonFromArgs, gateFromArgs, cliFromArgs []string
 	for _, command := range explicit {
 		pkgs := goListPackages(t, goTestPackagePatterns(command)...)
 		switch {
@@ -310,9 +311,15 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 			}
 			gateCommand = command
 			gateFromArgs = pkgs
+		case slices.Equal(pkgs, cliWant):
+			if cliCommand.name != "" {
+				t.Fatal("multiple Windows shards list only internal/cli")
+			}
+			cliCommand = command
+			cliFromArgs = pkgs
 		default:
 			if gitCommand.name != "" {
-				t.Fatalf("extra explicit Windows shard packages %v; want one git-heavy remainder besides steps, daemon, and gate", pkgs)
+				t.Fatalf("extra explicit Windows shard packages %v; want one git-heavy remainder besides steps, daemon, gate, and cli", pkgs)
 			}
 			gitCommand = command
 			gitFromArgs = pkgs
@@ -327,10 +334,13 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 	if gateCommand.name == "" {
 		t.Fatal("Windows tests must run ./internal/gate on its own shard")
 	}
-	if gitCommand.name == "" {
-		t.Fatal("Windows tests must keep a git-heavy remainder shard besides steps, daemon, and gate")
+	if cliCommand.name == "" {
+		t.Fatal("Windows tests must run ./internal/cli on its own shard")
 	}
-	explicitSets := [][]string{stepsFromArgs, daemonFromArgs, gateFromArgs, gitFromArgs}
+	if gitCommand.name == "" {
+		t.Fatal("Windows tests must keep a git-heavy remainder shard besides steps, daemon, gate, and cli")
+	}
+	explicitSets := [][]string{stepsFromArgs, daemonFromArgs, gateFromArgs, cliFromArgs, gitFromArgs}
 	for i, a := range explicitSets {
 		for _, b := range explicitSets[i+1:] {
 			if overlap := packagesOverlap(a, b); len(overlap) > 0 {
@@ -346,9 +356,10 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 	gitHeavyFromArgs := append(append([]string{}, gitFromArgs...), stepsFromArgs...)
 	gitHeavyFromArgs = append(gitHeavyFromArgs, daemonFromArgs...)
 	gitHeavyFromArgs = append(gitHeavyFromArgs, gateFromArgs...)
+	gitHeavyFromArgs = append(gitHeavyFromArgs, cliFromArgs...)
 	slices.Sort(gitHeavyFromArgs)
 	if !slices.Equal(gitHeavyFromArgs, gitHeavyFromFilter) {
-		t.Fatalf("git+steps+daemon+gate shard packages %v do not match ALAMINO_CI_WINDOWS_GIT_EXCLUDE %q -> %v", gitHeavyFromArgs, exclude, gitHeavyFromFilter)
+		t.Fatalf("git+steps+daemon+gate+cli shard packages %v do not match ALAMINO_CI_WINDOWS_GIT_EXCLUDE %q -> %v", gitHeavyFromArgs, exclude, gitHeavyFromFilter)
 	}
 
 	requiredOn := []struct {
@@ -366,6 +377,9 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 		{"gate", []string{
 			"github.com/mika-rafie/alamino/internal/gate",
 		}, gateFromArgs},
+		{"cli", []string{
+			"github.com/mika-rafie/alamino/internal/cli",
+		}, cliFromArgs},
 		{"git-heavy remainder", []string{
 			"github.com/mika-rafie/alamino/internal/git",
 			"github.com/mika-rafie/alamino/internal/branchsync",
@@ -391,6 +405,7 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 		{"steps", stepsFromArgs},
 		{"daemon", daemonFromArgs},
 		{"gate", gateFromArgs},
+		{"cli", cliFromArgs},
 	}
 	for pkg, owner := range allOwned {
 		for _, set := range ownedSets {
@@ -408,6 +423,7 @@ func TestCIWorkflow_WindowsHangSurfacesAsGoTimeoutNotJobCancellation(t *testing.
 	union = append(union, stepsFromArgs...)
 	union = append(union, daemonFromArgs...)
 	union = append(union, gateFromArgs...)
+	union = append(union, cliFromArgs...)
 	union = append(union, coreFromFilter...)
 	slices.Sort(union)
 	if !slices.Equal(union, all) {
@@ -546,6 +562,18 @@ func TestCIWorkflow_WindowsGateShardsRunEveryTestExactlyOnce(t *testing.T) {
 		skipKey: "gate_skip",
 		runEnv:  "ALAMINO_CI_WINDOWS_GATE_RUN",
 		skipEnv: "ALAMINO_CI_WINDOWS_GATE_SKIP",
+	})
+}
+
+func TestCIWorkflow_WindowsCLIShardsRunEveryTestExactlyOnce(t *testing.T) {
+	t.Parallel()
+	assertWindowsNamedShardsCoverEveryTest(t, windowsNamedShardSpec{
+		kind:    "cli",
+		dir:     filepath.Join("internal", "cli"),
+		runKey:  "cli_run",
+		skipKey: "cli_skip",
+		runEnv:  "ALAMINO_CI_WINDOWS_CLI_RUN",
+		skipEnv: "ALAMINO_CI_WINDOWS_CLI_SKIP",
 	})
 }
 
