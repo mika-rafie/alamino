@@ -69,21 +69,84 @@ func TestReleaseWorkflowBuildStartsOnlyWhenReleaseIsCreated(t *testing.T) {
 	}
 }
 
-func TestReleaseWorkflowEmbedsOnlyOperatorConfiguredTelemetry(t *testing.T) {
+// TestReleaseWorkflowBuildsEveryTargetOnOneUbuntuJob pins the installer and
+// updater artifact contract: one ubuntu job cross-compiles all six targets
+// under the alamino-<tag>-<goos>-<goarch> archive names, and the checksums job
+// covers every archive.
+func TestReleaseWorkflowBuildsEveryTargetOnOneUbuntuJob(t *testing.T) {
+	wf := loadReleaseWorkflowDoc(t)
+	job := wf.Jobs["build-and-upload"]
+	if job == nil {
+		t.Fatal("release workflow must define build-and-upload")
+	}
+	if !strings.Contains(job.runsOn(), "ubuntu") {
+		t.Errorf("build-and-upload runs on %q, want ubuntu", job.runsOn())
+	}
+
+	want := map[string]bool{
+		"darwin/amd64": true, "darwin/arm64": true,
+		"linux/amd64": true, "linux/arm64": true,
+		"windows/amd64": true, "windows/arm64": true,
+	}
+	got := map[string]bool{}
+	for _, e := range job.Strategy.Matrix.Include {
+		got[e["goos"]+"/"+e["goarch"]] = true
+	}
+	if len(got) != len(want) {
+		t.Errorf("build-and-upload matrix = %v, want %v", got, want)
+	}
+	for target := range want {
+		if !got[target] {
+			t.Errorf("build-and-upload matrix is missing %s", target)
+		}
+	}
+
+	run := job.allRun()
+	for _, req := range []string{
+		"alamino-${TAG}-${GOOS}-${GOARCH}.tar.gz",
+		"alamino-${TAG}-${GOOS}-${GOARCH}.zip",
+		"gh release upload",
+	} {
+		if !strings.Contains(run, req) {
+			t.Errorf("build-and-upload must contain %q", req)
+		}
+	}
+
+	checksums := wf.Jobs["checksums"]
+	if checksums == nil || !strings.Contains(checksums.allRun(), "sha256sum alamino-*") {
+		t.Error("checksums job must compute `sha256sum alamino-*` over every archive")
+	}
+}
+
+// TestReleaseWorkflowHasNoAppleSigningOrTelemetry pins that the release
+// needs no Apple Developer ID material and embeds no analytics endpoint: no
+// macOS runner, no protected environment, no repository secret, no signing or
+// notarization tooling, and no telemetry build variables.
+func TestReleaseWorkflowHasNoAppleSigningOrTelemetry(t *testing.T) {
 	data, err := os.ReadFile(".github/workflows/release.yml")
 	if err != nil {
 		t.Fatalf("read workflow: %v", err)
 	}
+	content := string(data)
+	for _, forbidden := range []string{"secrets.", "vars.", "UMAMI", "Telemetry", "CSC_"} {
+		if strings.Contains(content, forbidden) {
+			t.Errorf("release workflow must not reference %q", forbidden)
+		}
+	}
 
-	block := extractJobBlock(t, string(data), "build-and-upload")
-	for _, want := range []string{
-		"UMAMI_HOST: ${{ vars.UMAMI_HOST }}",
-		"UMAMI_WEBSITE_ID: ${{ vars.UMAMI_WEBSITE_ID }}",
-		"TelemetryHost=${UMAMI_HOST}",
-		"TelemetryWebsiteID=${UMAMI_WEBSITE_ID}",
-	} {
-		if !strings.Contains(block, want) {
-			t.Fatalf("build-and-upload must contain %q", want)
+	wf := loadReleaseWorkflowDoc(t)
+	for name, job := range wf.Jobs {
+		if strings.Contains(job.runsOn(), "macos") {
+			t.Errorf("job %q must not need a macOS runner", name)
+		}
+		if env := job.environ(); env != "" {
+			t.Errorf("job %q must not use a protected environment, got %q", name, env)
+		}
+		run := strings.ToLower(job.allRun())
+		for _, tool := range []string{"codesign", "notarytool", "stapler", "security ", "keychain", "pkgbuild", "productbuild"} {
+			if strings.Contains(run, tool) {
+				t.Errorf("job %q must not run Apple signing tooling %q", name, tool)
+			}
 		}
 	}
 }
